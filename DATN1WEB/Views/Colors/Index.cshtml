@@ -1,0 +1,401 @@
+﻿@model IEnumerable<DATN1WEB.Models.Color>
+@using DATN1API.Models
+@{
+    ViewData["Title"] = "Danh sách màu sắc và kích cỡ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var sizes = ViewBag.Sizes as List<Size>;
+}
+
+<style>
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        position: relative;
+    }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+    .search-box {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+        .search-box:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+        }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .table-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+        .table-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+        }
+
+    .table thead th {
+        background: #f8f9fa;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+        }
+
+    @@media (max-width: 768px) {
+        .btn-action
+
+    {
+        width: 30px;
+        height: 30px;
+    }
+
+    }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-palette me-3 text-primary"></i>Màu sắc & Kích cỡ
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Quản lý màu sắc và kích cỡ sản phẩm</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <form method="get" class="d-flex align-items-center">
+                <input type="text" name="search" class="form-control search-box me-2"
+                       placeholder="Tìm màu hoặc kích cỡ..." value="@ViewBag.Search" style="width: 300px;" />
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Tổng màu sắc</h6>
+                        <h4 class="fw-bold text-primary mb-0">@ViewBag.TotalColors</h4>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-palette fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Tổng kích cỡ</h6>
+                        <h4 class="fw-bold text-success mb-0">@ViewBag.TotalSizes</h4>
+                    </div>
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-ruler-combined fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Kết quả tìm kiếm</h6>
+                        <h4 class="fw-bold text-info mb-0">
+                            @if (!string.IsNullOrEmpty(ViewBag.Search as string))
+                            {
+                                @((ViewBag.FilteredColorCount ?? 0) + (ViewBag.FilteredSizeCount ?? 0))
+                            }
+                            else
+                            {
+                                @((ViewBag.TotalColors ?? 0) + (ViewBag.TotalSizes ?? 0))
+                            }
+                        </h4>
+                    </div>
+                    <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-search fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Tổng thuộc tính</h6>
+                        <h4 class="fw-bold text-warning mb-0">@((ViewBag.TotalColors ?? 0) + (ViewBag.TotalSizes ?? 0))</h4>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-tags fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Colors Table -->
+<div class="card table-card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-palette me-2"></i>Danh sách màu sắc
+        </h5>
+        <a asp-action="Create" class="btn btn-light btn-sm">
+            <i class="fas fa-plus me-1"></i>Thêm màu mới
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-center">
+                        <th style="width: 10%;">STT</th>
+                        <th style="width: 60%;">Tên màu</th>
+                        <th style="width: 30%;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        var indexColor = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr id="row_@item.ColorID">
+                                <td class="text-center fw-bold">@indexColor</td>
+                                <td class="fw-semibold">@item.ColorName</td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <a asp-action="Edit" asp-route-id="@item.ColorID"
+                                           class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-action btn-outline-danger"
+                                                onclick="confirmDelete(@item.ColorID)" title="Xóa">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            indexColor++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                Chưa có dữ liệu màu sắc
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Sizes Table -->
+<div class="card table-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-ruler-combined me-2"></i>Danh sách kích cỡ
+        </h5>
+        <a asp-action="Create" asp-controller="Sizes" class="btn btn-light btn-sm">
+            <i class="fas fa-plus me-1"></i>Thêm kích cỡ mới
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-center">
+                        <th style="width: 10%;">STT</th>
+                        <th style="width: 60%;">Tên kích cỡ</th>
+                        <th style="width: 30%;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (sizes != null && sizes.Any())
+                    {
+                        var indexSize = 1;
+                        foreach (var item in sizes)
+                        {
+                            <tr id="row_size_@item.SizeID">
+                                <td class="text-center fw-bold">@indexSize</td>
+                                <td class="fw-semibold">@item.SizeName</td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <a asp-action="Edit" asp-controller="Sizes" asp-route-id="@item.SizeID"
+                                           class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-action btn-outline-danger"
+                                                onclick="confirmDeleteSize(@item.SizeID)" title="Xóa">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            indexSize++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                                Chưa có dữ liệu kích cỡ
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // ===== Hiển thị TempData (Success / Error) =====
+        var successMessage = '@TempData["SuccessMessage"]';
+        var errorMessage = '@TempData["ErrorMessage"]';
+        if (successMessage) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: successMessage,
+                timer: 3000,
+                timerProgressBar: true,
+                showConfirmButton: true,
+                confirmButtonText: 'OK'
+            });
+        }
+        if (errorMessage) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: errorMessage,
+                confirmButtonText: 'OK'
+            });
+        }
+
+        // ===== Xóa Color =====
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Bạn có chắc muốn xoá?',
+                text: "Hành động này không thể hoàn tác!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Xoá',
+                cancelButtonText: 'Huỷ'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Colors/DeleteAjax', { id: id }, function (response) {
+                        if (response.success) {
+                            $('#row_' + id).remove();
+                            Swal.fire('Đã xoá!', response.message, 'success');
+                        } else {
+                            Swal.fire('Lỗi', response.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+
+        // ===== Xóa Size =====
+        function confirmDeleteSize(id) {
+            Swal.fire({
+                title: 'Bạn có chắc muốn xoá?',
+                text: "Hành động này không thể hoàn tác!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Xoá',
+                cancelButtonText: 'Huỷ'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('/Sizes/DeleteAjax', { id: id }, function (response) {
+                        if (response.success) {
+                            $('#row_size_' + id).remove();
+                            Swal.fire('Đã xoá!', response.message, 'success');
+                        } else {
+                            Swal.fire('Lỗi', response.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,433 @@
+﻿@using DATN1API.Models
+@model List<DATN1API.Models.Promotion>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Mã giảm giá";
+}
+
+<style>
+    .coupon-style {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        background: white;
+    }
+
+        .coupon-style:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+    .coupon-left {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        min-width: 120px;
+        position: relative;
+    }
+
+        .coupon-left::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+        }
+
+    .coupon-right {
+        background: white;
+        position: relative;
+    }
+
+        .coupon-right::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: #f8f9fa;
+            border-radius: 50%;
+        }
+
+    .custom-filter-group {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .custom-filter-btn {
+        border: none;
+        background: white;
+        color: #6c757d;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border-right: 1px solid #e9ecef;
+    }
+
+        .custom-filter-btn:last-child {
+            border-right: none;
+        }
+
+        .custom-filter-btn:hover {
+            background: #f8f9fa;
+            color: #495057;
+        }
+
+        .custom-filter-btn.active {
+            background: var(--primary-color);
+            color: #1a1d29;
+            font-weight: 600;
+        }
+
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        position: relative;
+    }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+    .search-box {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+        .search-box:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+        }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .progress {
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(0,0,0,0.05);
+    }
+
+    .progress-bar {
+        border-radius: 3px;
+    }
+
+    @@media (max-width: 768px) {
+        .coupon-left
+
+    {
+        min-width: 100px;
+    }
+
+    .custom-filter-group {
+        flex-direction: column;
+    }
+
+    .custom-filter-btn {
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+        .custom-filter-btn:last-child {
+            border-bottom: none;
+        }
+
+    }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-ticket-alt me-3 text-warning"></i>Mã giảm giá
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Quản lý các mã khuyến mãi và ưu đãi</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <form id="filterForm" class="d-flex align-items-center" method="get">
+                <input type="text" id="searchInput" name="search" class="form-control search-box me-2"
+                       placeholder="Tìm kiếm mã giảm giá..." value="@ViewBag.Search" style="width: 300px;" />
+                <input type="hidden" id="statusInput" name="status" value="@ViewBag.CurrentStatus" />
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Tổng mã giảm giá</h6>
+                        <h4 class="fw-bold text-dark mb-0">@ViewBag.TongMa</h4>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-ticket-alt fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Đã sử dụng</h6>
+                        <h4 class="fw-bold text-success mb-0">@ViewBag.DaSuDung.ToString("N0")</h4>
+                    </div>
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Tiết kiệm khách hàng</h6>
+                        <h4 class="fw-bold text-primary mb-0">₫@ViewBag.TietKiem.ToString("N0")</h4>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-piggy-bank fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Tỷ lệ chuyển đổi</h6>
+                        <h4 class="fw-bold text-info mb-0">@ViewBag.ChuyenDoi%</h4>
+                    </div>
+                    <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                        <i class="fas fa-percentage fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <!-- Buttons bên trái -->
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-warning text-white fw-semibold" asp-controller="Promotions" asp-action="Create">
+                    <i class="fas fa-plus me-2"></i>Tạo mã mới
+                </a>
+                <button class="btn btn-outline-primary">
+                    <i class="fas fa-download me-2"></i>Xuất Excel
+                </button>
+            </div>
+
+            <!-- Filter trạng thái bên phải -->
+            <div class="btn-group custom-filter-group" role="group">
+                @{
+                    var statuses = new[] { "Tất cả", "Đang hoạt động", "Sắp hết hạn", "Hết hạn", "Đã dùng hết" };
+                    foreach (var s in statuses)
+                    {
+                        var active = s == ViewBag.CurrentStatus ? "active" : "";
+                        <button type="button" class="btn custom-filter-btn @active" onclick="setStatus('@s')">@s</button>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Coupon Cards -->
+@functions {
+    public string FormatCurrency(decimal? amount)
+    {
+        if (!amount.HasValue) return "0";
+        if (amount < 1000)
+            return $"{amount:N0}K";
+        else
+            return $"{(amount / 1000):N1} triệu";
+    }
+
+    public string FormatDiscount(Promotion item)
+    {
+        if (item.PromoType?.Contains("%") == true || item.PromoType?.ToLower().Contains("phần trăm") == true)
+        {
+            return $"{item.DiscountValue?.ToString("N0")}%";
+        }
+        var value = item.DiscountValue ?? 0;
+        if (value >= 1000)
+            return $"{Math.Round(value / 1000, 1)} triệu";
+        else
+            return $"{value:N0}K";
+    }
+}
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        var percentUsed = item.Quantity > 0 && item.UsedQuantity.HasValue
+        ? Math.Min((int)Math.Round((decimal)item.UsedQuantity.Value / item.Quantity.Value * 100), 100)
+        : 0;
+        var remaining = item.Quantity.HasValue && item.UsedQuantity.HasValue
+        ? item.Quantity.Value - item.UsedQuantity.Value
+        : 0;
+
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="d-flex coupon-style">
+                <!-- Dải đỏ bên trái -->
+                <div class="coupon-left text-white d-flex flex-column justify-content-center align-items-center p-3">
+                    <h6 class="fw-bold mb-2 text-center">@item.PromoName</h6>
+                    @foreach (var code in item.PromoNameCode?.Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? new string[0])
+                    {
+                        <span class="badge bg-light text-dark fw-bold px-2 py-1 rounded-pill mb-1">@code</span>
+                    }
+                </div>
+
+                <!-- Phần nội dung chính -->
+                <div class="coupon-right p-3 position-relative w-100">
+                    @if (remaining > 1)
+                    {
+                        <span class="badge bg-danger text-white position-absolute top-0 end-0 me-2 mt-2">
+                            @($"x{remaining}")
+                        </span>
+                    }
+
+                    <h5 class="fw-bold text-danger mb-2">Giảm @FormatDiscount(item)</h5>
+
+                    <p class="mb-2 text-muted small">
+                        <i class="fas fa-shopping-cart me-1"></i>
+                        Áp dụng đơn tối thiểu: <strong>@FormatCurrency(item.MinOrderAmount)</strong>
+                    </p>
+
+                    <div class="progress mb-2">
+                        <div class="progress-bar bg-success progress-bar-striped" style="width: @percentUsed%"></div>
+                    </div>
+                    <p class="text-muted small mb-2">Đã dùng: @percentUsed%</p>
+
+                    <div class="d-flex justify-content-between small text-muted mb-3">
+                        <span><i class="fas fa-calendar-alt me-1"></i> @item.StartDate?.ToString("dd/MM/yyyy")</span>
+                        <span><i class="fas fa-clock me-1"></i> @item.EndDate?.ToString("dd/MM/yyyy")</span>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-1">
+                        <a asp-controller="Promotions" asp-action="Details" asp-route-id="@item.PromoCode"
+                           class="btn btn-action btn-outline-info" title="Chi tiết">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a asp-controller="Promotions" asp-action="Edit" asp-route-id="@item.PromoCode"
+                           class="btn btn-action btn-outline-warning" title="Sửa">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a asp-controller="Promotions" asp-action="Delete" asp-route-id="@item.PromoCode"
+                           class="btn btn-action btn-outline-danger" title="Xóa">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+    // Search functionality
+    document.getElementById("searchInput").addEventListener("input", function () {
+        clearTimeout(this.searchTimer);
+        this.searchTimer = setTimeout(() => {
+            document.getElementById("filterForm").submit();
+        }, 300);
+    });
+
+    function setStatus(status) {
+        document.getElementById("statusInput").value = status;
+        document.getElementById("filterForm").submit();
+    }
+
+    // Format currency and discount on page load
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".discount-value").forEach(function (el) {
+            const rawValue = parseFloat(el.textContent);
+            const type = el.dataset.type?.trim();
+            if (!isNaN(rawValue)) {
+                el.textContent = formatDiscount(rawValue, type);
+            }
+        });
+
+        document.querySelectorAll(".min-order").forEach(function (el) {
+            const rawValue = parseFloat(el.textContent);
+            if (!isNaN(rawValue)) {
+                el.textContent = formatCurrency(rawValue);
+            }
+        });
+    });
+
+    function formatCurrency(amount) {
+        if (amount >= 1000) {
+            const value = amount / 1000;
+            return value.toFixed(2) + " triệu";
+        } else {
+            return amount + "K";
+        }
+    }
+
+    function formatDiscount(value, type) {
+        if (type === "Phần trăm") {
+            return value + "%";
+        } else {
+            return formatCurrency(value);
+        }
+    }
+</script>

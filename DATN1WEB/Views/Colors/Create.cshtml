@@ -1,0 +1,258 @@
+﻿@model DATN1WEB.Models.Color
+@{
+    ViewData["Title"] = "Thêm màu sắc";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var returnUrl = Context.Request.Query["returnUrl"].FirstOrDefault();
+}
+
+<style>
+    .form-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+        .form-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+        }
+
+    .form-control {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        padding: 0.75rem 1rem;
+    }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+        }
+
+    .input-group-text {
+        border-radius: 12px 0 0 12px;
+        border: 2px solid #e9ecef;
+        border-right: none;
+        background: #f8f9fa;
+    }
+
+    .btn-custom {
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .color-legend-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        margin-top: 2rem;
+    }
+
+        .color-legend-card .card-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+        }
+
+    .color-item {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .color-item:hover {
+            transform: scale(1.05);
+        }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-plus me-3 text-success"></i>Thêm màu sắc
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Colors")">Màu sắc</a></li>
+                    <li class="breadcrumb-item active">Thêm mới</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Form Section -->
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card form-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-palette me-2"></i>Thông tin màu sắc
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post" id="colorForm">
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                    <!-- Nhập tên màu -->
+                    <div class="mb-4">
+                        <label asp-for="ColorName" class="form-label fw-semibold">
+                            <i class="fas fa-brush me-2 text-primary"></i>Tên màu
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-droplet text-primary"></i>
+                            </span>
+                            <input asp-for="ColorName" class="form-control" placeholder="Nhập tên màu..." id="ColorName" />
+                            <input type="color" id="colorPicker" class="form-control form-control-color" style="max-width:60px;" />
+                        </div>
+                        <input type="hidden" name="HexCode" id="HexCode" />
+                        <span id="colorNameError" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Nút hành động -->
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-success btn-custom">
+                            <i class="fas fa-save me-2"></i>Lưu
+                        </button>
+                        <a href="@(string.IsNullOrEmpty(returnUrl) ? Url.Action("Index", "Colors") : returnUrl)"
+                           class="btn btn-secondary btn-custom">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bảng chú thích màu -->
+        <div class="card color-legend-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-swatchbook me-2"></i>Bảng chú thích màu phổ biến
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="colorLegendContainer" class="d-flex flex-column gap-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        var successMessage = '@Html.Raw(TempData["SuccessMessage"])';
+        var errorMessage = '@Html.Raw(TempData["ErrorMessage"])';
+        if (successMessage) {
+            Swal.fire({ icon: 'success', title: 'Thành công!', text: successMessage, timer: 3000, timerProgressBar: true });
+        }
+        if (errorMessage) {
+            Swal.fire({ icon: 'error', title: 'Lỗi', text: errorMessage, confirmButtonText: 'OK' });
+        }
+
+        // Bảng màu tiếng Việt ~50 màu
+        const colorDictionary = {
+            "#000000": "Đen", "#FFFFFF": "Trắng", "#FF0000": "Đỏ", "#800000": "Đỏ đậm",
+            "#FFA07A": "Cam nhạt", "#FF4500": "Cam đỏ", "#FFA500": "Cam", "#FFD700": "Vàng ánh kim",
+            "#FFFF00": "Vàng", "#808000": "Vàng ô liu", "#ADFF2F": "Vàng xanh", "#7CFC00": "Xanh cỏ",
+            "#00FF00": "Xanh lá", "#32CD32": "Xanh lá tươi", "#006400": "Xanh lá đậm", "#20B2AA": "Xanh ngọc nhạt",
+            "#00FFFF": "Xanh ngọc", "#40E0D0": "Ngọc lam", "#008080": "Xanh lam xám", "#0000FF": "Xanh dương",
+            "#00008B": "Xanh dương đậm", "#191970": "Xanh đêm", "#800080": "Tím", "#8A2BE2": "Tím xanh",
+            "#4B0082": "Chàm", "#FF00FF": "Hồng tím", "#DA70D6": "Tím hoa cà", "#C71585": "Hồng cánh sen",
+            "#FFC0CB": "Hồng nhạt", "#FF69B4": "Hồng tươi", "#DC143C": "Đỏ tươi", "#B22222": "Đỏ lửa",
+            "#CD5C5C": "Đỏ nâu nhạt", "#A52A2A": "Nâu", "#8B4513": "Nâu đất", "#D2691E": "Nâu cam",
+            "#BC8F8F": "Hồng đất", "#F5F5DC": "Be", "#FFE4C4": "Da bò", "#FFF8DC": "Ngà nhạt",
+            "#FFDAB9": "Hồng đào", "#FFE4B5": "Vàng nhạt", "#E6E6FA": "Oải hương", "#D8BFD8": "Tím xám nhạt",
+            "#B0E0E6": "Xanh xám nhạt", "#C0C0C0": "Bạc", "#808080": "Xám", "#696969": "Xám tối",
+            "#2F4F4F": "Xám xanh đậm", "#708090": "Xám xanh nhạt"
+        };
+
+        function createColorCard(hex, name) {
+            const col = document.createElement('div');
+            col.className = "col";
+            col.innerHTML = `
+                <div class="color-item d-flex flex-column align-items-center justify-content-between
+                            border rounded shadow-sm bg-white text-center p-2 h-100"
+                     style="min-height:90px;" onclick="selectColor('${hex}', '${name}')">
+                    <div class="rounded mb-1" style="width:28px; height:28px; background:${hex};"></div>
+                    <small class="fw-bold" style="font-size:0.7rem;">${hex}</small>
+                    <span class="fw-semibold" style="font-size:0.7rem;">${name}</span>
+                </div>
+            `;
+            return col;
+        }
+
+        function selectColor(hex, name) {
+            document.getElementById('ColorName').value = name;
+            document.getElementById('colorPicker').value = hex;
+            document.getElementById('HexCode').value = hex;
+        }
+
+        function renderColorLegend() {
+            const container = document.getElementById('colorLegendContainer');
+            container.innerHTML = '';
+            const colors = Object.entries(colorDictionary);
+            const maxCols = 10;
+            for (let i = 0; i < Math.floor(colors.length / maxCols) * maxCols; i += maxCols) {
+                const row = document.createElement('div');
+                row.className = "row row-cols-10 g-2";
+                for (let j = 0; j < maxCols; j++) {
+                    const [hex, name] = colors[i + j];
+                    row.appendChild(createColorCard(hex, name));
+                }
+                container.appendChild(row);
+            }
+            const remainder = colors.length % maxCols;
+            if (remainder !== 0) {
+                const row = document.createElement('div');
+                row.className = "row g-2";
+                for (let i = colors.length - remainder; i < colors.length; i++) {
+                    const [hex, name] = colors[i];
+                    row.appendChild(createColorCard(hex, name));
+                }
+                container.appendChild(row);
+            }
+        }
+
+        renderColorLegend();
+
+        document.getElementById('colorPicker').addEventListener('input', function () {
+            const hex = this.value.toUpperCase();
+            document.getElementById('HexCode').value = hex;
+            document.getElementById('ColorName').value = colorDictionary[hex] || hex;
+        });
+
+        document.getElementById('colorForm').addEventListener('submit', async function (e) {
+            let colorNameInput = document.getElementById('ColorName');
+            let errorSpan = document.getElementById('colorNameError');
+            let colorName = colorNameInput.value.trim();
+            errorSpan.textContent = '';
+            if (!colorName) {
+                e.preventDefault();
+                errorSpan.textContent = 'Vui lòng nhập hoặc chọn màu';
+                colorNameInput.focus();
+                return;
+            }
+            let response = await fetch('/Colors/CheckColorName?colorName=' + encodeURIComponent(colorName));
+            let result = await response.json();
+            if (result.exists) {
+                e.preventDefault();
+                errorSpan.textContent = 'Tên màu đã tồn tại';
+                colorNameInput.focus();
+            }
+        });
+    </script>
+}

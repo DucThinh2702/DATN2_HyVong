@@ -1,0 +1,109 @@
+﻿@model DATN1WEB.Models.Size
+@{
+    ViewData["Title"] = "Chi tiết kích cỡ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .detail-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+        .detail-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+        }
+
+    .detail-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    .detail-value {
+        font-size: 1.1rem;
+        color: #212529;
+    }
+
+    .btn-custom {
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-eye me-3 text-info"></i>Chi tiết kích cỡ
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Sizes")">Kích cỡ</a></li>
+                    <li class="breadcrumb-item active">Chi tiết</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Section -->
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card detail-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-ruler-combined me-2"></i>Thông tin chi tiết
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-hashtag me-2 text-success"></i>ID kích cỡ
+                    </div>
+                    <div class="detail-value">@Model.SizeID</div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-ruler me-2 text-success"></i>Tên kích cỡ
+                    </div>
+                    <div class="detail-value">@Model.SizeName</div>
+                </div>
+
+                <!-- Nút hành động -->
+                <div class="d-flex gap-3 mt-4">
+                    <a asp-action="Edit" asp-route-id="@Model.SizeID" class="btn btn-warning btn-custom">
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary btn-custom">
+                        <i class="fas fa-arrow-left me-2"></i>Quay lại
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

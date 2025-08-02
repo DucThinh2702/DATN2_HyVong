@@ -1,0 +1,442 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <title>Quên mật khẩu - The Bag Studio</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Free HTML Templates" name="keywords">
+    <meta content="Free HTML Templates" name="description">
+
+    <!-- Favicon -->
+    <link href="img/favicon.ico" rel="icon">
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+<style>
+    /* Màu sắc chủ đạo */
+    :root {
+        --primary-color: #F1C40F;       /* Vàng chính */
+        --primary-dark: #D4AC0D;        /* Vàng đậm cho hover */
+        --dark-color: #343a40;          /* Xám đậm cho background */
+        --text-on-yellow: #343a40;      /* Chữ trên nền vàng */
+    }
+
+    /* Phần auth-left (bên trái) */
+    .auth-left {
+        background: linear-gradient(135deg, var(--dark-color) 0%, #212529 100%);
+        color: white;
+    }
+
+    /* Logo và brand */
+    .brand-primary {
+        background-color: var(--primary-color);
+        color: var(--text-on-yellow);
+        padding: 8px 16px;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    .brand-secondary {
+        background-color: var(--dark-color);
+        color: white;
+        padding: 8px 16px;
+        margin-left: -4px;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    /* Nút chính */
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: var(--text-on-yellow);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .btn-primary:hover {
+        background-color: var(--primary-dark);
+        border-color: var(--primary-dark);
+        color: var(--text-on-yellow);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    /* Nút secondary */
+    .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #5a6268;
+        color: white;
+    }
+
+    /* Focus input */
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(241, 196, 15, .25);
+    }
+
+    /* Header */
+    .bg-light {
+        background-color: white !important;
+        border-bottom: 1px solid #eee;
+    }
+
+    /* Footer */
+    .bg-dark {
+        background-color: var(--dark-color) !important;
+    }
+
+    /* Links */
+    a {
+        color: var(--primary-color);
+    }
+
+    a:hover {
+        color: var(--primary-dark);
+        text-decoration: none;
+    }
+
+    /* Footer styling */
+    .footer-white-text {
+        color: white !important;
+    }
+
+    .footer-white-text h5 {
+        color: white !important;
+    }
+
+    .footer-white-text p {
+        color: white !important;
+    }
+
+    .footer-white-text a {
+        color: white !important;
+    }
+
+    .footer-white-text a:hover {
+        color: var(--primary-color) !important;
+    }
+
+    /* Header top bar */
+    .bg-secondary {
+        background-color: #f8f9fa !important;
+    }
+
+    /* Success message */
+    .alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+
+    /* Info message */
+    .alert-info {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
+    }
+</style>
+</head>
+
+<body>
+    <!-- Header Start -->
+    <div class="container-fluid">
+        <div class="row bg-secondary py-1 px-xl-5">
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="d-inline-flex align-items-center h-100">
+                    <a class="text-body mr-3" href="">Liên hệ</a>
+                    <a class="text-body mr-3" href="">Giúp đỡ</a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center text-lg-right">
+                <div class="d-inline-flex align-items-center">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-light dropdown-toggle" data-toggle="dropdown">Tài
+                            khoản</button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="login.html">Đăng nhập</a>
+                            <a class="dropdown-item" href="register.html">Đăng ký</a>
+                        </div>
+                    </div>
+                    <div class="btn-group mx-2">
+                        <button type="button" class="btn btn-sm btn-light dropdown-toggle" data-toggle="dropdown">Ngôn
+                            ngữ</button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <button class="dropdown-item" type="button">Tiếng việt</button>
+                            <button class="dropdown-item" type="button">Tiếng anh</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row align-items-center bg-light py-3 px-xl-5">
+            <div class="col-lg-4">
+                <a href="index.html" class="text-decoration-none">
+                    <span class="brand-primary">The Bag</span>
+                    <span class="brand-secondary">Studio</span>
+                </a>
+            </div>
+            <div class="col-lg-4 col-6 text-center">
+                <h4 class="m-0" style="color: #343a40;">Khôi phục mật khẩu</h4>
+            </div>
+            <div class="col-lg-4 col-6 text-right">
+                <p class="m-0">Chăm sóc khách hàng</p>
+                <h5 class="m-0">012 345 6789</h5>
+            </div>
+        </div>
+    </div>
+    <!-- Header End -->
+
+    <!-- Forgot Password Form Start -->
+    <div class="container mt-5">
+        <div class="row no-gutters shadow rounded overflow-hidden">
+            <!-- Bên trái -->
+            <div class="col-md-5 auth-left text-white p-4">
+                <div class="brand-logo mb-3">
+                    <span class="brand-primary">The Bag</span>
+                    <span class="brand-secondary">Studio</span>
+                </div>
+                <h4 class="mb-3 font-weight-bold">Khôi phục tài khoản</h4>
+                <p class="mb-4">Đừng lo lắng! Chúng tôi sẽ giúp bạn lấy lại quyền truy cập vào tài khoản một cách nhanh chóng và an toàn.</p>
+
+                <div class="row text-center">
+                    <div class="col-4 mb-4">
+                        <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                        <p><small>Bảo mật tuyệt đối</small></p>
+                    </div>
+                    <div class="col-4 mb-4">
+                        <i class="fas fa-clock fa-2x mb-2"></i>
+                        <p><small>Xử lý nhanh chóng</small></p>
+                    </div>
+                    <div class="col-4 mb-4">
+                        <i class="fas fa-envelope fa-2x mb-2"></i>
+                        <p><small>Gửi qua email</small></p>
+                    </div>
+                    <div class="col-4 mb-4">
+                        <i class="fas fa-key fa-2x mb-2"></i>
+                        <p><small>Mật khẩu mới</small></p>
+                    </div>
+                    <div class="col-4 mb-4">
+                        <i class="fas fa-headset fa-2x mb-2"></i>
+                        <p><small>Hỗ trợ 24/7</small></p>
+                    </div>
+                    <div class="col-4 mb-4">
+                        <i class="fas fa-user-check fa-2x mb-2"></i>
+                        <p><small>Xác thực an toàn</small></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bên phải -->
+            <div class="col-md-7 bg-white p-5">
+                <div id="step1" class="reset-step">
+                    <h3 class="text-center text-dark mb-4">Quên mật khẩu?</h3>
+                    <p class="text-center text-muted mb-4">Nhập địa chỉ email của bạn và chúng tôi sẽ gửi hướng dẫn khôi phục mật khẩu.</p>
+
+                    <form id="forgotPasswordForm">
+                        <div class="form-group">
+                            <label for="email">Địa chỉ email</label>
+                            <input type="email" class="form-control" id="email" placeholder="Nhập email đã đăng ký" required>
+                            <small class="form-text text-muted">Vui lòng nhập email bạn đã sử dụng để đăng ký tài khoản.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block mb-3" id="sendResetBtn">
+                            <i class="fas fa-paper-plane mr-2"></i>Gửi liên kết khôi phục
+                        </button>
+
+                        <div class="text-center">
+                            <p class="mb-2">Nhớ lại mật khẩu? <a href="login.html"><strong>Đăng nhập ngay</strong></a></p>
+                            <p>Chưa có tài khoản? <a href="register.html"><strong>Đăng ký tại đây</strong></a></p>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="step2" class="reset-step" style="display: none;">
+                    <div class="text-center">
+                        <i class="fas fa-check-circle fa-4x text-success mb-4"></i>
+                        <h3 class="text-dark mb-4">Email đã được gửi!</h3>
+                        <div class="alert alert-success">
+                            <strong>Thành công!</strong> Chúng tôi đã gửi liên kết khôi phục mật khẩu đến email của bạn.
+                        </div>
+                        <p class="text-muted mb-4">Vui lòng kiểm tra hộp thư đến (và cả thư mục spam) để tìm email từ The Bag Studio.</p>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <strong>Lưu ý:</strong> Liên kết khôi phục sẽ hết hạn sau 24 giờ vì lý do bảo mật.
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-secondary mr-2" id="resendBtn">
+                                <i class="fas fa-redo mr-2"></i>Gửi lại email
+                            </button>
+                            <a href="login.html" class="btn btn-primary">
+                                <i class="fas fa-arrow-left mr-2"></i>Quay lại đăng nhập
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Forgot Password Form End -->
+
+    <!-- Footer Start -->
+    <div class="container-fluid bg-dark footer-white-text mt-5 pt-5">
+        <div class="row px-xl-5 pt-5">
+            <div class="col-lg-4 col-md-12 mb-5 pr-3 pr-xl-5">
+                <h5 class="footer-white-text text-uppercase mb-4">Liên lạc</h5>
+                <p class="mb-4">Hãy liên lạc với chúng tôi nếu bạn đang thất mất hoặc muốn chúng tôi tư vấn sản phẩm phù
+                    hợp với bạn thì cứ liên lạc với chúng tôi</p>
+                <p class="mb-2"><i class="fa fa-map-marker-alt text-primary mr-3"></i>123 Ngô Quyền, P. Thường Thạnh, Q.
+                    Cái Răng, TP. Cần Thơ</p>
+                <p class="mb-2"><i class="fa fa-envelope text-primary mr-3"></i>nhomhyvongdatn@gmail.com</p>
+                <p class="mb-0"><i class="fa fa-phone-alt text-primary mr-3"></i>012 345 67890</p>
+            </div>
+            <div class="col-lg-8 col-md-12">
+                <div class="row">
+                    <div class="col-md-4 mb-5">
+                        <h5 class="footer-white-text text-uppercase mb-4">Cửa hàng nhanh</h5>
+                        <div class="d-flex flex-column justify-content-start">
+                            <a class="footer-white-text mb-2" href="index.html"><i class="fa fa-angle-right mr-2"></i>Trang
+                                chủ</a>
+                            <a class="footer-white-text mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Cửa hàng của
+                                chúng tôi</a>
+                            <a class="footer-white-text mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Chi tiết cửa
+                                hàng</a>
+                            <a class="footer-white-text mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Giỏ hàng</a>
+                            <a class="footer-white-text mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Thanh toán</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-5">
+                        <h5 class="footer-white-text text-uppercase mb-4">Tài khoản của tôi</h5>
+                        <div class="d-flex flex-column justify-content-start">
+                            <a class="footer-white-text mb-2" href="index.html"><i class="fa fa-angle-right mr-2"></i>Trang
+                                chủ</a>
+                            <a class="footer-white-text mb-2" href="login.html"><i class="fa fa-angle-right mr-2"></i>Đăng
+                                nhập</a>
+                            <a class="footer-white-text mb-2" href="register.html"><i
+                                    class="fa fa-angle-right mr-2"></i>Đăng ký</a>
+                            <a class="footer-white-text mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Giỏ hàng</a>
+                            <a class="footer-white-text mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Thanh toán</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-5">
+                        <h5 class="footer-white-text text-uppercase mb-4">Bản tin</h5>
+                        <p>Hãy tìm hiểu về chúng tôi</p>
+                        <form action="">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Địa chỉ email của bạn">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary">Đăng ký</button>
+                                </div>
+                            </div>
+                        </form>
+                        <h6 class="footer-white-text text-uppercase mt-4 mb-3">Theo đổi chúng tôi</h6>
+                        <div class="d-flex">
+                            <a class="btn btn-primary btn-square mr-2" href="#"><i class="fab fa-twitter"></i></a>
+                            <a class="btn btn-primary btn-square mr-2" href="#"><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-primary btn-square mr-2" href="#"><i class="fab fa-linkedin-in"></i></a>
+                            <a class="btn btn-primary btn-square" href="#"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Footer End -->
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Handle forgot password form submission
+        document.getElementById('forgotPasswordForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const sendBtn = document.getElementById('sendResetBtn');
+
+            // Basic validation
+            if (!email) {
+                alert('Vui lòng nhập địa chỉ email!');
+                return;
+            }
+
+            // Email validation
+            const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Địa chỉ email không hợp lệ!');
+                return;
+            }
+
+            // Show loading state
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang gửi...';
+            sendBtn.disabled = true;
+
+            // Simulate API call
+            setTimeout(() => {
+                // Hide step 1 and show step 2
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+                
+                // Store email for resend functionality
+                localStorage.setItem('resetEmail', email);
+            }, 2000);
+        });
+
+        // Handle resend email
+        document.getElementById('resendBtn').addEventListener('click', function() {
+            const email = localStorage.getItem('resetEmail');
+            const resendBtn = this;
+            
+            if (email) {
+                // Show loading state
+                resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang gửi lại...';
+                resendBtn.disabled = true;
+
+                // Simulate API call
+                setTimeout(() => {
+                    resendBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Đã gửi lại!';
+                    resendBtn.classList.remove('btn-secondary');
+                    resendBtn.classList.add('btn-success');
+                    
+                    // Reset button after 3 seconds
+                    setTimeout(() => {
+                        resendBtn.innerHTML = '<i class="fas fa-redo mr-2"></i>Gửi lại email';
+                        resendBtn.classList.remove('btn-success');
+                        resendBtn.classList.add('btn-secondary');
+                        resendBtn.disabled = false;
+                    }, 3000);
+                }, 1500);
+            }
+        });
+
+        // Clear stored email when page loads
+        window.addEventListener('load', function() {
+            localStorage.removeItem('resetEmail');
+        });
+    </script>
+</body>
+
+</html>

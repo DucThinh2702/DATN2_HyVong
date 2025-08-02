@@ -1,0 +1,624 @@
+﻿@{
+    ViewData["Title"] = "Khách hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        position: relative;
+    }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .customer-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: var(--bg-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .table-modern {
+        border: none;
+    }
+
+        .table-modern th {
+            border: none;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .table-modern td {
+            border: none;
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .table-modern tbody tr {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+            .table-modern tbody tr:hover {
+                background: rgba(255,193,7,0.05);
+                transform: scale(1.01);
+            }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .search-box {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+        .search-box:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+        }
+
+    .modal-content {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    }
+
+    .form-control, .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+        }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-users me-3 text-info"></i>Khách hàng
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Quản lý thông tin khách hàng</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="input-group" style="width: 300px;">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control search-box" placeholder="Tìm kiếm khách hàng...">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Tổng khách hàng</h6>
+                        <h4 class="fw-bold text-dark mb-0">3,892</h4>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>+5.2% tháng này
+                        </small>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10">
+                        <i class="fas fa-users text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Khách hàng mới</h6>
+                        <h4 class="fw-bold text-dark mb-0">156</h4>
+                        <small class="text-success">Tháng này</small>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10">
+                        <i class="fas fa-user-plus text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Khách VIP</h6>
+                        <h4 class="fw-bold text-dark mb-0">234</h4>
+                        <small class="text-warning">
+                            <i class="fas fa-crown me-1"></i>Đặc biệt
+                        </small>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10">
+                        <i class="fas fa-crown text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Đang hoạt động</h6>
+                        <h4 class="fw-bold text-dark mb-0">2,847</h4>
+                        <small class="text-info">
+                            <i class="fas fa-check me-1"></i>Online
+                        </small>
+                    </div>
+                    <div class="stat-icon bg-info bg-opacity-10">
+                        <i class="fas fa-user-check text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="card">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-list me-2 text-primary"></i>Danh sách khách hàng
+        </h5>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-filter me-1"></i>Lọc
+            </button>
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-download me-1"></i>Xuất Excel
+            </button>
+            <a href="@Url.Action("Create", "Customers")" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i>Thêm khách hàng
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-modern mb-0" id="customersTable">
+                <thead>
+                    <tr>
+                        <th>Khách hàng</th>
+                        <th>Liên hệ</th>
+                        <th>Đơn hàng</th>
+                        <th>Tổng chi tiêu</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tham gia</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="customer-avatar me-3">NA</div>
+                                <div>
+                                    <div class="fw-bold">Nguyễn Văn A</div>
+                                    <small class="text-muted">ID: CUST-001</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div class="fw-semibold">nguyenvana@email.com</div>
+                                <small class="text-muted">0901234567</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">12</span>
+                        </td>
+                        <td>
+                            <strong class="text-success">₫15,250,000</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">VIP</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">15/06/2023</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <button class="btn btn-action btn-outline-primary" title="Xem chi tiết" onclick="viewCustomer('CUST-001')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-action btn-outline-info" title="Gửi email">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="customer-avatar me-3">TB</div>
+                                <div>
+                                    <div class="fw-bold">Trần Thị B</div>
+                                    <small class="text-muted">ID: CUST-002</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div class="fw-semibold">tranthib@email.com</div>
+                                <small class="text-muted">0912345678</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">8</span>
+                        </td>
+                        <td>
+                            <strong class="text-success">₫8,500,000</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">Thường xuyên</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">20/08/2023</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <button class="btn btn-action btn-outline-primary" title="Xem chi tiết" onclick="viewCustomer('CUST-002')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-action btn-outline-info" title="Gửi email">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="customer-avatar me-3">LC</div>
+                                <div>
+                                    <div class="fw-bold">Lê Văn C</div>
+                                    <small class="text-muted">ID: CUST-003</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div class="fw-semibold">levanc@email.com</div>
+                                <small class="text-muted">0923456789</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">3</span>
+                        </td>
+                        <td>
+                            <strong class="text-success">₫2,450,000</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">Mới</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">05/01/2024</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <button class="btn btn-action btn-outline-primary" title="Xem chi tiết" onclick="viewCustomer('CUST-003')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-action btn-outline-info" title="Gửi email">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="customer-avatar me-3">PD</div>
+                                <div>
+                                    <div class="fw-bold">Phạm Thị D</div>
+                                    <small class="text-muted">ID: CUST-004</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div class="fw-semibold">phamthid@email.com</div>
+                                <small class="text-muted">0934567890</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">15</span>
+                        </td>
+                        <td>
+                            <strong class="text-success">₫22,680,000</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">VIP</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">10/03/2023</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <button class="btn btn-action btn-outline-primary" title="Xem chi tiết" onclick="viewCustomer('CUST-004')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-action btn-outline-info" title="Gửi email">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="customer-avatar me-3">HE</div>
+                                <div>
+                                    <div class="fw-bold">Hoàng Văn E</div>
+                                    <small class="text-muted">ID: CUST-005</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <div class="fw-semibold">hoangvane@email.com</div>
+                                <small class="text-muted">0945678901</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">1</span>
+                        </td>
+                        <td>
+                            <strong class="text-success">₫920,000</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">Mới</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">13/01/2024</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <button class="btn btn-action btn-outline-primary" title="Xem chi tiết" onclick="viewCustomer('CUST-005')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-action btn-outline-info" title="Gửi email">
+                                    <i class="fas fa-envelope"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Detail Modal -->
+<div class="modal fade" id="customerDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-user-circle me-2 text-info"></i>Chi tiết khách hàng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="customerDetailContent">
+                <!-- Customer details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-envelope me-1"></i>Gửi email
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // View customer details
+    function viewCustomer(customerId) {
+        const customerDetails = {
+            'CUST-001': {
+                id: 'CUST-001',
+                name: 'Nguyễn Văn A',
+                email: 'nguyenvana@email.com',
+                phone: '0901234567',
+                address: '123 Nguyễn Huệ, Quận 1, TP.HCM',
+                birthday: '15/05/1985',
+                gender: 'Nam',
+                joinDate: '15/06/2023',
+                status: 'VIP',
+                orders: 12,
+                totalSpent: '₫15,250,000',
+                lastOrder: '15/01/2024',
+                notes: 'Khách hàng VIP, thường mua túi xách cao cấp'
+            },
+            'CUST-002': {
+                id: 'CUST-002',
+                name: 'Trần Thị B',
+                email: 'tranthib@email.com',
+                phone: '0912345678',
+                address: '456 Lê Lợi, Quận 3, TP.HCM',
+                birthday: '22/08/1990',
+                gender: 'Nữ',
+                joinDate: '20/08/2023',
+                status: 'Thường xuyên',
+                orders: 8,
+                totalSpent: '₫8,500,000',
+                lastOrder: '10/01/2024',
+                notes: 'Khách hàng thân thiết'
+            }
+        };
+
+        const customer = customerDetails[customerId];
+        if (!customer) return;
+
+        const content = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                    </h6>
+                    <p><strong>Mã KH:</strong> ${customer.id}</p>
+                    <p><strong>Họ tên:</strong> ${customer.name}</p>
+                    <p><strong>Email:</strong> ${customer.email}</p>
+                    <p><strong>SĐT:</strong> ${customer.phone}</p>
+                    <p><strong>Địa chỉ:</strong> ${customer.address}</p>
+                    <p><strong>Ngày sinh:</strong> ${customer.birthday}</p>
+                    <p><strong>Giới tính:</strong> ${customer.gender}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-success mb-3">
+                        <i class="fas fa-shopping-cart me-2"></i>Thông tin mua hàng
+                    </h6>
+                    <p><strong>Ngày tham gia:</strong> ${customer.joinDate}</p>
+                    <p><strong>Trạng thái:</strong> <span class="badge bg-warning">${customer.status}</span></p>
+                    <p><strong>Số đơn hàng:</strong> ${customer.orders}</p>
+                    <p><strong>Tổng chi tiêu:</strong> <span class="text-success fw-bold">${customer.totalSpent}</span></p>
+                    <p><strong>Đơn gần nhất:</strong> ${customer.lastOrder}</p>
+                </div>
+            </div>
+            <hr>
+            <h6 class="fw-bold text-info mb-3">
+                <i class="fas fa-sticky-note me-2"></i>Ghi chú
+            </h6>
+            <p class="bg-light p-3 rounded">${customer.notes}</p>
+            <hr>
+            <h6 class="fw-bold text-warning mb-3">
+                <i class="fas fa-history me-2"></i>Lịch sử đơn hàng gần đây
+            </h6>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Ngày</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="order-id">#ORD-1247</span></td>
+                            <td>15/01/2024</td>
+                            <td><strong class="text-success">₫1,250,000</strong></td>
+                            <td><span class="badge bg-success">Hoàn thành</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="order-id">#ORD-1235</span></td>
+                            <td>28/12/2023</td>
+                            <td><strong class="text-success">₫850,000</strong></td>
+                            <td><span class="badge bg-success">Hoàn thành</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        document.getElementById('customerDetailContent').innerHTML = content;
+        const modal = new bootstrap.Modal(document.getElementById('customerDetailModal'));
+        modal.show();
+    }
+
+    // Search functionality
+    document.querySelector('input[placeholder="Tìm kiếm khách hàng..."]').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#customersTable tbody tr');
+
+        rows.forEach(row => {
+            const customerName = row.querySelector('.fw-bold').textContent.toLowerCase();
+            const email = row.querySelector('.fw-semibold').textContent.toLowerCase();
+            const customerId = row.querySelector('small').textContent.toLowerCase();
+
+            if (customerName.includes(searchTerm) || email.includes(searchTerm) || customerId.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+</script>

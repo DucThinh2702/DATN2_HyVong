@@ -1,0 +1,326 @@
+﻿@model IEnumerable<DATN1API.Models.Order>
+@{
+    ViewData["Title"] = "Đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        position: relative;
+    }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .table-modern {
+        border: none;
+    }
+
+        .table-modern th {
+            border: none;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .table-modern td {
+            border: none;
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .table-modern tbody tr {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+            .table-modern tbody tr:hover {
+                background: rgba(255,193,7,0.05);
+                transform: scale(1.01);
+            }
+
+    .badge-status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .order-id {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .customer-info {
+        line-height: 1.4;
+    }
+
+        .customer-info small {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+
+    .amount {
+        font-weight: 700;
+        color: #28a745;
+        font-size: 1.1rem;
+    }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-shopping-cart me-3 text-primary"></i>Đơn hàng
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Quản lý các đơn đặt hàng</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary">
+                <i class="fas fa-download me-2"></i>Xuất Excel
+            </button>
+            <button class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Tạo đơn hàng
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Thống kê đơn hàng -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Tổng đơn hàng</h6>
+                        <h4 class="fw-bold text-dark mb-0">@Model.Count()</h4>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>+12% so với tháng trước
+                        </small>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10">
+                        <i class="fas fa-file-invoice text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Chờ xử lý</h6>
+                        <h4 class="fw-bold text-dark mb-0">@Model.Count(x => x.OrderStatus?.ToLower() == "đang xử lý")</h4>
+                        <small class="text-warning">
+                            <i class="fas fa-clock me-1"></i>Cần xử lý
+                        </small>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10">
+                        <i class="fas fa-spinner text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Hoàn thành</h6>
+                        <h4 class="fw-bold text-dark mb-0">@Model.Count(x => x.OrderStatus?.ToLower() == "hoàn thành")</h4>
+                        <small class="text-success">
+                            <i class="fas fa-check me-1"></i>Thành công
+                        </small>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10">
+                        <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase text-muted small mb-1">Đã huỷ</h6>
+                        <h4 class="fw-bold text-dark mb-0">@Model.Count(x => x.OrderStatus?.ToLower() == "đã huỷ")</h4>
+                        <small class="text-danger">
+                            <i class="fas fa-times me-1"></i>Đã hủy
+                        </small>
+                    </div>
+                    <div class="stat-icon bg-danger bg-opacity-10">
+                        <i class="fas fa-times-circle text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bảng đơn hàng -->
+<div class="card">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-list me-2 text-primary"></i>Danh sách đơn hàng
+        </h5>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-filter me-1"></i>Lọc
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Tất cả</a></li>
+                    <li><a class="dropdown-item" href="#">Chờ xử lý</a></li>
+                    <li><a class="dropdown-item" href="#">Đã giao</a></li>
+                    <li><a class="dropdown-item" href="#">Hoàn thành</a></li>
+                    <li><a class="dropdown-item" href="#">Đã hủy</a></li>
+                </ul>
+            </div>
+            <button class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-download me-1"></i>Xuất
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-modern mb-0">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Ngày đặt</th>
+                        <th>Sản phẩm</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <span class="order-id">#ORD-@item.OrderId</span>
+                            </td>
+                            <td>
+                                <div class="customer-info">
+                                    <div class="fw-semibold">@item.RecipientName</div>
+                                    <small>@item.RecipientPhone</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-muted">@item.OrderDate?.ToString("dd/MM/yyyy")</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">@item.Quantity sản phẩm</span>
+                            </td>
+                            <td>
+                                <span class="amount">@string.Format("{0:#,##0}₫", item.TotalAmount)</span>
+                            </td>
+                            <td>
+                                @{
+                                    var status = item.OrderStatus?.ToLower();
+                                }
+                                @switch (status)
+                                {
+                                    case "processing":
+                                        <span class="badge badge-status bg-primary">Đang xử lý</span>
+                                        break;
+                                    case "shipped":
+                                        <span class="badge badge-status bg-info">Đã giao</span>
+                                        break;
+                                    case "delivered":
+                                        <span class="badge badge-status bg-success">Hoàn thành</span>
+                                        break;
+                                    case "cancelled":
+                                        <span class="badge badge-status bg-danger">Đã huỷ</span>
+                                        break;
+                                    case "pending":
+                                        <span class="badge badge-status bg-warning">Chờ thanh toán</span>
+                                        break;
+                                    default:
+                                        <span class="badge badge-status bg-secondary">@item.OrderStatus</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a href="@Url.Action("Details", "Orders", new { id = item.OrderId })"
+                                       class="btn btn-action btn-outline-info" title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-action btn-outline-success" title="In hóa đơn">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

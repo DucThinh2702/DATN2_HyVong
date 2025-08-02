@@ -1,0 +1,596 @@
+﻿@using DATN1API.Models.ViewModels
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        position: relative;
+    }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .stat-card .card-body {
+            padding: 2rem;
+        }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.8;
+    }
+
+    .chart-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .activity-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+
+        .activity-item:hover {
+            background: rgba(255,193,7,0.05);
+            border-radius: 8px;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .table-modern {
+        border: none;
+    }
+
+        .table-modern th {
+            border: none;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .table-modern td {
+            border: none;
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .table-modern tbody tr {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+            .table-modern tbody tr:hover {
+                background: rgba(255,193,7,0.05);
+                transform: scale(1.01);
+            }
+
+    .badge-status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+    .content-header {
+        background: white;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .notification-dropdown {
+        min-width: 350px;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        padding: 0;
+    }
+
+    .notification-item {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+
+        .notification-item:hover {
+            background: rgba(255,193,7,0.05);
+        }
+
+    @@media (max-width: 768px) {
+        .stat-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+        }
+
+        .content-header {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-chart-pie me-3 text-warning"></i>Dashboard
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item active">Tổng quan hoạt động cửa hàng</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-label text-success mb-2">Doanh thu tháng này</div>
+                        <div class="stat-value text-dark">@Model.DoanhThuThangNay.ToString("N0")</div>
+                        <small class="text-muted">VNĐ</small>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10">
+                        <i class="fas fa-dollar-sign text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-label text-primary mb-2">Đơn hàng mới</div>
+                        <div class="stat-value text-dark">@Model.DonHangMoi.ToString("N0")</div>
+                        <small class="text-muted">Đơn hàng</small>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10">
+                        <i class="fas fa-shopping-cart text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-label text-info mb-2">Khách hàng đăng ký</div>
+                        <div class="stat-value text-dark">@Model.SoKhachHangMoi.ToString("N0")</div>
+                        <small class="text-muted">Khách hàng</small>
+                    </div>
+                    <div class="stat-icon bg-info bg-opacity-10">
+                        <i class="fas fa-users text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-label text-warning mb-2">Sản phẩm trong kho</div>
+                        <div class="stat-value text-dark">@Model.TongSanPhamTrongKho.ToString("N0")</div>
+                        <small class="text-muted">Sản phẩm</small>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10">
+                        <i class="fas fa-shopping-bag text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Activity Row -->
+<div class="row mb-4">
+    <!-- Revenue Chart -->
+    <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="card chart-card">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Doanh thu & Đơn hàng
+                </h5>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary active">7 ngày</button>
+                    <button class="btn btn-outline-primary">30 ngày</button>
+                    <button class="btn btn-outline-primary">90 ngày</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="height: 350px;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="col-xl-4 col-lg-5 mb-4">
+        <div class="card chart-card">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clock me-2 text-info"></i>Hoạt động gần đây
+                </h5>
+            </div>
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                <div class="activity-item">
+                    <div class="d-flex align-items-start">
+                        <div class="activity-icon bg-primary text-white me-3">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Đơn hàng mới #ORD-1247</h6>
+                            <p class="mb-1 text-muted small">Nguyễn Văn A đã đặt mua Túi xách da cao cấp</p>
+                            <small class="text-muted">2 phút trước</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="d-flex align-items-start">
+                        <div class="activity-icon bg-success text-white me-3">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Khách hàng mới đăng ký</h6>
+                            <p class="mb-1 text-muted small">Trần Thị B vừa tạo tài khoản mới</p>
+                            <small class="text-muted">5 phút trước</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="d-flex align-items-start">
+                        <div class="activity-icon bg-warning text-white me-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Sản phẩm sắp hết hàng</h6>
+                            <p class="mb-1 text-muted small">Balo du lịch chỉ còn 5 sản phẩm</p>
+                            <small class="text-muted">10 phút trước</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="d-flex align-items-start">
+                        <div class="activity-icon bg-info text-white me-3">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Thanh toán thành công</h6>
+                            <p class="mb-1 text-muted small">Đơn hàng #ORD-1245 đã được thanh toán</p>
+                            <small class="text-muted">15 phút trước</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Tables Row -->
+<div class="row">
+    <!-- Recent Orders -->
+    <div class="col-xl-6 mb-4">
+        <div class="card chart-card">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list-alt me-2 text-primary"></i>Đơn hàng gần đây
+                </h5>
+                <div>
+                    <button class="btn btn-outline-primary btn-sm me-2">
+                        <i class="fas fa-download me-1"></i>Xuất Excel
+                    </button>
+                    <button class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Thêm đơn hàng
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-modern mb-0">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var dh in Model.DonHangGanDay)
+                            {
+                                <tr>
+                                    <td><strong class="text-primary">@dh.MaDon</strong></td>
+                                    <td>@dh.TenKhachHang</td>
+                                    <td><strong>@dh.TongTien.ToString("N0") VNĐ</strong></td>
+                                    <td><span class="badge badge-status bg-info">@dh.TrangThai</span></td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <button class="btn btn-action btn-outline-primary" title="Xem">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-action btn-outline-warning" title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-action btn-outline-danger" title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Best Selling Products -->
+    <div class="col-xl-6 mb-4">
+        <div class="card chart-card">
+            <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-fire me-2 text-danger"></i>Sản phẩm bán chạy
+                </h5>
+                <div>
+                    <button class="btn btn-outline-primary btn-sm me-2">
+                        <i class="fas fa-chart-bar me-1"></i>Xem báo cáo
+                    </button>
+                    <button class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Thêm sản phẩm
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-modern mb-0">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th>Đã bán</th>
+                                <th>Doanh thu</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var sp in Model.SanPhamBanChay)
+                            {
+                                <tr>
+                                    <td><strong>@sp.TenSanPham</strong></td>
+                                    <td><span class="badge bg-light text-dark">@sp.DanhMuc</span></td>
+                                    <td><strong class="text-success">@sp.SoLuongBan</strong></td>
+                                    <td><strong class="text-primary">@sp.DoanhThu.ToString("N0") VNĐ</strong></td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <button class="btn btn-action btn-outline-primary" title="Xem">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-action btn-outline-warning" title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Chart Configuration
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(Json.Serialize(Model.LabelsDoanhThu)),
+            datasets: [{
+                label: 'Doanh thu (triệu VNĐ)',
+                data: @Html.Raw(Json.Serialize(Model.DataDoanhThu.Select(x => Math.Round(x / 1000000M, 2)))),
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255,193,7,0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#ffc107',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }, {
+                label: 'Đơn hàng',
+                data: @Html.Raw(Json.Serialize(Model.DataDonHang)),
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13,110,253,0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#0d6efd',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#ffc107',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    displayColors: true
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#6c757d'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    },
+                    ticks: {
+                        color: '#6c757d'
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+
+    // Logout function
+    function logout() {
+        if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+            window.location.href = '@Url.Action("Logout", "Account")';
+        }
+    }
+
+    // Add loading states to buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            if (this.getAttribute('data-bs-toggle') || this.onclick) return;
+
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang xử lý...';
+            this.disabled = true;
+
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.disabled = false;
+            }, 2000);
+        });
+    });
+
+    // Auto refresh data every 30 seconds
+    setInterval(() => {
+        // Add subtle animation to indicate data refresh
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.style.transform = 'scale(1.02)';
+            setTimeout(() => {
+                card.style.transform = 'scale(1)';
+            }, 200);
+        });
+    }, 30000);
+</script>

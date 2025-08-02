@@ -1,0 +1,156 @@
+﻿@model DATN1WEB.Models.Size
+@{
+    ViewData["Title"] = "Xóa kích cỡ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .delete-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+        .delete-card .card-header {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+        }
+
+    .warning-box {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .detail-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    .detail-value {
+        font-size: 1.1rem;
+        color: #212529;
+    }
+
+    .btn-custom {
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-trash-alt me-3 text-danger"></i>Xóa kích cỡ
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Sizes")">Kích cỡ</a></li>
+                    <li class="breadcrumb-item active">Xóa</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Section -->
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card delete-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="warning-box">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning me-3"></i>
+                        <div>
+                            <h6 class="mb-1 text-warning">Cảnh báo!</h6>
+                            <p class="mb-0">Bạn có chắc chắn muốn xóa kích cỡ này không? Hành động này không thể hoàn tác.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-hashtag me-2 text-success"></i>ID kích cỡ
+                    </div>
+                    <div class="detail-value">@Model.SizeID</div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">
+                        <i class="fas fa-ruler me-2 text-success"></i>Tên kích cỡ
+                    </div>
+                    <div class="detail-value">@Model.SizeName</div>
+                </div>
+
+                <form asp-action="Delete" method="post" class="mt-4">
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.SizeID)
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-danger btn-custom">
+                            <i class="fas fa-trash-alt me-2"></i>Xóa
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary btn-custom">
+                            <i class="fas fa-arrow-left me-2"></i>Hủy
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        var successMessage = '@Html.Raw(TempData["SuccessMessage"])';
+        var errorMessage = '@Html.Raw(TempData["ErrorMessage"])';
+        if (successMessage) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: successMessage,
+                timer: 3000,
+                timerProgressBar: true,
+                confirmButtonText: 'OK'
+            });
+        }
+        if (errorMessage) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: errorMessage,
+                confirmButtonText: 'OK'
+            });
+        }
+    </script>
+}

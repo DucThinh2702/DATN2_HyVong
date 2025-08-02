@@ -1,0 +1,661 @@
+﻿@model DATN1API.Models.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký - The Bag Studio";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1d29 0%, #2c3142 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 700px;
+            transition: all 0.3s ease;
+        }
+
+            .auth-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            }
+
+        .auth-header {
+            text-align: center;
+            padding: 40px 40px 20px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 15px;
+            color: #1a1d29;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .back-btn:hover {
+                background: white;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                color: #1a1d29;
+                text-decoration: none;
+            }
+
+        .brand-logo {
+            display: inline-flex;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+            .brand-logo .logo-left {
+                background: #6c757d;
+                color: #ffc107;
+                padding: 12px 16px;
+                font-weight: bold;
+                font-size: 16px;
+            }
+
+            .brand-logo .logo-right {
+                background: #ffc107;
+                color: #1a1d29;
+                padding: 12px 16px;
+                font-weight: bold;
+                font-size: 16px;
+            }
+
+        .auth-title {
+            color: #1a1d29;
+            font-weight: 700;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            color: #6c757d;
+            font-size: 16px;
+            margin-bottom: 0;
+        }
+
+        .auth-body {
+            padding: 0 40px 40px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-row-three {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #1a1d29;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+            .form-label i {
+                margin-right: 8px;
+                color: #ffc107;
+            }
+
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+            .form-control:focus {
+                border-color: #ffc107;
+                box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+                outline: none;
+            }
+
+            .form-control.is-invalid {
+                border-color: #dc3545;
+            }
+
+        .invalid-feedback {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .password-field {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+            .password-toggle:hover {
+                color: #ffc107;
+            }
+
+        .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+            .form-select:focus {
+                border-color: #ffc107;
+                box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+                outline: none;
+            }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+            .requirement i {
+                margin-right: 8px;
+                font-size: 10px;
+            }
+
+            .requirement.valid {
+                color: #28a745;
+            }
+
+            .requirement.invalid {
+                color: #dc3545;
+            }
+
+        .btn-primary {
+            background: #ffc107;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 30px;
+            font-weight: 600;
+            font-size: 16px;
+            color: #1a1d29;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+            .btn-primary:hover {
+                background: #e0a800;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+                color: #1a1d29;
+            }
+
+            .btn-primary:active {
+                transform: translateY(0);
+            }
+
+            .btn-primary:disabled {
+                background: #e9ecef;
+                color: #6c757d;
+                cursor: not-allowed;
+                transform: none;
+                box-shadow: none;
+            }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .auth-link {
+            color: #ffc107;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+            .auth-link:hover {
+                color: #e0a800;
+                text-decoration: underline;
+            }
+
+        .alert {
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .form-row, .form-row-three {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .auth-header {
+                padding: 30px 20px 15px;
+            }
+
+            .auth-body {
+                padding: 0 20px 30px;
+            }
+
+            .auth-title {
+                font-size: 24px;
+            }
+
+            .auth-subtitle {
+                font-size: 14px;
+            }
+        }
+
+        /* Animation */
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .invalid-feedback.d-block {
+            display: block !important;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .form-control.input-validation-error,
+        .form-select.input-validation-error {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+
+        .field-validation-error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <a href="/Account/Login" class="back-btn">
+        <i class="fas fa-arrow-left"></i>
+        Quay lại đăng nhập
+    </a>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="brand-logo">
+                    <span class="logo-left">THE BAG</span>
+                    <span class="logo-right">STUDIO</span>
+                </div>
+                <h1 class="auth-title">Đăng Ký</h1>
+                <p class="auth-subtitle">Điền thông tin để tạo tài khoản The Bag Studio</p>
+            </div>
+
+            <div class="auth-body">
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Vui lòng kiểm tra lại thông tin:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <li>@error.ErrorMessage</li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
+                {
+                    <div class="alert alert-success" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @ViewBag.SuccessMessage
+                    </div>
+                }
+
+                <form method="post" id="registerForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="FullName">
+                                <i class="fas fa-user"></i>
+                                Họ và Tên <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên đầy đủ" />
+                            <span asp-validation-for="FullName" class="invalid-feedback d-block"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="Username">
+                                <i class="fas fa-user-circle"></i>
+                                Tên Đăng Nhập <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Username" class="form-control" placeholder="Nhập tên đăng nhập (4-100 ký tự, chỉ chữ và số)" />
+                            <span asp-validation-for="Username" class="invalid-feedback d-block"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="Email">
+                                <i class="fas fa-envelope"></i>
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Email" class="form-control" placeholder="Nhập địa chỉ email" />
+                            <span asp-validation-for="Email" class="invalid-feedback d-block"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="PhoneNumber">
+                                <i class="fas fa-phone"></i>
+                                Số Điện Thoại <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="Nhập số điện thoại (10 chữ số)" />
+                            <span asp-validation-for="PhoneNumber" class="invalid-feedback d-block"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="Password">
+                                <i class="fas fa-lock"></i>
+                                Mật Khẩu <span class="text-danger">*</span>
+                            </label>
+                            <div class="password-field">
+                                <input asp-for="Password" type="password" class="form-control" placeholder="Tạo mật khẩu (tối thiểu 6 ký tự)" />
+                                <button type="button" class="password-toggle" onclick="togglePassword('Password')">
+                                    <i class="fas fa-eye" id="Password-icon"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="invalid-feedback d-block"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="ConfirmPassword">
+                                <i class="fas fa-lock"></i>
+                                Xác Nhận Mật Khẩu <span class="text-danger">*</span>
+                            </label>
+                            <div class="password-field">
+                                <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Nhập lại mật khẩu" />
+                                <button type="button" class="password-toggle" onclick="togglePassword('ConfirmPassword')">
+                                    <i class="fas fa-eye" id="ConfirmPassword-icon"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="ConfirmPassword" class="invalid-feedback d-block"></span>
+                        </div>
+                    </div>
+
+                    <div class="password-requirements" id="passwordRequirements">
+                        <div class="requirement" id="lengthReq">
+                            <i class="fas fa-times"></i>
+                            Ít nhất 6 ký tự
+                        </div>
+                        <div class="requirement" id="uppercaseReq">
+                            <i class="fas fa-times"></i>
+                            Có chữ hoa
+                        </div>
+                        <div class="requirement" id="lowercaseReq">
+                            <i class="fas fa-times"></i>
+                            Có chữ thường
+                        </div>
+                        <div class="requirement" id="numberReq">
+                            <i class="fas fa-times"></i>
+                            Có số
+                        </div>
+                        <div class="requirement" id="specialCharReq">
+                            <i class="fas fa-times"></i>
+                            Ít nhất 1 ký tự đặc biệt
+                        </div>
+
+                    </div>
+
+                    <div class="form-row-three">
+                        <div class="form-group">
+                            <label class="form-label" for="Gender">
+                                <i class="fas fa-venus-mars"></i>
+                                Giới Tính <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Gender" class="form-select">
+                                <option value="">Chọn giới tính</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                            <span asp-validation-for="Gender" class="invalid-feedback d-block"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="BirthDate">
+                                <i class="fas fa-calendar-alt"></i>
+                                Ngày Sinh <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="BirthDate" type="date" class="form-control" />
+                            <span asp-validation-for="BirthDate" class="invalid-feedback d-block"></span>
+                            <small class="text-muted">Bạn phải đủ 15 tuổi để đăng ký</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="Address">
+                                <i class="fas fa-map-marker-alt"></i>
+                                Địa Chỉ <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Address" class="form-control" placeholder="Nhập địa chỉ" />
+                            <span asp-validation-for="Address" class="invalid-feedback d-block"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="registerBtn">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Đăng Ký
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>Đã có tài khoản? <a href="/Account/Login" class="auth-link">Đăng nhập ngay</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery Validation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+                        // Toggle password visibility
+                        function togglePassword(fieldId) {
+                            const field = document.getElementById(fieldId);
+                            const icon = document.getElementById(fieldId + '-icon');
+
+                            if (field.type === 'password') {
+                                field.type = 'text';
+                                icon.classList.remove('fa-eye');
+                                icon.classList.add('fa-eye-slash');
+                            } else {
+                                field.type = 'password';
+                                icon.classList.remove('fa-eye-slash');
+                                icon.classList.add('fa-eye');
+                            }
+                        }
+
+        // Password requirements visual feedback (UI only, not validation)
+        function updatePasswordRequirements(password) {
+            const requirements = {
+                length: password.length >= 6,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /\d/.test(password),
+                specialChar: /[!@@#$%^&*(),.?":{}|<>]/.test(password)  // Kiểm tra ký tự đặc biệt
+            };
+
+            updateRequirement('lengthReq', requirements.length);
+            updateRequirement('uppercaseReq', requirements.uppercase);
+            updateRequirement('lowercaseReq', requirements.lowercase);
+            updateRequirement('numberReq', requirements.number);
+            updateRequirement('specialCharReq', requirements.specialChar);  // Cập nhật kiểm tra ký tự đặc biệt
+        }
+
+        function updateRequirement(id, isValid) {
+            const element = document.getElementById(id);
+            const icon = element.querySelector('i');
+
+            if (isValid) {
+                element.classList.add('valid');
+                element.classList.remove('invalid');
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-check');
+            } else {
+                element.classList.add('invalid');
+                element.classList.remove('valid');
+                icon.classList.remove('fa-check');
+                icon.classList.add('fa-times');
+            }
+        }
+
+        // Visual feedback for password requirements
+        document.getElementById('Password').addEventListener('input', function() {
+            updatePasswordRequirements(this.value);
+        });
+
+
+                        // Phone number formatting (UI enhancement only)
+                        document.getElementById('PhoneNumber').addEventListener('input', function() {
+                            let value = this.value.replace(/\D/g, '').slice(0, 10);
+                            this.value = value;
+                        });
+
+                        // Form submission with loading state
+                        document.getElementById('registerForm').addEventListener('submit', function() {
+                            const submitBtn = document.getElementById('registerBtn');
+                            const originalText = submitBtn.innerHTML;
+
+                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang đăng ký...';
+                            submitBtn.disabled = true;
+
+                            // Re-enable button after 10 seconds if form doesn't submit
+                            setTimeout(() => {
+                                if (submitBtn.disabled) {
+                                    submitBtn.innerHTML = originalText;
+                                    submitBtn.disabled = false;
+                                }
+                            }, 10000);
+                        });
+
+                // Load remembered username on page load
+                window.addEventListener('load', function() {
+                    const rememberedUsername = localStorage.getItem('rememberedUsername');
+                    if (rememberedUsername) {
+                        document.getElementById('Email').value = rememberedUsername;
+                    }
+
+                    // Ensure password fields are always hidden on page load
+                    const passwordField = document.getElementById('Password');
+                    const passwordIcon = document.getElementById('Password-icon');
+                    const confirmPasswordField = document.getElementById('ConfirmPassword');
+                    const confirmPasswordIcon = document.getElementById('ConfirmPassword-icon');
+
+                    if (passwordField && passwordIcon) {
+                        passwordField.type = 'password';
+                        passwordIcon.classList.remove('fa-eye-slash');
+                        passwordIcon.classList.add('fa-eye');
+                    }
+
+                    if (confirmPasswordField && confirmPasswordIcon) {
+                        confirmPasswordField.type = 'password';
+                        confirmPasswordIcon.classList.remove('fa-eye-slash');
+                        confirmPasswordIcon.classList.add('fa-eye');
+                    }
+                });
+    </script>
+</body>
+</html>

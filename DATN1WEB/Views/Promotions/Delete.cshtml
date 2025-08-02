@@ -1,0 +1,233 @@
+﻿@model DATN1API.Models.Promotion
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Xóa mã giảm giá";
+}
+
+<style>
+    .delete-container {
+        background: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+        margin-top: 2rem;
+    }
+
+        .delete-container h2 {
+            color: #dc3545;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #dc3545;
+        }
+
+    .details dt {
+        font-weight: 600;
+        color: var(--bg-dark);
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .details dd {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        color: #495057;
+    }
+
+        .details dd:last-child,
+        .details dt:last-child {
+            border-bottom: none;
+        }
+
+    .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+    .btn-danger {
+        background: #dc3545;
+        border-color: #dc3545;
+    }
+
+        .btn-danger:hover {
+            background: #c82333;
+            border-color: #bd2130;
+        }
+
+    .btn-secondary {
+        border: 2px solid #6c757d;
+    }
+
+        .btn-secondary:hover {
+            background: #6c757d;
+            border-color: #6c757d;
+        }
+
+    .alert-warning {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .warning-icon {
+        font-size: 3rem;
+        color: #dc3545;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-trash-alt me-3 text-danger"></i>Xóa mã giảm giá
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("MaGiamGia", "Admin")">Mã giảm giá</a></li>
+                    <li class="breadcrumb-item active">Xóa</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="delete-container">
+    <div class="text-center mb-4">
+        <i class="fas fa-exclamation-triangle warning-icon"></i>
+        <h2>Xác nhận xóa mã giảm giá</h2>
+        <div class="alert alert-warning">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác. Mã giảm giá sẽ bị xóa vĩnh viễn khỏi hệ thống.
+        </div>
+    </div>
+
+    <dl class="row details">
+        <dt class="col-sm-4">
+            <i class="fas fa-tag text-primary me-2"></i>Tên mã giảm giá
+        </dt>
+        <dd class="col-sm-8">
+            <strong>@Model.PromoName</strong>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-code text-warning me-2"></i>Mã tự tạo
+        </dt>
+        <dd class="col-sm-8">
+            <span class="badge bg-warning text-dark">@Model.PromoNameCode</span>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-percent text-info me-2"></i>Loại giảm giá
+        </dt>
+        <dd class="col-sm-8">
+            <span class="badge bg-light text-dark">@Model.PromoType</span>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-gift text-success me-2"></i>Giá trị giảm
+        </dt>
+        <dd class="col-sm-8">
+            <strong class="text-danger">@FormatDiscount(Model.DiscountValue, Model.PromoType)</strong>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-shopping-cart text-primary me-2"></i>Đơn tối thiểu
+        </dt>
+        <dd class="col-sm-8">
+            <strong class="text-primary">@FormatCurrency(Model.MinOrderAmount)</strong>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-calendar-alt text-info me-2"></i>Thời gian áp dụng
+        </dt>
+        <dd class="col-sm-8">
+            <span class="badge bg-info">@Model.StartDate?.ToString("dd/MM/yyyy")</span>
+            <i class="fas fa-arrow-right mx-2"></i>
+            <span class="badge bg-info">@Model.EndDate?.ToString("dd/MM/yyyy")</span>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-sort-numeric-up text-primary me-2"></i>Số lượng / Đã dùng
+        </dt>
+        <dd class="col-sm-8">
+            <strong class="text-primary">@Model.Quantity</strong> / <strong class="text-success">@Model.UsedQuantity</strong>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-users text-info me-2"></i>Đối tượng áp dụng
+        </dt>
+        <dd class="col-sm-8">
+            <span class="badge bg-light text-dark">@Model.Status</span>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-align-left text-secondary me-2"></i>Mô tả
+        </dt>
+        <dd class="col-sm-8">
+            <p class="mb-0">@Model.Description</p>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-truck text-primary me-2"></i>Đơn vị vận chuyển
+        </dt>
+        <dd class="col-sm-8">
+            @if (Model.ShippingProviders != null && Model.ShippingProviders.Any())
+            {
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var provider in Model.ShippingProviders)
+                    {
+                        <span class="badge bg-primary">@provider.ShippingProviderName</span>
+                    }
+                </div>
+            }
+            else
+            {
+                <em class="text-muted">Không có</em>
+            }
+        </dd>
+    </dl>
+
+    <form asp-action="Delete" method="post" class="text-center">
+        <input type="hidden" asp-for="PromoCode" />
+        <button type="submit" class="btn btn-danger me-3" onclick="return confirm('Bạn có chắc chắn muốn xóa mã giảm giá này không?')">
+            <i class="fas fa-trash me-2"></i>Xóa mã
+        </button>
+        <a asp-action="MaGiamGia" asp-controller="Admin" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Trở về
+        </a>
+    </form>
+</div>
+
+@functions {
+    string FormatCurrency(decimal? value)
+    {
+        if (value == null) return "0";
+        var amount = value.Value;
+        if (amount >= 1000)
+            return $"{amount / 1000:#.##} triệu";
+        else
+            return $"{amount:#.##}K";
+    }
+
+    string FormatDiscount(decimal? value, string type)
+    {
+        if (value == null) return "0";
+        if (type == "Phần trăm" || type.Contains("%"))
+            return $"{Math.Round(value.Value, 0)}%";
+        return FormatCurrency(value);
+    }
+}

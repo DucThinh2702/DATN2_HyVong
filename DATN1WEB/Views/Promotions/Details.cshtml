@@ -1,0 +1,241 @@
+﻿@model DATN1API.Models.Promotion
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Chi tiết mã giảm giá";
+}
+
+<style>
+    .voucher-detail {
+        background: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+        .voucher-detail dl {
+            margin-bottom: 2rem;
+        }
+
+        .voucher-detail dt {
+            font-weight: 600;
+            color: var(--bg-dark);
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .voucher-detail dd {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            color: #495057;
+        }
+
+            .voucher-detail dd:last-child,
+            .voucher-detail dt:last-child {
+                border-bottom: none;
+            }
+
+    .badge {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .btn {
+        padding: 0.75rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+    .btn-warning {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: var(--bg-dark);
+    }
+
+        .btn-warning:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: var(--bg-dark);
+        }
+
+    .btn-secondary {
+        border: 2px solid #6c757d;
+    }
+
+        .btn-secondary:hover {
+            background: #6c757d;
+            border-color: #6c757d;
+        }
+
+    .detail-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+    }
+
+    .shipping-providers {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+    }
+
+        .shipping-providers ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .shipping-providers li {
+            padding: 0.25rem 0;
+            color: #495057;
+        }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-info-circle me-3 text-info"></i>Chi tiết mã giảm giá
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("MaGiamGia", "Admin")">Mã giảm giá</a></li>
+                    <li class="breadcrumb-item active">Chi tiết</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-warning" asp-action="Edit" asp-route-id="@Model.PromoCode">
+                <i class="fas fa-edit me-2"></i>Chỉnh sửa
+            </a>
+            <a class="btn btn-secondary" asp-action="MaGiamGia" asp-controller="Admin">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="voucher-detail">
+    <dl class="row">
+        <dt class="col-sm-4">
+            <i class="fas fa-tag text-primary me-2"></i>Tên mã giảm giá:
+        </dt>
+        <dd class="col-sm-8">
+            <strong>@Model.PromoName</strong>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-code text-warning me-2"></i>Mã sử dụng:
+        </dt>
+        <dd class="col-sm-8">
+            <span class="badge bg-warning text-dark">@Model.PromoNameCode</span>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-gift text-success me-2"></i>Ưu đãi:
+        </dt>
+        <dd class="col-sm-8">
+            <strong class="text-danger">Giảm @FormatDiscount(Model.DiscountValue, Model.PromoType)</strong>
+            cho đơn từ <strong class="text-primary">@FormatCurrency(Model.MinOrderAmount)</strong>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-calendar-alt text-info me-2"></i>Thời gian áp dụng:
+        </dt>
+        <dd class="col-sm-8">
+            <span class="badge bg-info">@Model.StartDate?.ToString("dd.MM.yyyy")</span>
+            <i class="fas fa-arrow-right mx-2"></i>
+            <span class="badge bg-info">@Model.EndDate?.ToString("dd.MM.yyyy")</span>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-clock text-warning me-2"></i>HSD:
+        </dt>
+        <dd class="col-sm-8">
+            <span class="badge bg-warning text-dark">@Model.EndDate?.ToString("dd.MM.yyyy")</span>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-sort-numeric-up text-primary me-2"></i>Số lượng:
+        </dt>
+        <dd class="col-sm-8">
+            <strong class="text-primary">@Model.Quantity</strong>
+            <span class="text-muted">|</span>
+            Đã dùng: <strong class="text-success">@Model.UsedQuantity</strong>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-users text-info me-2"></i>Đối tượng áp dụng:
+        </dt>
+        <dd class="col-sm-8">
+            <span class="badge bg-light text-dark">@Model.Status</span>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-align-left text-secondary me-2"></i>Mô tả:
+        </dt>
+        <dd class="col-sm-8">
+            <p class="mb-0">@Model.Description</p>
+        </dd>
+
+        <dt class="col-sm-4">
+            <i class="fas fa-truck text-primary me-2"></i>Đơn vị vận chuyển:
+        </dt>
+        <dd class="col-sm-8">
+            @if (Model.ShippingProviders != null && Model.ShippingProviders.Any())
+            {
+                <div class="shipping-providers">
+                    <ul class="mb-0">
+                        @foreach (var provider in Model.ShippingProviders)
+                        {
+                            <li>
+                                <i class="fas fa-shipping-fast text-primary me-2"></i>
+                                @provider.ShippingProviderName
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+            else
+            {
+                <span class="text-muted fst-italic">
+                    <i class="fas fa-times-circle me-2"></i>Không có
+                </span>
+            }
+        </dd>
+    </dl>
+</div>
+
+@functions {
+    string FormatCurrency(decimal? value)
+    {
+        if (value == null) return "0";
+        var amount = value.Value;
+        if (amount >= 1000)
+            return $"{amount / 1000:#.##} triệu";
+        else
+            return $"{amount:#.##}K";
+    }
+
+    string FormatDiscount(decimal? value, string type)
+    {
+        if (value == null) return "0";
+        if (type == "Phần trăm" || type.Contains("%"))
+            return $"{Math.Round(value.Value, 0)}%";
+        return FormatCurrency(value);
+    }
+}

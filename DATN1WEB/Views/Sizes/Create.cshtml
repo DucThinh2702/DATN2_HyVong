@@ -1,0 +1,160 @@
+﻿@model DATN1WEB.Models.Size
+@{
+    ViewData["Title"] = "Thêm kích cỡ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var returnUrl = Context.Request.Query["returnUrl"].FirstOrDefault();
+}
+
+<style>
+    .form-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+        .form-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+        }
+
+    .form-control {
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+        padding: 0.75rem 1rem;
+    }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+        }
+
+    .input-group-text {
+        border-radius: 12px 0 0 12px;
+        border: 2px solid #e9ecef;
+        border-right: none;
+        background: #f8f9fa;
+    }
+
+    .btn-custom {
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+</style>
+
+<!-- Content Header -->
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1 class="mb-2">
+                <i class="fas fa-plus me-3 text-success"></i>Thêm kích cỡ
+            </h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Sizes")">Kích cỡ</a></li>
+                    <li class="breadcrumb-item active">Thêm mới</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Form Section -->
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card form-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-ruler-combined me-2"></i>Thông tin kích cỡ
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post" id="sizeForm">
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+                    <div class="mb-4">
+                        <label asp-for="SizeName" class="form-label fw-semibold">
+                            <i class="fas fa-ruler me-2 text-success"></i>Tên kích cỡ
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-tag text-success"></i>
+                            </span>
+                            <input asp-for="SizeName" class="form-control" id="SizeName"
+                                   placeholder="Nhập tên kích cỡ..." />
+                        </div>
+                        <span id="sizeNameError" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-success btn-custom">
+                            <i class="fas fa-save me-2"></i>Lưu
+                        </button>
+                        <a href="@(string.IsNullOrEmpty(returnUrl) ? Url.Action("Index", "Color") : returnUrl)"
+                           class="btn btn-secondary btn-custom">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        var successMessage = '@Html.Raw(TempData["SuccessMessage"])';
+        var errorMessage = '@Html.Raw(TempData["ErrorMessage"])';
+        if (successMessage) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Thành công!',
+                text: successMessage,
+                timer: 3000,
+                timerProgressBar: true,
+                confirmButtonText: 'OK'
+            });
+        }
+        if (errorMessage) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: errorMessage,
+                confirmButtonText: 'OK'
+            });
+        }
+
+        document.getElementById('sizeForm').addEventListener('submit', async function (e) {
+            let sizeNameInput = document.getElementById('SizeName');
+            let errorSpan = document.getElementById('sizeNameError');
+            let sizeName = sizeNameInput.value.trim();
+            errorSpan.textContent = '';
+            if (!sizeName) {
+                e.preventDefault();
+                errorSpan.textContent = 'Vui lòng nhập tên kích cỡ';
+                sizeNameInput.focus();
+                return;
+            }
+            let response = await fetch('/Sizes/CheckSizeName?sizeName=' + encodeURIComponent(sizeName));
+            let result = await response.json();
+            if (result.exists) {
+                e.preventDefault();
+                errorSpan.textContent = 'Tên kích cỡ đã tồn tại';
+                sizeNameInput.focus();
+            }
+        });
+    </script>
+}

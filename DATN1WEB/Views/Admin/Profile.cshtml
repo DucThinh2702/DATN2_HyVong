@@ -1,0 +1,386 @@
+﻿@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-user-circle me-3"></i>Hồ sơ cá nhân</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Hồ sơ cá nhân</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" onclick="toggleEditMode()">
+                <i class="fas fa-edit me-2"></i>Chỉnh sửa
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Profile Card -->
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="position-relative d-inline-block mb-4">
+                    <img src="~/hinh/logo.jpg" alt="Avatar" class="rounded-circle border border-3 border-warning" style="width: 120px; height: 120px; object-fit: cover;">
+                    <button class="btn btn-warning btn-sm rounded-circle position-absolute bottom-0 end-0" style="width: 35px; height: 35px;" onclick="changeAvatar()">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                </div>
+
+                <h4 class="card-title mb-1">Nguyễn Văn Admin</h4>
+                <p class="text-muted mb-3">Quản trị viên hệ thống</p>
+
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="border-end">
+                            <h5 class="text-warning mb-0">156</h5>
+                            <small class="text-muted">Sản phẩm</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border-end">
+                            <h5 class="text-success mb-0">89</h5>
+                            <small class="text-muted">Đơn hàng</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <h5 class="text-info mb-0">234</h5>
+                        <small class="text-muted">Khách hàng</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Information -->
+    <div class="col-lg-8 col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Thông tin cá nhân
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="profileForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-user me-2 text-primary"></i>Họ và tên
+                            </label>
+                            <input type="text" class="form-control" id="fullName" value="Nguyễn Văn Admin" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-envelope me-2 text-primary"></i>Email
+                            </label>
+                            <input type="email" class="form-control" id="email" value="admin@thebagstudio.com" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-phone me-2 text-primary"></i>Số điện thoại
+                            </label>
+                            <input type="tel" class="form-control" id="phone" value="0123456789" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-calendar me-2 text-primary"></i>Ngày sinh
+                            </label>
+                            <input type="date" class="form-control" id="birthDate" value="1990-01-01" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-venus-mars me-2 text-primary"></i>Giới tính
+                            </label>
+                            <select class="form-select" id="gender" disabled>
+                                <option value="Nam" selected>Nam</option>
+                                <option value="Nữ">Nữ</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-briefcase me-2 text-primary"></i>Chức vụ
+                            </label>
+                            <input type="text" class="form-control" id="position" value="Quản trị viên hệ thống" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-map-marker-alt me-2 text-primary"></i>Địa chỉ
+                        </label>
+                        <textarea class="form-control" id="address" rows="2" readonly>123 Đường ABC, Phường XYZ, Quận 1, TP.HCM</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-info-circle me-2 text-primary"></i>Giới thiệu
+                        </label>
+                        <textarea class="form-control" id="bio" rows="3" readonly>Quản trị viên hệ thống với hơn 5 năm kinh nghiệm trong lĩnh vực công nghệ thông tin và quản lý dự án.</textarea>
+                    </div>
+
+                    <div class="d-none" id="editButtons">
+                        <button type="button" class="btn btn-success me-2" onclick="saveProfile()">
+                            <i class="fas fa-save me-2"></i>Lưu thay đổi
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
+                            <i class="fas fa-times me-2"></i>Hủy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Security Settings -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>Bảo mật tài khoản
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-1">Đổi mật khẩu</h6>
+                        <small class="text-muted">Cập nhật mật khẩu để bảo mật tài khoản</small>
+                    </div>
+                    <button class="btn btn-outline-warning btn-sm" onclick="changePassword()">
+                        <i class="fas fa-key me-1"></i>Đổi
+                    </button>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-1">Xác thực 2 bước</h6>
+                        <small class="text-muted">Tăng cường bảo mật với xác thực 2 bước</small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="twoFactorAuth">
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1">Phiên đăng nhập</h6>
+                        <small class="text-muted">Quản lý các phiên đăng nhập</small>
+                    </div>
+                    <button class="btn btn-outline-danger btn-sm" onclick="viewSessions()">
+                        <i class="fas fa-list me-1"></i>Xem
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Hoạt động gần đây
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Đăng nhập thành công</h6>
+                            <small class="text-muted">2 giờ trước</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Cập nhật sản phẩm #123</h6>
+                            <small class="text-muted">5 giờ trước</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-warning"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Thay đổi cài đặt hệ thống</h6>
+                            <small class="text-muted">1 ngày trước</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Tạo báo cáo tháng</h6>
+                            <small class="text-muted">2 ngày trước</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e9ecef;
+        }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -23px;
+        top: 5px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #e9ecef;
+    }
+
+    .timeline-content h6 {
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+    }
+
+    .timeline-content small {
+        font-size: 0.8rem;
+    }
+</style>
+
+<script>
+    let isEditMode = false;
+
+    function toggleEditMode() {
+        isEditMode = !isEditMode;
+        const inputs = document.querySelectorAll('#profileForm input, #profileForm textarea, #profileForm select');
+        const editButtons = document.getElementById('editButtons');
+        const toggleBtn = document.querySelector('button[onclick="toggleEditMode()"]');
+
+        inputs.forEach(input => {
+            if (input.id !== 'email') { // Email không được chỉnh sửa
+                input.readOnly = !isEditMode;
+                input.disabled = !isEditMode;
+            }
+        });
+
+        if (isEditMode) {
+            editButtons.classList.remove('d-none');
+            toggleBtn.innerHTML = '<i class="fas fa-times me-2"></i>Hủy chỉnh sửa';
+            toggleBtn.className = 'btn btn-outline-secondary';
+        } else {
+            editButtons.classList.add('d-none');
+            toggleBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Chỉnh sửa';
+            toggleBtn.className = 'btn btn-outline-primary';
+        }
+    }
+
+    function saveProfile() {
+        // Simulate saving
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang lưu...';
+        btn.disabled = true;
+
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            toggleEditMode();
+
+            // Show success message
+            showNotification('Cập nhật thông tin thành công!', 'success');
+        }, 2000);
+    }
+
+    function cancelEdit() {
+        // Reset form values
+        document.getElementById('fullName').value = 'Nguyễn Văn Admin';
+        document.getElementById('phone').value = '0123456789';
+        document.getElementById('birthDate').value = '1990-01-01';
+        document.getElementById('gender').value = 'Nam';
+        document.getElementById('position').value = 'Quản trị viên hệ thống';
+        document.getElementById('address').value = '123 Đường ABC, Phường XYZ, Quận 1, TP.HCM';
+        document.getElementById('bio').value = 'Quản trị viên hệ thống với hơn 5 năm kinh nghiệm trong lĩnh vực công nghệ thông tin và quản lý dự án.';
+
+        toggleEditMode();
+    }
+
+    function changeAvatar() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.querySelector('img[alt="Avatar"]').src = e.target.result;
+                    showNotification('Cập nhật ảnh đại diện thành công!', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    }
+
+    function changePassword() {
+        // Open password change modal or redirect
+        showNotification('Chức năng đổi mật khẩu sẽ được triển khai!', 'info');
+    }
+
+    function viewSessions() {
+        showNotification('Chức năng quản lý phiên đăng nhập sẽ được triển khai!', 'info');
+    }
+
+    function showNotification(message, type) {
+        const alertClass = type === 'success' ? 'alert-success' :
+                          type === 'error' ? 'alert-danger' : 'alert-info';
+
+        const notification = document.createElement('div');
+        notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+
+    // Two-factor authentication toggle
+    document.getElementById('twoFactorAuth').addEventListener('change', function() {
+        const message = this.checked ? 'Đã bật xác thực 2 bước' : 'Đã tắt xác thực 2 bước';
+        showNotification(message, 'success');
+    });
+</script>
