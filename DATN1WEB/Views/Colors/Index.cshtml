@@ -227,17 +227,17 @@
                         var indexColor = 1;
                         foreach (var item in Model)
                         {
-                            <tr id="row_@item.ColorID">
+                            <tr id="row_@item.ColorId">
                                 <td class="text-center fw-bold">@indexColor</td>
                                 <td class="fw-semibold">@item.ColorName</td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <a asp-action="Edit" asp-route-id="@item.ColorID"
+                                        <a asp-action="Edit" asp-route-id="@item.ColorId"
                                            class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button class="btn btn-action btn-outline-danger"
-                                                onclick="confirmDelete(@item.ColorID)" title="Xóa">
+                                                onclick="confirmDelete(@item.ColorId)" title="Xóa">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>
@@ -287,17 +287,17 @@
                         var indexSize = 1;
                         foreach (var item in sizes)
                         {
-                            <tr id="row_size_@item.SizeID">
+                            <tr id="row_size_@item.SizeId">
                                 <td class="text-center fw-bold">@indexSize</td>
                                 <td class="fw-semibold">@item.SizeName</td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <a asp-action="Edit" asp-controller="Sizes" asp-route-id="@item.SizeID"
+                                        <a asp-action="Edit" asp-controller="Sizes" asp-route-id="@item.SizeId"
                                            class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button class="btn btn-action btn-outline-danger"
-                                                onclick="confirmDeleteSize(@item.SizeID)" title="Xóa">
+                                                onclick="confirmDeleteSize(@item.SizeId)" title="Xóa">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>

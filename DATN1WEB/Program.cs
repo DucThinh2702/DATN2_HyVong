@@ -1,8 +1,11 @@
 ﻿
 using DATN1API.Data;
+using DATN1API.Helpers;
+using DATN1API.Services;
 using DATN1WEB.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +29,11 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 })
 .AddEntityFrameworkStores<DatnContext>()
 .AddDefaultTokenProviders();
+builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
+builder.Services.AddScoped<PayOSService>(); // 👈 Cần thêm dòng này
+builder.Services.Configure<VNPAYSettings>(builder.Configuration.GetSection("VNPAY"));
+builder.Services.AddScoped<IVnPayService, VnPayService>();
+builder.Services.AddScoped<VnPayService>(); // Đăng ký VnPayService
 
 // Cấu hình session nếu bạn dùng OTP hoặc giữ thông tin tạm
 builder.Services.AddSession(options =>
@@ -43,6 +51,12 @@ builder.Services.AddRazorPages();
 builder.Services.AddRazorPages().AddViewOptions(options =>
 {
     options.HtmlHelperOptions.ClientValidationEnabled = true;
+});
+builder.Services.AddHttpClient("api", client =>
+{
+    // Đặt URL API cho HttpClient (đúng port dự án API)
+    client.BaseAddress = new Uri("https://localhost:7138/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
 // Cấu hình các dịch vụ middleware
@@ -72,6 +86,7 @@ app.UseAuthorization();   // Thêm middleware cho phân quyền
 // Cấu hình các route cho Controller
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+//pattern: "{controller=SanPham}/{action=Index}/{id?}");
+pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

@@ -648,36 +648,33 @@
 
     /* Responsive Improvements */
     @@media (max-width: 768px) {
-        .logo-brand span
+        .logo-brand span {
+            font-size: 1.5rem;
+            padding: 6px 12px;
+        }
 
-    {
-        font-size: 1.5rem;
-        padding: 6px 12px;
-    }
+        .search-container {
+            margin: 15px 0;
+        }
 
-    .search-container {
-        margin: 15px 0;
-    }
+        .hotline-section {
+            text-align: center;
+            margin-top: 10px;
+        }
 
-    .hotline-section {
-        text-align: center;
-        margin-top: 10px;
-    }
+        .category-btn {
+            width: 100%;
+        }
 
-    .category-btn {
-        width: 100%;
-    }
+        .feature-card {
+            text-align: center;
+            flex-direction: column;
+            padding: 20px;
+        }
 
-    .feature-card {
-        text-align: center;
-        flex-direction: column;
-        padding: 20px;
-    }
-
-    .feature-icon {
-        margin-bottom: 10px;
-    }
-
+        .feature-icon {
+            margin-bottom: 10px;
+        }
     }
 
     /* Additional Improvements */
@@ -720,6 +717,41 @@
         border-color: #ffc107;
         box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
     }
+
+
+    .product-offer {
+        position: relative;
+        height: 300px; /* giữ đúng chiều cao bạn đang dùng */
+        overflow: hidden;
+        border-radius: 8px; /* tuỳ chọn */
+    }
+
+        .product-offer img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* CHÍNH: không bị bể ảnh */
+            object-position: center; /* canh giữa vùng cắt */
+            display: block;
+        }
+
+        .product-offer .offer-text {
+            position: absolute;
+            inset: 0; /* top:0; right:0; bottom:0; left:0 */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* căn giữa ngang */
+            justify-content: center; /* căn giữa dọc */
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .product-offer::after { /* lớp mờ giúp chữ nổi bật (tuỳ chọn) */
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.25);
+        }
+
 </style>
 
 <body>
@@ -732,31 +764,48 @@
                         <a href="#" class="me-3">Liên hệ</a>
                         <a href="#">Giúp đỡ</a>
                     </div>
-                </div>
+                   </div>
                 <div class="col-lg-6 d-flex justify-content-end align-items-center">
                     <!-- Account Dropdown -->
                     <div class="dropdown me-2">
-                        <button class="btn btn-sm dropdown-toggle border" type="button" data-toggle="dropdown">
-                            Tài khoản
+                        <button class="btn btn-sm dropdown-toggle border"
+                                type="button"
+                                data-bs-toggle="dropdown">
+                            @(User.Identity?.IsAuthenticated == true ? User.Identity.Name : "Tài khoản")
                         </button>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" href="login.html">Đăng nhập</a>
-                            <a class="dropdown-item" href="register.html">Đăng ký</a>
+
+                        <div class="dropdown-menu dropdown-menu-end">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="px-2">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item">Đăng xuất</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a class="dropdown-item" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                                <a class="dropdown-item" asp-controller="Account" asp-action="Register">Đăng ký</a>
+                            }
                         </div>
                     </div>
+
+
                     <!-- Language Dropdown -->
                     <div class="dropdown">
-                        <button class="btn btn-sm dropdown-toggle border" type="button" data-toggle="dropdown">
+                        <button class="btn btn-sm dropdown-toggle border"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                data-toggle="dropdown">
                             Ngôn ngữ
                         </button>
-                        <div class="dropdown-menu dropdown-menu-right">
+                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
                             <a class="dropdown-item" href="#">Tiếng Việt</a>
                             <a class="dropdown-item" href="#">Tiếng Anh</a>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+
 
         <!-- Logo + Search + Hotline -->
         <div class="logo-section">
@@ -879,7 +928,7 @@
                         </ol>
                         <div class="carousel-inner rounded">
                             <div class="carousel-item active" style="height:430px;">
-                                <img class="d-block w-100 h-100" src="/placeholder.svg?height=430&width=800&text=Fashion Banner 1" style="object-fit:cover;">
+                                <img class="d-block w-100 h-100" src="/hinh/hinh3.jpg" alt="Ưu đãi đặc biệt">
                                 <div class="carousel-caption">
                                     <h1 class="display-4 text-white mb-3">Thời trang nữ</h1>
                                     <p class="mb-4">Mang lại phong cách và lịch lãm, sang trọng cho phụ nữ trước đám đông</p>
@@ -887,7 +936,7 @@
                                 </div>
                             </div>
                             <div class="carousel-item" style="height:430px;">
-                                <img class="d-block w-100 h-100" src="/placeholder.svg?height=430&width=800&text=Fashion Banner 2" style="object-fit:cover;">
+                                <img class="d-block w-100 h-100" src="/hinh/hinh6.jpg" alt="Ưu đãi đặc biệt">
                                 <div class="carousel-caption">
                                     <h1 class="display-4 text-white mb-3">Phong cách, hiện đại</h1>
                                     <p class="mb-4">Cuốn hút mọi ánh nhìn, tôn dáng người phụ nữ hiện đại</p>
@@ -895,7 +944,7 @@
                                 </div>
                             </div>
                             <div class="carousel-item" style="height:430px;">
-                                <img class="d-block w-100 h-100" src="/placeholder.svg?height=430&width=800&text=Fashion Banner 3" style="object-fit:cover;">
+                                <img class="d-block w-100 h-100" src="/hinh/hinh5.jpg" alt="Ưu đãi đặc biệt">
                                 <div class="carousel-caption">
                                     <h1 class="display-4 text-white mb-3">Thời trang trẻ em</h1>
                                     <p class="mb-4">Tôn lên sự sang trọng, hiện đại của giới trẻ</p>
@@ -909,7 +958,7 @@
                 <!-- Side Offers -->
                 <div class="col-lg-4 d-flex flex-column justify-content-between">
                     <div class="offer-card mb-3">
-                        <img class="img-fluid w-100 h-100" src="/placeholder.svg?height=200&width=400&text=Special Offer 1" style="object-fit:cover;">
+                        <img class="d-block w-100 h-100" src="/hinh/hinh7.jpg" alt="Ưu đãi đặc biệt">
                         <div class="offer-overlay">
                             <h6 class="text-white text-uppercase font-weight-bold">GIẢM GIÁ 20%</h6>
                             <h3 class="text-white mb-3 font-weight-bold">Ưu đãi đặc biệt</h3>
@@ -917,7 +966,7 @@
                         </div>
                     </div>
                     <div class="offer-card">
-                        <img class="img-fluid w-100 h-100" src="/placeholder.svg?height=200&width=400&text=Special Offer 2" style="object-fit:cover;">
+                        <img class="d-block w-100 h-100" src="/hinh/hinh9.jpg" alt="Ưu đãi đặc biệt">
                         <div class="offer-overlay">
                             <h6 class="text-white text-uppercase font-weight-bold">GIẢM GIÁ 20%</h6>
                             <h3 class="text-white mb-3 font-weight-bold">Ưu đãi đặc biệt</h3>
@@ -1011,7 +1060,6 @@
             </div>
         </div>
 
-        <!-- Products Section -->
         <div id="productContainer">
             <div class="row px-xl-5" id="recentProducts">
                 <div class="container-fluid pt-5 pb-3">
@@ -1041,14 +1089,20 @@
 
                 @if (Model != null && Model.Any())
                 {
-                    @foreach (var item in Model)
+                    foreach (var item in Model)
                     {
                         <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
                             <div class="product-item mb-4">
                                 <div class="product-img">
-                                    <img class="img-fluid w-100" src="/placeholder.svg?height=280&width=300&text=@item.ProductName" alt="@item.ProductName">
+                                    <img src="@item.ThumbnailImage" alt="@item.ProductName" class="img-fluid w-100" />
+
+
+
                                     <div class="product-action">
-                                        <a href="#" class="btn"><i class="fa fa-shopping-cart"></i></a>
+                                        <a class="btn btn-outline-dark btn-square" href="/User/ChonBienThe/@item.ProductId">
+                                            <i class="fa fa-shopping-cart"></i>
+                                        </a>
+
                                         <a href="#" class="btn"><i class="far fa-heart"></i></a>
                                         <a href="#" class="btn"><i class="fa fa-sync-alt"></i></a>
                                         <a href="#" class="btn"><i class="fa fa-search"></i></a>
@@ -1057,14 +1111,12 @@
                                 <div class="product-info">
                                     <a href="#">@item.ProductName</a>
                                     <div class="product-price">
-                                        <h5>@(item.SalePrice.HasValue? item.SalePrice.Value.ToString("N0") : "0") VNĐ</h5>
-                                        <h6><del>@(item.OriginalPrice.HasValue? item.OriginalPrice.Value.ToString("N0") : "0") VNĐ</del></h6>
+                                        <h5>@(item.SalePrice?.ToString("N0") ?? "0") VNĐ</h5>
+                                        <h6><del>@(item.OriginalPrice?.ToString("N0") ?? "0") VNĐ</del></h6>
                                     </div>
                                     <div class="product-rating">
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i><i class="fa fa-star"></i>
+                                        <i class="fa fa-star"></i><i class="fa fa-star"></i>
                                         <i class="fa fa-star"></i>
                                         <small>(99)</small>
                                     </div>
@@ -1075,10 +1127,9 @@
                 }
                 else
                 {
-                    <div class="col-12">
-                        <p class="text-center text-muted py-5">Không có sản phẩm nào được tìm thấy.</p>
-                    </div>
+                    <p class="text-muted">Không có sản phẩm nào được tìm thấy.</p>
                 }
+
             </div>
 
             <!-- Pagination -->
@@ -1111,27 +1162,28 @@
         <div class="container-fluid pt-5 pb-3">
             <div class="row px-xl-5">
                 <div class="col-md-6">
-                    <div class="product-offer mb-30 hover-zoom" style="height: 300px;">
-                        <img class="img-fluid" src="/placeholder.svg?height=300&width=600&text=Special Deal 1" alt="">
+                    <div class="product-offer mb-30 hover-zoom">
+                        <img src="/hinh/hinh3.jpg" alt="Ưu đãi đặc biệt">
                         <div class="offer-text">
                             <h6 class="text-white text-uppercase">Giảm giá 20%</h6>
                             <h3 class="text-white mb-3">Ưu đãi đặc biệt</h3>
-                            <a href="" class="btn btn-warning text-dark font-weight-bold">Mua ngay</a>
+                            <a href="#" class="btn btn-warning text-dark font-weight-bold">Mua ngay</a>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="product-offer mb-30 hover-zoom" style="height: 300px;">
-                        <img class="img-fluid" src="/placeholder.svg?height=300&width=600&text=Special Deal 2" alt="">
+                    <div class="product-offer mb-30 hover-zoom">
+                        <img src="/hinh/hinh10.jpg" alt="Ưu đãi đặc biệt">
                         <div class="offer-text">
                             <h6 class="text-white text-uppercase">Giảm giá 20%</h6>
                             <h3 class="text-white mb-3">Ưu đãi đặc biệt</h3>
-                            <a href="" class="btn btn-warning text-dark font-weight-bold">Mua ngay</a>
+                            <a href="#" class="btn btn-warning text-dark font-weight-bold">Mua ngay</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
 
         <!-- Recent Products -->
         <div class="container-fluid pt-5 pb-3">
@@ -1149,9 +1201,9 @@
                         <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
                             <div class="product-item mb-4">
                                 <div class="product-img">
-                                    <img class="img-fluid w-100" src="/placeholder.svg?height=280&width=300&text=@item.ProductName" alt="@item.ProductName" />
+                                    <img src="@item.ThumbnailImage" alt="@item.ProductName" class="img-fluid w-100" />
                                     <div class="product-action">
-                                        <a href="#" class="btn"><i class="fa fa-shopping-cart"></i></a>
+                                        <a href="ChonBienThe" class="btn"><i class="fa fa-shopping-cart"></i></a>
                                         <a href="#" class="btn"><i class="far fa-heart"></i></a>
                                         <a href="#" class="btn"><i class="fa fa-sync-alt"></i></a>
                                         <a href="#" class="btn"><i class="fa fa-search"></i></a>
@@ -1160,8 +1212,8 @@
                                 <div class="product-info">
                                     <a href="#">@item.ProductName</a>
                                     <div class="product-price">
-                                        <h5>@(item.SalePrice.HasValue? item.SalePrice.Value.ToString("N0") : "0") VNĐ</h5>
-                                        <h6><del>@(item.OriginalPrice.HasValue? item.OriginalPrice.Value.ToString("N0") : "0") VNĐ</del></h6>
+                                        <h5>@(item.SalePrice.HasValue ? item.SalePrice.Value.ToString("N0") : "0") VNĐ</h5>
+                                        <h6><del>@(item.OriginalPrice.HasValue ? item.OriginalPrice.Value.ToString("N0") : "0") VNĐ</del></h6>
                                     </div>
                                     <div class="product-rating">
                                         <i class="fa fa-star"></i>
@@ -1278,6 +1330,40 @@
     <script src="~/js/main.js"></script>
 
     <script>
+                document.querySelectorAll(".add-to-cart").forEach(button => {
+            button.addEventListener("click", function (e) {
+                e.preventDefault();
+
+                const id = this.dataset.id;
+                const name = this.dataset.name;
+                const price = parseInt(this.dataset.price);
+                const img = this.dataset.img;
+
+                let cart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+                const found = cart.find(p => p.id === id);
+                if (found) {
+                    found.quantity += 1;
+                    found.total = found.quantity * found.price;
+                } else {
+                    cart.push({ id, name, price, img, quantity: 1, total: price });
+                }
+
+                localStorage.setItem("cartItems", JSON.stringify(cart));
+                localStorage.setItem("cartTotal", cart.reduce((acc, p) => acc + p.total, 0));
+
+                alert("Đã thêm sản phẩm vào giỏ hàng!");
+            });
+        });
+                function updateCartBadge() {
+            const cart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.querySelectorAll(".cart-badge").forEach(badge => {
+                badge.textContent = count;
+            });
+        }
+
+        updateCartBadge(); // gọi lúc load
+
         document.addEventListener("DOMContentLoaded", function () {
             // Add to cart functionality
             document.querySelectorAll(".add-to-cart").forEach(button => {

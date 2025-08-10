@@ -1,0 +1,203 @@
+﻿@model DATN1API.Models.Product
+
+
+@{
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css" rel="stylesheet">
+
+<div class="main-content" id="mainContent">
+    <h1 class="mb-4">Chỉnh sửa sản phẩm</h1>
+
+    <div class="row">
+        <div class="container-full">
+            <form asp-action="Edit" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <input type="hidden" asp-for="ProductId" />
+
+                <!-- Tên sản phẩm -->
+                <div class="mb-3">
+                    <label asp-for="ProductName" class="form-label fw-bold">Tên sản phẩm</label>
+                    <input asp-for="ProductName" class="form-control" />
+                    <span asp-validation-for="ProductName" class="text-danger"></span>
+                </div>
+
+                <!-- Mô tả -->
+                <div class="mb-3">
+                    <label for="Description" class="form-label fw-bold">Mô tả sản phẩm</label>
+                    <textarea asp-for="Description" class="form-control" id="Description"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <!-- Giá -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="SalePrice" class="form-label fw-bold">Giá bán</label>
+                        <input asp-for="SalePrice" class="form-control" />
+                        <span asp-validation-for="SalePrice" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="OriginalPrice" class="form-label fw-bold">Giá gốc</label>
+                        <input asp-for="OriginalPrice" class="form-control" />
+                        <span asp-validation-for="OriginalPrice" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Danh mục -->
+                <!-- Danh mục -->
+                <div class="mb-3">
+                    <label asp-for="CategoryId" class="form-label fw-bold">Danh mục</label>
+                    @Html.DropDownListFor(model => model.CategoryId,
+                             (SelectList)ViewBag.Categories,
+                             "-- Chọn danh mục --",
+                             new { @class = "form-select" })
+                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                </div>
+
+
+                <!-- Thông tin kỹ thuật -->
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="Material" class="form-label fw-bold">Chất liệu</label>
+                        <input asp-for="Material" class="form-control" />
+                    </div>
+                </div>
+
+                <!-- Ngày tạo/cập nhật -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="CreatedDate" class="form-label fw-bold">Ngày tạo</label>
+                        <input asp-for="CreatedDate" class="form-control" readonly />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="UpdatedDate" class="form-label fw-bold">Ngày cập nhật</label>
+                        <input asp-for="UpdatedDate" class="form-control" readonly />
+                    </div>
+                </div>
+
+                <!-- Ảnh đại diện -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Ảnh hiện tại</label><br />
+                    @if (!string.IsNullOrEmpty(Model.ThumbnailImage))
+                    {
+                        <img src="~/hinh/@System.IO.Path.GetFileName(Model.ThumbnailImage)" style="height:100px;" />
+
+                    }
+                    else
+                    {
+                        <span class="text-muted">Chưa có ảnh</span>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Chọn ảnh mới (nếu cần)</label>
+                    <input type="file" name="ImageFile" class="form-control" />
+                </div>
+
+
+                <!-- Trạng thái -->
+                <div class="mb-3">
+                    <label asp-for="Status" class="form-label fw-bold">Trạng thái</label>
+                    <select asp-for="Status" class="form-select">
+                        <option value="Đang bán" selected="@("Đang bán".Equals(Model.Status))">Đang bán</option>
+                        <option value="Ngừng bán" selected="@("Ngừng bán".Equals(Model.Status))">Ngừng bán</option>
+                    </select>
+                    <span asp-validation-for="Status" class="text-danger fw-bold"></span>
+                </div>
+
+                <!-- Nút -->
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Lưu thay đổi
+                </button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">Quay lại danh sách</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/localization/messages_vi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Summernote
+            $('#Description').summernote({
+                height: 200,
+                toolbar: [
+                    ['style', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['insert', ['link']],
+                    ['view', ['fullscreen', 'codeview']]
+                ]
+            });
+
+            // Custom rule summernote >= 10 ký tự
+            $.validator.addMethod("summernoteRequired", function (value, element) {
+                var text = $($(element).summernote('code')).text().trim();
+                return text.length >= 10;
+            }, "Mô tả phải ít nhất 10 ký tự");
+
+            // Validate form
+            $("form").validate({
+                ignore: [],
+                rules: {
+                    ProductName: { required: true, minlength: 10 },
+                    Description: { summernoteRequired: true },
+                    SalePrice: { required: true, number: true, min: 1 },
+                    OriginalPrice: { required: true, number: true, min: 1 },
+                    CategoryId: { required: true },
+                    Status: { required: true }, // bỏ minlength
+                    Material: { required: true, minlength: 5 }
+                },
+                messages: {
+                    ProductName: {
+                        required: "Vui lòng nhập tên sản phẩm",
+                        minlength: "Tên sản phẩm phải ít nhất 10 ký tự"
+                    },
+                    Description: {
+                        summernoteRequired: "Vui lòng nhập mô tả ít nhất 10 ký tự"
+                    },
+                    SalePrice: { required: "Vui lòng nhập giá bán" },
+                    OriginalPrice: { required: "Vui lòng nhập giá gốc" },
+                    CategoryId: { required: "Vui lòng chọn danh mục" },
+                    Status: { required: "Vui lòng chọn trạng thái" },
+                    Material: {
+                        required: "Vui lòng nhập chất liệu",
+                        minlength: "Chất liệu phải ít nhất 5 ký tự"
+                    }
+                },
+                errorElement: "span",
+                errorClass: "text-danger",
+                errorPlacement: function (error, element) {
+                    if (element.attr("name") === "Description") {
+                        error.insertAfter($("#Description").next());
+                    } else {
+                        error.insertAfter(element);
+                    }
+                }
+            });
+
+            // Lưu dữ liệu ban đầu và kiểm tra thay đổi
+            var initialData = $("form").serialize();
+            $("form").on("submit", function (e) {
+                var currentData = $(this).serialize();
+                if (currentData === initialData) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Vui lòng thay đổi thông tin trước khi lưu!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        });
+    </script>
+}
+
+

@@ -102,7 +102,7 @@
                     <div class="detail-label">
                         <i class="fas fa-hashtag me-2 text-primary"></i>Mã màu
                     </div>
-                    <div class="detail-value">@Model.ColorID</div>
+                    <div class="detail-value">@Model.ColorId</div>
                 </div>
 
                 <div class="detail-item">
@@ -113,7 +113,7 @@
                 </div>
 
                 <form asp-action="Delete" class="mt-4">
-                    <input type="hidden" asp-for="ColorID" />
+                    <input type="hidden" asp-for="ColorId" />
                     <div class="d-flex gap-3">
                         <button type="submit" class="btn btn-danger btn-custom">
                             <i class="fas fa-trash-alt me-2"></i>Xóa

@@ -1,0 +1,181 @@
+﻿@model List<DATN1API.Models.Product>
+@{
+    ViewData["Title"] = "Danh sách sản phẩm";
+    var lowStockProducts = ViewBag.LowStockProducts as List<DATN1API.Models.Product> ?? new();
+}
+
+<div class="content-header">
+    <div>
+        <h1 class="mb-2"><i class="fas fa-shopping-bag me-3 text-success"></i>Sản phẩm</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                <li class="breadcrumb-item active">Quản lý danh mục sản phẩm</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <form method="get" class="input-group" style="width: 300px;">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="text" name="search" class="form-control search-box" placeholder="Tìm kiếm sản phẩm..." />
+        </form>
+        <div class="dropdown">
+            <button class="btn btn-outline-warning position-relative" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-bell"></i>
+                @if (lowStockProducts.Any())
+                {
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        @lowStockProducts.Count
+                    </span>
+                }
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
+                <li class="notification-item">
+                    <h6 class="mb-2 fw-bold text-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Sản phẩm sắp hết hàng
+                    </h6>
+                </li>
+                @if (!lowStockProducts.Any())
+                {
+                    <li class="notification-item"><span class="text-muted">Không có sản phẩm sắp hết hàng</span></li>
+                }
+                else
+                {
+                    @foreach (var p in lowStockProducts)
+                    {
+                        <li class="notification-item">
+                            <a class="text-decoration-none" href="@Url.Action("Edit", new { id = p.ProductId })">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-box text-warning me-2"></i>
+                                    <div class="fw-semibold">@p.ProductName</div>
+                                </div>
+                            </a>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase text-muted small mb-1">Tổng sản phẩm</h6>
+                    <h4 class="fw-bold text-dark mb-0">@ViewBag.TotalCount</h4>
+                </div>
+                <div class="stat-icon bg-primary bg-opacity-10"><i class="fas fa-shopping-bag text-primary"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase text-muted small mb-1">Đang bán</h6>
+                    <h4 class="fw-bold text-dark mb-0">@ViewBag.InStockCount</h4>
+                </div>
+                <div class="stat-icon bg-success bg-opacity-10"><i class="fas fa-check-circle text-success"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase text-muted small mb-1">Sắp hết hàng</h6>
+                    <h4 class="fw-bold text-dark mb-0">@ViewBag.LowStockCount</h4>
+                </div>
+                <div class="stat-icon bg-warning bg-opacity-10"><i class="fas fa-exclamation-triangle text-warning"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase text-muted small mb-1">Hết hàng</h6>
+                    <h4 class="fw-bold text-dark mb-0">@ViewBag.OutOfStockCount</h4>
+                </div>
+                <div class="stat-icon bg-danger bg-opacity-10"><i class="fas fa-times-circle text-danger"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Danh sách sản phẩm</h5>
+        <div class="d-flex gap-2">
+            <a asp-controller="SanPham" asp-action="Create" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i>Thêm sản phẩm
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-modern mb-0">
+                <thead>
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Giá bán</th>
+                        <th>Ngày tạo</th>
+                        <th class="text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.ThumbnailImage))
+                                    {
+                                        <img src="~/hinh/@System.IO.Path.GetFileName(item.ThumbnailImage)"
+                                             class="product-image" alt="@item.ProductName" />
+
+                                    }
+                                    else
+                                    {
+                                        <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    }
+                                </td>
+
+                                <td>
+                                    <div class="product-name">@item.ProductName</div>
+                                    <small class="product-sku">SKU: BAG-@item.ProductId</small>
+                                </td>
+                                <td><span class="price">@((item.SalePrice ?? 0).ToString("N0")) ₫</span></td>
+                                <td><span class="text-muted">@item.CreatedDate?.ToString("dd/MM/yyyy")</span></td>
+                                <td class="text-center">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-action btn-outline-info" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                                        <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-action btn-outline-warning" title="Chỉnh sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-action btn-outline-danger" title="Xóa"><i class="fas fa-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                Không có sản phẩm nào
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+    

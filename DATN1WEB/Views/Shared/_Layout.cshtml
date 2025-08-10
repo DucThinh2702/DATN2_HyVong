@@ -487,7 +487,7 @@
                     <li class="nav-item">
                         <a class="nav-link active" asp-controller="Admin" asp-action="Index">
                             <i class="fas fa-chart-pie"></i>
-                            <span class="nav-text">Dashboard</span>
+                            <span class="nav-text">Thống kê</span>
                         </a>
                     </li>
                 </ul>
@@ -497,7 +497,7 @@
                 <h6 class="nav-section-title">Quản lý</h6>
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link" asp-controller="Admin" asp-action="SanPham">
+                        <a class="nav-link" asp-controller="SanPham" asp-action="Index">
                             <i class="fas fa-shopping-bag"></i>
                             <span class="nav-text">Sản phẩm</span>
                         </a>
@@ -509,7 +509,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link position-relative" asp-controller="Admin" asp-action="DonHang">
+                        <a class="nav-link position-relative" asp-controller="Orders" asp-action="Index">
                             <i class="fas fa-shopping-cart"></i>
                             <span class="nav-text">Đơn hàng</span>
                             <span class="notification-badge">5</span>
@@ -522,7 +522,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" asp-controller="Admin" asp-action="DanhMuc">
+                        <a class="nav-link" asp-controller="Categories" asp-action="Index">
                             <i class="fas fa-tags"></i>
                             <span class="nav-text">Danh mục</span>
                         </a>
@@ -564,8 +564,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/localization/messages_vi.min.js"></script>
+    
 
     <script>
         // Khi đăng xuất, lưu trạng thái vào localStorage
@@ -668,7 +667,23 @@
             });
         });
     </script>
+    <!-- JQUERY LUÔN ĐẶT TRƯỚC -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Validate -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <!-- Localization phải đặt SAU khi validate đã load -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/localization/messages_vi.min.js"></script>
+
+    <!-- Các script khác -->
     @RenderSection("Scripts", required: false)
+
 </body>
 </html>
+
+

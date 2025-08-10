@@ -42,8 +42,7 @@ namespace DATN1API.Controllers
                     .CountAsync(),
 
 
-                TongSanPhamTrongKho = await _context.Products
-                    .SumAsync(p => (int?)p.Stock) ?? 0,
+
 
                 DonHangGanDay = await _context.Orders
                     .Include(o => o.User)

@@ -214,17 +214,17 @@
                     {
                         foreach (var item in Model)
                         {
-                            <tr id="row_@item.SizeID">
-                                <td class="text-center fw-bold">@item.SizeID</td>
+                            <tr id="row_@item.SizeId">
+                                <td class="text-center fw-bold">@item.SizeId</td>
                                 <td class="fw-semibold">@item.SizeName</td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <a asp-action="Edit" asp-route-id="@item.SizeID"
+                                        <a asp-action="Edit" asp-route-id="@item.SizeId"
                                            class="btn btn-action btn-outline-warning" title="Chỉnh sửa">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button class="btn btn-action btn-outline-danger"
-                                                onclick="confirmDelete(@item.SizeID)" title="Xóa">
+                                                onclick="confirmDelete(@item.SizeId)" title="Xóa">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>

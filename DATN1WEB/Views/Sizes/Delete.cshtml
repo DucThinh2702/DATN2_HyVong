@@ -102,7 +102,7 @@
                     <div class="detail-label">
                         <i class="fas fa-hashtag me-2 text-success"></i>ID kích cỡ
                     </div>
-                    <div class="detail-value">@Model.SizeID</div>
+                    <div class="detail-value">@Model.SizeId</div>
                 </div>
 
                 <div class="detail-item">
@@ -114,7 +114,7 @@
 
                 <form asp-action="Delete" method="post" class="mt-4">
                     @Html.AntiForgeryToken()
-                    @Html.HiddenFor(m => m.SizeID)
+                    @Html.HiddenFor(m => m.SizeId)
                     <div class="d-flex gap-3">
                         <button type="submit" class="btn btn-danger btn-custom">
                             <i class="fas fa-trash-alt me-2"></i>Xóa

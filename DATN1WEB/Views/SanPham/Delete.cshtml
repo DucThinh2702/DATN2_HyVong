@@ -1,0 +1,40 @@
+﻿@model DATN1API.Models.Product
+
+@{
+    ViewData["Title"] = "Xoá sản phẩm";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-header">
+
+    <h2 class="mb-4 text-danger"><i class="fas fa-trash-alt me-2"></i>Xác nhận xoá sản phẩm</h2>
+
+    <div class="card border-danger mb-4">
+        <div class="card-body">
+            <h4 class="card-title text-dark">@Model.ProductName</h4>
+            <p class="text-muted">Bạn có chắc chắn muốn xoá sản phẩm này?</p>
+
+            <dl class="row">
+                <dt class="col-sm-3">Danh mục</dt>
+                <dd class="col-sm-9">@Model.Category?.CategoryName</dd>
+
+                <dt class="col-sm-3">Giá bán</dt>
+                <dd class="col-sm-9">@Model.SalePrice?.ToString("N0") ₫</dd>
+
+                <dt class="col-sm-3">Chất liệu</dt>
+                <dd class="col-sm-9">@Model.Material</dd>
+
+                <dt class="col-sm-3">Trạng thái</dt>
+                <dd class="col-sm-9">@Model.Status</dd>
+            </dl>
+
+            <div class="text-center mt-4">
+                <form asp-action="Delete" method="post">
+                    <input type="hidden" asp-for="ProductId" />
+                    <button type="submit" class="btn btn-danger">Xoá</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

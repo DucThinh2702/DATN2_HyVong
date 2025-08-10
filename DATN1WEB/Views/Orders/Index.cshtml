@@ -1,0 +1,247 @@
+﻿@model List<DATN1API.Models.Order>
+@using System.Globalization
+@using System.Linq
+@{
+    ViewData["Title"] = "Đơn hàng";
+    string q = Context.Request.Query["search"];
+    string orderStatus = Context.Request.Query["orderStatus"];
+    string paymentStatus = Context.Request.Query["paymentStatus"];
+
+    string Badge(string s) => s?.ToLower() switch
+    {
+        "pending" => "badge bg-warning-subtle text-warning fw-semibold",
+        "processing" => "badge bg-primary-subtle text-primary fw-semibold",
+        "paid" => "badge bg-success-subtle text-success fw-semibold",
+        "unpaid" => "badge bg-secondary-subtle text-secondary fw-semibold",
+        "cancelled" or "canceled" => "badge bg-danger-subtle text-danger fw-semibold",
+        _ => "badge bg-light text-dark fw-semibold"
+    };
+
+    Func<object?, string> formatDate = d =>
+          {
+      if (d == null) return "";
+      if (d is DateTime dt) return dt.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
+      if (d is DateTimeOffset dto) return dto.LocalDateTime.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
+      return d.ToString();
+          };
+
+
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+}
+
+<div class="content-header">
+    <div>
+        <h1 class="mb-2"><i class="fas fa-receipt me-3 text-success"></i>Đơn hàng</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index","Admin")">Dashboard</a></li>
+                <li class="breadcrumb-item active">Quản lý đơn hàng</li>
+            </ol>
+        </nav>
+    </div>
+
+    <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="input-group" style="width: 300px;">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input name="search" value="@q" class="form-control" placeholder="Mã đơn / tên / SĐT / địa chỉ..." />
+        </div>
+
+        <!-- OrderStatus -->
+        <select name="orderStatus" class="form-select" style="width:170px">
+            <option value="">-- Trạng thái đơn --</option>
+            @if (string.Equals(orderStatus, "Pending", StringComparison.OrdinalIgnoreCase))
+            {
+                <option value="Pending" selected>Pending</option>
+            }
+            else
+            {
+                <option value="Pending">Pending</option>
+            }
+
+            @if (string.Equals(orderStatus, "Processing", StringComparison.OrdinalIgnoreCase))
+            {
+                <option value="Processing" selected>Processing</option>
+            }
+            else
+            {
+                <option value="Processing">Processing</option>
+            }
+
+            @if (string.Equals(orderStatus, "Cancelled", StringComparison.OrdinalIgnoreCase))
+            {
+                <option value="Cancelled" selected>Cancelled</option>
+            }
+            else
+            {
+                <option value="Cancelled">Cancelled</option>
+            }
+        </select>
+
+        <!-- PaymentStatus -->
+        <select name="paymentStatus" class="form-select" style="width:170px">
+            <option value="">-- TT Thanh toán --</option>
+            @if (string.Equals(paymentStatus, "Paid", StringComparison.OrdinalIgnoreCase))
+            {
+                <option value="Paid" selected>Paid</option>
+            }
+            else
+            {
+                <option value="Paid">Paid</option>
+            }
+
+            @if (string.Equals(paymentStatus, "Unpaid", StringComparison.OrdinalIgnoreCase))
+            {
+                <option value="Unpaid" selected>Unpaid</option>
+            }
+            else
+            {
+                <option value="Unpaid">Unpaid</option>
+            }
+        </select>
+
+        <button class="btn btn-outline-primary"><i class="fas fa-filter me-1"></i>Lọc</button>
+    </form>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase text-muted small mb-1">Tổng đơn</h6>
+                    <h4 class="fw-bold text-dark mb-0">@ViewBag.TotalOrders</h4>
+                </div>
+                <div class="stat-icon bg-primary bg-opacity-10"><i class="fas fa-receipt text-primary"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase text-muted small mb-1">Pending</h6>
+                    <h4 class="fw-bold text-dark mb-0">@ViewBag.PendingCount</h4>
+                </div>
+                <div class="stat-icon bg-warning bg-opacity-10"><i class="fas fa-hourglass-half text-warning"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase text-muted small mb-1">Đã thanh toán</h6>
+                    <h4 class="fw-bold text-dark mb-0">@ViewBag.PaidCount</h4>
+                </div>
+                <div class="stat-icon bg-success bg-opacity-10"><i class="fas fa-check-circle text-success"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-uppercase text-muted small mb-1">Chưa thanh toán</h6>
+                    <h4 class="fw-bold text-dark mb-0">@ViewBag.UnpaidCount</h4>
+                </div>
+                <div class="stat-icon bg-secondary bg-opacity-10"><i class="fas fa-wallet text-secondary"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Orders table -->
+<!-- Orders table -->
+<div class="card">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Danh sách đơn hàng</h5>
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-modern mb-0">
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Ngày đặt</th>
+                        <th>Khách nhận</th>
+                        <th>SĐT</th>
+                        <th class="text-center">SL</th>
+                        <th class="text-end">Thành tiền</th>
+                        <th>TT thanh toán</th>
+                        <th>Trạng thái</th>
+                        
+                        <th class="text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var o in Model)
+                        {
+                            var subTotal = o.TotalAmount ?? 0m;
+                            var ship = o.ShippingFee ?? 0m;
+                            var grand = subTotal + ship;
+
+                            // SL ưu tiên từ OrderDetails
+                            int qty = o.OrderDetails?.Any() == true
+                            ? o.OrderDetails.Sum(d => d.Quantity ?? 0)
+                            : (o.Quantity ?? 0);
+
+                            <tr>
+                                <td class="fw-semibold">#@o.OrderId</td>
+                                <td>@formatDate(o.OrderDate)</td>
+                                <td>@o.RecipientName</td>
+                                <td>@o.RecipientPhone</td>
+                                <td class="text-center">@qty</td>
+                                <td class="text-end fw-semibold">@grand.ToString("N0", vi) ₫</td>
+                                <td><span class="@Badge(o.PaymentStatus)">@o.PaymentStatus</span></td>
+                                <td><span class="@Badge(o.OrderStatus)">@o.OrderStatus</span></td>
+                                
+                                <td class="text-center">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a asp-action="Details" asp-route-id="@o.OrderId" class="btn btn-action btn-outline-info" title="Chi tiết"><i class="fas fa-eye"></i></a>
+                                        <a asp-action="Edit" asp-route-id="@o.OrderId" class="btn btn-action btn-outline-warning" title="Sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-action="Delete" asp-route-id="@o.OrderId" class="btn btn-action btn-outline-danger" title="Xóa"><i class="fas fa-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center text-muted">Không có đơn hàng nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    .table-modern th {
+        white-space: nowrap;
+    }
+
+    .badge {
+        font-size: .75rem;
+        padding: .5em .6em;
+        border-radius: .5rem;
+    }
+
+    .stat-card .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+    }
+
+    .btn-action {
+        padding: .25rem .5rem;
+    }
+</style>

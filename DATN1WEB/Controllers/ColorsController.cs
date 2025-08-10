@@ -24,7 +24,7 @@ namespace DATN1API.Controllers
             {
                 colorQuery = colorQuery.Where(c => c.ColorName.Contains(search));
             }
-            var colors = await colorQuery.OrderByDescending(c => c.ColorID).ToListAsync();
+            var colors = await colorQuery.OrderByDescending(c => c.ColorId).ToListAsync();
             ViewBag.TotalColors = await _context.Colors.CountAsync();
             ViewBag.FilteredColorCount = colors.Count;
 
@@ -34,7 +34,7 @@ namespace DATN1API.Controllers
             {
                 sizeQuery = sizeQuery.Where(s => s.SizeName.Contains(search));
             }
-            var sizes = await sizeQuery.OrderByDescending(s => s.SizeID).ToListAsync();
+            var sizes = await sizeQuery.OrderByDescending(s => s.SizeId).ToListAsync();
             ViewBag.TotalSizes = await _context.Sizes.CountAsync();
             ViewBag.FilteredSizeCount = sizes.Count;
 
@@ -127,13 +127,13 @@ namespace DATN1API.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Color color)
         {
-            if (id != color.ColorID) return NotFound();
+            if (id != color.ColorId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 // Lấy bản ghi gốc trong DB
                 var existingColor = await _context.Colors.AsNoTracking()
-                                        .FirstOrDefaultAsync(c => c.ColorID == id);
+                                        .FirstOrDefaultAsync(c => c.ColorId == id);
 
                 if (existingColor == null) return NotFound();
 
@@ -146,7 +146,7 @@ namespace DATN1API.Controllers
 
                 // Kiểm tra tên đã tồn tại ở bản ghi khác
                 bool exists = await _context.Colors
-                    .AnyAsync(c => c.ColorID != id && c.ColorName.ToLower() == color.ColorName.ToLower());
+                    .AnyAsync(c => c.ColorId != id && c.ColorName.ToLower() == color.ColorName.ToLower());
 
                 if (exists)
                 {
@@ -170,7 +170,7 @@ namespace DATN1API.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
-            var color = await _context.Colors.FirstOrDefaultAsync(m => m.ColorID == id);
+            var color = await _context.Colors.FirstOrDefaultAsync(m => m.ColorId == id);
             if (color == null) return NotFound();
             return View(color);
         }

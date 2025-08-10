@@ -1,5 +1,7 @@
 ﻿
 using DATN1API.Data;
+using DATN1API.Helpers;
+using DATN1API.Services;
 using DATN1WEB.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +28,11 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 })
 .AddEntityFrameworkStores<DatnContext>()
 .AddDefaultTokenProviders();
+builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
+builder.Services.AddScoped<PayOSService>();
+builder.Services.Configure<VNPAYSettings>(builder.Configuration.GetSection("VNPAY"));
+builder.Services.AddScoped<IVnPayService, VnPayService>();
+builder.Services.AddScoped<VnPayService>(); // Đăng ký VnPayService
 
 // Cấu hình session
 builder.Services.AddSession(options =>

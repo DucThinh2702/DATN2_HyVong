@@ -18,6 +18,8 @@ public partial class OrderDetail
     public decimal? TotalPrice { get; set; }
 
     [ForeignKey(nameof(OrderId))]
+    [System.Text.Json.Serialization.JsonIgnore]  // ← THÊM DÒNG NÀY để ngắt vòng lặp
+
     public virtual Order? Order { get; set; }
 
     [ForeignKey(nameof(ProductVariantId))]

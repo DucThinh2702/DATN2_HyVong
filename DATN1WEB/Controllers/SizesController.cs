@@ -27,7 +27,7 @@ namespace DATN1API.Controllers
 
             // Sắp xếp giảm dần để bản mới nhất lên đầu
             var sizes = await query
-                .OrderByDescending(s => s.SizeID)
+                .OrderByDescending(s => s.SizeId)
                 .ToListAsync();
 
             // Tổng số kích cỡ
@@ -42,7 +42,7 @@ namespace DATN1API.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
-            var size = await _context.Sizes.FirstOrDefaultAsync(m => m.SizeID == id);
+            var size = await _context.Sizes.FirstOrDefaultAsync(m => m.SizeId == id);
             if (size == null) return NotFound();
             return View(size);
         }
@@ -96,12 +96,12 @@ namespace DATN1API.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Size size)
         {
-            if (id != size.SizeID) return NotFound();
+            if (id != size.SizeId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 var existingSize = await _context.Sizes.AsNoTracking()
-                                       .FirstOrDefaultAsync(s => s.SizeID == id);
+                                       .FirstOrDefaultAsync(s => s.SizeId == id);
 
                 if (existingSize == null) return NotFound();
 
@@ -114,7 +114,7 @@ namespace DATN1API.Controllers
 
                 // Kiểm tra trùng tên kích cỡ ở bản ghi khác
                 bool exists = await _context.Sizes
-                    .AnyAsync(s => s.SizeID != id && s.SizeName.ToLower() == size.SizeName.ToLower());
+                    .AnyAsync(s => s.SizeId != id && s.SizeName.ToLower() == size.SizeName.ToLower());
                 if (exists)
                 {
                     TempData["ErrorMessage"] = "Tên kích cỡ đã tồn tại!";
@@ -135,7 +135,7 @@ namespace DATN1API.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
-            var size = await _context.Sizes.FirstOrDefaultAsync(m => m.SizeID == id);
+            var size = await _context.Sizes.FirstOrDefaultAsync(m => m.SizeId == id);
             if (size == null) return NotFound();
             return View(size);
         }

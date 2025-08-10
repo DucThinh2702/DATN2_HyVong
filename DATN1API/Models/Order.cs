@@ -1,6 +1,7 @@
 ﻿using DATN1WEB.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DATN1API.Models;
 
@@ -8,7 +9,7 @@ public partial class Order
 {
     public int OrderId { get; set; }
 
-    public int? UserId { get; set; }
+    public string? UserId { get; set; }
 
     public DateTime? OrderDate { get; set; }
 
@@ -30,7 +31,8 @@ public partial class Order
 
     public string? Note { get; set; }
 
-    public int? PromoCode { get; set; }
+  public string? PromoCode { get; set; } // ← sửa từ int? sang string?
+
 
     public decimal? ShippingFee { get; set; }
 
@@ -40,6 +42,7 @@ public partial class Order
 
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
+    [ForeignKey("UserId")]
     public virtual ApplicationUser? User { get; set; }
 
 }
