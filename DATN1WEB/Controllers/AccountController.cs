@@ -42,13 +42,15 @@ namespace DATN1API.Controllers
             {
                 var user = new ApplicationUser
                 {
-                    UserName = model.Email,  // Email sẽ là Username
+                    UserName = model.Username,  // Email sẽ là Username
                     Email = model.Email,
                     FullName = model.FullName,
                     PhoneNumber = model.PhoneNumber,
                     Gender = model.Gender,
                     Address = model.Address,
                     BirthDate = model.BirthDate,
+                    CreatedAt = DateTime.Now
+
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);

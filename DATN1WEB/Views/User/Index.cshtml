@@ -648,36 +648,33 @@
 
     /* Responsive Improvements */
     @@media (max-width: 768px) {
-        .logo-brand span
+        .logo-brand span {
+            font-size: 1.5rem;
+            padding: 6px 12px;
+        }
 
-    {
-        font-size: 1.5rem;
-        padding: 6px 12px;
-    }
+        .search-container {
+            margin: 15px 0;
+        }
 
-    .search-container {
-        margin: 15px 0;
-    }
+        .hotline-section {
+            text-align: center;
+            margin-top: 10px;
+        }
 
-    .hotline-section {
-        text-align: center;
-        margin-top: 10px;
-    }
+        .category-btn {
+            width: 100%;
+        }
 
-    .category-btn {
-        width: 100%;
-    }
+        .feature-card {
+            text-align: center;
+            flex-direction: column;
+            padding: 20px;
+        }
 
-    .feature-card {
-        text-align: center;
-        flex-direction: column;
-        padding: 20px;
-    }
-
-    .feature-icon {
-        margin-bottom: 10px;
-    }
-
+        .feature-icon {
+            margin-bottom: 10px;
+        }
     }
 
     /* Additional Improvements */
@@ -737,11 +734,36 @@
                     <!-- Account Dropdown -->
                     <div class="dropdown me-2">
                         <button class="btn btn-sm dropdown-toggle border" type="button" data-toggle="dropdown">
-                            Tài khoản
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <text>@User.Identity.Name</text>
+                            }
+                            else
+                            {
+                                <text>Tài khoản</text>
+                            }
                         </button>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" href="login.html">Đăng nhập</a>
-                            <a class="dropdown-item" href="register.html">Đăng ký</a>
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <!-- Added personal information link for logged in users -->
+                                <a class="dropdown-item" href="@Url.Action("ProfileUser", "User")">
+                                    <i class="fa fa-user mr-2"></i>Thông tin cá nhân
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="@Url.Action("Logout", "Account")">
+                                    <i class="fa fa-sign-out-alt mr-2"></i>Đăng xuất
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="dropdown-item" href="@Url.Action("Login", "Account")">
+                                    <i class="fa fa-sign-in-alt mr-2"></i>Đăng nhập
+                                </a>
+                                <a class="dropdown-item" href="@Url.Action("Register", "Account")">
+                                    <i class="fa fa-user-plus mr-2"></i>Đăng ký
+                                </a>
+                            }
                         </div>
                     </div>
                     <!-- Language Dropdown -->
@@ -1048,7 +1070,13 @@
                                 <div class="product-img">
                                     <img class="img-fluid w-100" src="/placeholder.svg?height=280&width=300&text=@item.ProductName" alt="@item.ProductName">
                                     <div class="product-action">
-                                        <a href="#" class="btn"><i class="fa fa-shopping-cart"></i></a>
+                                        <a href="#" class="btn add-to-cart"
+                                           data-id="@item.ProductId"
+                                           data-name="@item.ProductName"
+                                           data-price="@item.SalePrice"
+                                           data-img="@item.ProductVariants?.FirstOrDefault()?.ImageFile">
+                                            <i class="fa fa-shopping-cart"></i>
+                                        </a>
                                         <a href="#" class="btn"><i class="far fa-heart"></i></a>
                                         <a href="#" class="btn"><i class="fa fa-sync-alt"></i></a>
                                         <a href="#" class="btn"><i class="fa fa-search"></i></a>
@@ -1278,6 +1306,40 @@
     <script src="~/js/main.js"></script>
 
     <script>
+                document.querySelectorAll(".add-to-cart").forEach(button => {
+            button.addEventListener("click", function (e) {
+                e.preventDefault();
+
+                const id = this.dataset.id;
+                const name = this.dataset.name;
+                const price = parseInt(this.dataset.price);
+                const img = this.dataset.img;
+
+                let cart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+                const found = cart.find(p => p.id === id);
+                if (found) {
+                    found.quantity += 1;
+                    found.total = found.quantity * found.price;
+                } else {
+                    cart.push({ id, name, price, img, quantity: 1, total: price });
+                }
+
+                localStorage.setItem("cartItems", JSON.stringify(cart));
+                localStorage.setItem("cartTotal", cart.reduce((acc, p) => acc + p.total, 0));
+
+                alert("Đã thêm sản phẩm vào giỏ hàng!");
+            });
+        });
+                function updateCartBadge() {
+            const cart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.querySelectorAll(".cart-badge").forEach(badge => {
+                badge.textContent = count;
+            });
+        }
+
+        updateCartBadge(); // gọi lúc load
+
         document.addEventListener("DOMContentLoaded", function () {
             // Add to cart functionality
             document.querySelectorAll(".add-to-cart").forEach(button => {

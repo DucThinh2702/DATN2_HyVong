@@ -1,0 +1,821 @@
+﻿@{
+    ViewData["Title"] = "Thông tin cá nhân";
+    Layout = null;
+}
+@model DATN1WEB.Models.ApplicationUser
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Thông tin cá nhân - DuAn_NhomHyVong</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Free HTML Templates" name="keywords">
+    <meta content="Free HTML Templates" name="description">
+
+    <!-- Favicon -->
+    <link href="~/img/favicon.ico" rel="icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="~/lib/animate/animate.min.css" rel="stylesheet" />
+    <link href="~/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet" />
+
+    <!-- Bootstrap 4 -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="~/css/style.css" rel="stylesheet" />
+</head>
+
+<style>
+    /* Global Styles */
+    * {
+        font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+        background: #f8f9fa;
+        line-height: 1.6;
+    }
+
+    /* Top Header - cải thiện alignment */
+    .top-header {
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        padding: 8px 0;
+    }
+
+        .top-header a {
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.3s ease;
+        }
+
+            .top-header a:hover {
+                color: #ffc107;
+            }
+
+        .top-header .dropdown-toggle {
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+
+    /* Logo Section - cải thiện căn chỉnh */
+    .logo-section {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 15px 0;
+    }
+
+    .logo-brand {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+        .logo-brand span {
+            font-weight: 700;
+            font-size: 1.8rem;
+            padding: 8px 16px;
+            display: inline-block;
+            line-height: 1;
+        }
+
+    /* Navigation Menu - cải thiện */
+    .main-nav {
+        background: #343a40;
+        min-height: 55px;
+    }
+
+    .category-btn {
+        background: #ffc107;
+        border: none;
+        color: #000;
+        font-weight: 600;
+        height: 55px;
+        width: 260px;
+        border-radius: 0;
+        transition: background-color 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+    }
+
+        .category-btn:hover,
+        .category-btn:focus {
+            background: #e0a800;
+            color: #000;
+        }
+
+        .category-btn h6 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+    /* Main Menu Links */
+    .main-menu .nav-link {
+        color: rgba(255,255,255,0.9) !important;
+        font-weight: 500;
+        padding: 0 20px !important;
+        line-height: 55px;
+        font-size: 14px;
+        transition: color 0.3s ease;
+        height: 55px;
+        display: flex;
+        align-items: center;
+    }
+
+        .main-menu .nav-link:hover,
+        .main-menu .nav-link.active {
+            color: #ffc107 !important;
+        }
+
+    /* Profile Form Styles */
+    .profile-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        padding: 40px;
+        margin: 30px 0;
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f8f9fa;
+    }
+
+        .profile-header h2 {
+            color: #343a40;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .profile-header p {
+            color: #6c757d;
+            margin: 0;
+        }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+        .form-group label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        height: auto;
+    }
+
+        .form-control:focus {
+            border-color: #ffc107;
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+            outline: none;
+        }
+
+    .btn-primary {
+        background: #ffc107;
+        border: 2px solid #ffc107;
+        color: #000;
+        font-weight: 600;
+        padding: 12px 30px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background: #e0a800;
+            border-color: #e0a800;
+            color: #000;
+            transform: translateY(-2px);
+        }
+
+    .btn-secondary {
+        background: #6c757d;
+        border: 2px solid #6c757d;
+        color: white;
+        font-weight: 600;
+        padding: 12px 30px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            border-color: #5a6268;
+            color: white;
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+
+    .alert {
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        border: none;
+    }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border-left: 4px solid #28a745;
+    }
+
+    .alert-danger {
+        background: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+
+    .row.form-row {
+        margin: 0 -10px;
+    }
+
+        .row.form-row .col-md-6 {
+            padding: 0 10px;
+        }
+
+    /* Footer */
+    .footer {
+        background: #343a40;
+        color: white;
+        margin-top: 50px;
+        padding: 40px 0 20px;
+    }
+
+        .footer h5 {
+            color: #ffc107;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .footer a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            display: block;
+            padding: 3px 0;
+            font-size: 14px;
+        }
+
+            .footer a:hover {
+                color: #ffc107;
+                padding-left: 5px;
+            }
+
+    /* Back to Top */
+    .back-to-top {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: #ffc107 !important;
+        border: none;
+        color: #000;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        font-size: 18px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+        .back-to-top:hover {
+            background: #e0a800 !important;
+            color: #000;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+    /* Updated validation styles - only show error states, no success states */
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+
+    .error-icon {
+        color: #dc3545;
+        margin-right: 5px;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .profile-container {
+            padding: 20px;
+            margin: 15px;
+        }
+
+        .logo-brand span {
+            font-size: 1.5rem;
+            padding: 6px 12px;
+        }
+
+        .category-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<body>
+    <div class="container-fluid border-bottom">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="row px-4">
+                <div class="col-lg-6 d-none d-lg-block">
+                    <div class="d-flex align-items-center h-100">
+                        <a href="#" class="me-3">Liên hệ</a>
+                        <a href="#">Giúp đỡ</a>
+                    </div>
+                </div>
+                <div class="col-lg-6 d-flex justify-content-end align-items-center">
+                    <!-- Account Dropdown -->
+                    <div class="dropdown me-2">
+                        <button class="btn btn-sm dropdown-toggle border" type="button" data-toggle="dropdown">
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                @User.Identity.Name
+                            }
+                            else
+                            {
+                                @:Tài khoản
+                            }
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <a class="dropdown-item" href="@Url.Action("ProfileUser", "User")">Thông tin cá nhân</a>
+                                <a class="dropdown-item" href="@Url.Action("Logout", "Account")">Đăng xuất</a>
+                            }
+                            else
+                            {
+                                <a class="dropdown-item" href="@Url.Action("Login", "Account")">Đăng nhập</a>
+                                <a class="dropdown-item" href="@Url.Action("Register", "Account")">Đăng ký</a>
+                            }
+                        </div>
+                    </div>
+                    <!-- Language Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm dropdown-toggle border" type="button" data-toggle="dropdown">
+                            Ngôn ngữ
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="#">Tiếng Việt</a>
+                            <a class="dropdown-item" href="#">Tiếng Anh</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <div class="d-flex align-items-center justify-content-between px-4">
+                <!-- Logo -->
+                <a href="@Url.Action("Index", "User")" class="logo-brand">
+                    <span class="text-warning" style="background:#343a40;">THE BAG</span>
+                    <span class="text-dark" style="background:#ffc107;">STUDIO</span>
+                </a>
+
+                <!-- Hotline -->
+                <div class="hotline-section">
+                    <small>Chăm sóc khách hàng</small>
+                    <h5>012 345 6789</h5>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <div class="main-nav">
+            <div class="d-flex">
+                <!-- Category Button -->
+                <div>
+                    <button class="category-btn" data-toggle="collapse" data-target="#navbar-vertical">
+                        <h6><i class="fa fa-bars mr-2"></i>Thể loại</h6>
+                        <i class="fa fa-angle-down"></i>
+                    </button>
+                </div>
+
+                <!-- Main Menu -->
+                <nav class="navbar navbar-expand-lg flex-grow-1 py-0">
+                    <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                        <div class="navbar-nav d-flex main-menu">
+                            <a href="@Url.Action("Index", "User")" class="nav-item nav-link">Trang chủ</a>
+                            <a href="@Url.Action("Shop", "Products")" class="nav-item nav-link">Khuyến mãi</a>
+                            <a href="@Url.Action("Collection", "Products")" class="nav-item nav-link">Bộ sưu tập</a>
+                            <div class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Trang</a>
+                                <div class="dropdown-menu">
+                                    <a href="@Url.Action("Cart", "Orders")" class="dropdown-item">Giỏ hàng</a>
+                                    <a href="@Url.Action("Checkout", "Orders")" class="dropdown-item">Thanh toán</a>
+                                </div>
+                            </div>
+                            <a href="@Url.Action("Contact", "Home")" class="nav-item nav-link">Tin tức</a>
+                            <a href="@Url.Action("ProfileUser", "User")" class="nav-item nav-link active">Thông tin cá nhân</a>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Profile Form Section -->
+        <div class="container">
+            <div class="profile-container">
+                <div class="profile-header">
+                    <h2><i class="fa fa-user-circle mr-3"></i>Thông tin cá nhân</h2>
+                    <p>Cập nhật thông tin cá nhân của bạn</p>
+                </div>
+
+                <!-- Success/Error Messages -->
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success">
+                        <i class="fa fa-check-circle mr-2"></i>@TempData["SuccessMessage"]
+                    </div>
+                }
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger">
+                        <i class="fa fa-exclamation-circle mr-2"></i>@TempData["ErrorMessage"]
+                    </div>
+                }
+
+                <!-- Enhanced validation summary display -->
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        <h6><i class="fa fa-exclamation-triangle mr-2"></i>Vui lòng kiểm tra lại thông tin:</h6>
+                        <ul class="mb-0">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <li>@error.ErrorMessage</li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <!-- Profile Form -->
+                <form asp-action="ProfileUser" method="post" id="profileForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row form-row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="FullName">Họ và tên <span class="text-danger">*</span></label>
+                                <input asp-for="FullName" class="form-control" placeholder="Nhập họ và tên của bạn" data-validation="required|minlength:2|maxlength:100" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="UserName">Tên đăng nhập <span class="text-danger">*</span></label>
+                                <input asp-for="UserName" class="form-control" placeholder="Nhập tên đăng nhập" data-validation="required|username|minlength:4|maxlength:50" />
+                                <span asp-validation-for="UserName" class="text-danger small"></span>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row form-row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Email">Email <span class="text-danger">*</span></label>
+                                <input asp-for="Email" class="form-control" placeholder="Nhập địa chỉ email" data-validation="required|email" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="PhoneNumber">Số điện thoại <span class="text-danger">*</span></label>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="Nhập số điện thoại (10 chữ số)" data-validation="required|phone" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row form-row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="BirthDate">Ngày sinh <span class="text-danger">*</span></label>
+                                <input asp-for="BirthDate" type="date" class="form-control" data-validation="required|age" />
+                                <span asp-validation-for="BirthDate" class="text-danger small"></span>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Gender">Giới tính <span class="text-danger">*</span></label>
+                                <select asp-for="Gender" class="form-control" data-validation="required">
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                                <span asp-validation-for="Gender" class="text-danger small"></span>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Address">Địa chỉ <span class="text-danger">*</span></label>
+                        <textarea asp-for="Address" class="form-control" rows="3" placeholder="Nhập địa chỉ của bạn" data-validation="required|minlength:10|maxlength:200"></textarea>
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary mr-3" id="submitBtn">
+                            <i class="fa fa-save mr-2"></i>Cập nhật thông tin
+                        </button>
+                        <a href="@Url.Action("Index", "User")" class="btn btn-secondary">
+                            <i class="fa fa-arrow-left mr-2"></i>Quay lại trang chủ
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container-fluid">
+            <div class="row px-xl-5">
+                <!-- Contact Info -->
+                <div class="col-lg-4 col-md-12 mb-5">
+                    <h5>Liên lạc</h5>
+                    <p class="mb-4">
+                        Hãy liên lạc với chúng tôi nếu bạn đang thất mất hoặc muốn chúng tôi tư vấn sản phẩm phù hợp với bạn thì cứ liên lạc với chúng tôi
+                    </p>
+                    <p class="mb-2">
+                        <i class="fa fa-map-marker-alt text-warning mr-3"></i>123 Ngô Quyền, P. Thường Thạnh, Q. Cái Răng, TP. Cần Thơ
+                    </p>
+                    <p class="mb-2">
+                        <i class="fa fa-envelope text-warning mr-3"></i>nhomhyvongdatn@gmail.com
+                    </p>
+                    <p class="mb-0">
+                        <i class="fa fa-phone-alt text-warning mr-3"></i>012 345 67890
+                    </p>
+                </div>
+
+                <!-- Quick Shop -->
+                <div class="col-lg-2 col-md-4 mb-5">
+                    <h5>Cửa hàng nhanh</h5>
+                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Trang chủ</a>
+                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Cửa hàng của chúng tôi</a>
+                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Chi tiết cửa hàng</a>
+                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Giỏ hàng</a>
+                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Thanh toán</a>
+                </div>
+
+                <!-- My Account -->
+                <div class="col-lg-2 col-md-4 mb-5">
+                    <h5>Tài khoản của tôi</h5>
+                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Trang chủ</a>
+                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Cửa hàng của chúng tôi</a>
+                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Chi tiết cửa hàng</a>
+                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Giỏ hàng</a>
+                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Thanh toán</a>
+                </div>
+
+                <!-- Newsletter -->
+                <div class="col-lg-4 col-md-4 mb-5">
+                    <h5>Bản tin</h5>
+                    <p>Hãy tìm hiểu về chúng tôi</p>
+                    <form>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control border-0" placeholder="Địa chỉ email của bạn">
+                            <div class="input-group-append">
+                                <button class="btn btn-warning text-dark font-weight-bold">Đăng ký</button>
+                            </div>
+                        </div>
+                    </form>
+                    <h6 class="text-white text-uppercase mt-4 mb-3 font-weight-bold">Theo dõi chúng tôi</h6>
+                    <div class="d-flex">
+                        <a class="social-btn" href="#"><i class="fab fa-twitter"></i></a>
+                        <a class="social-btn" href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a class="social-btn" href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a class="social-btn" href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="row border-top pt-3">
+                <div class="col-md-6 text-center text-md-left">
+                    <p class="mb-0 text-muted">
+                        &copy; 2024 <strong>The Bag Studio</strong>. All rights reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-right">
+                    <p class="mb-0 text-muted">
+                        Designed with <i class="fa fa-heart text-danger"></i> by Nhom Hy Vong
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top -->
+    <a href="#" class="back-to-top">
+        <i class="fa fa-angle-double-up"></i>
+    </a>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/easing/easing.min.js"></script>
+    <script src="~/js/main.js"></script>
+
+    <script>
+        // Back to top functionality
+        $(window).scroll(function () {
+            if ($(this).scrollTop() > 100) {
+                $('.back-to-top').fadeIn('slow');
+            } else {
+                $('.back-to-top').fadeOut('slow');
+            }
+        });
+
+        $('.back-to-top').click(function () {
+            $('html, body').animate({ scrollTop: 0 }, 1500, 'easeInOutExpo');
+            return false;
+        });
+
+        $(document).ready(function() {
+            // Validation rules
+            const validationRules = {
+                required: function(value) {
+                    return value.trim() !== '';
+                },
+                email: function(value) {
+                    const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+                    return emailRegex.test(value);
+                },
+                phone: function(value) {
+                    const phoneRegex = /^0\d{9}$/;
+                    return phoneRegex.test(value);
+                },
+                username: function(value) {
+                    const usernameRegex = /^[a-zA-Z0-9_]{4,50}$/;
+                    return usernameRegex.test(value);
+                },
+                minlength: function(value, min) {
+                    return value.length >= parseInt(min);
+                },
+                maxlength: function(value, max) {
+                    return value.length <= parseInt(max);
+                },
+                age: function(value) {
+                    if (!value) return false;
+                    const birthDate = new Date(value);
+                    const today = new Date();
+                    const age = today.getFullYear() - birthDate.getFullYear();
+                    return age >= 13 && age <= 100;
+                }
+            };
+
+            // Error messages
+            const errorMessages = {
+                required: 'Trường này là bắt buộc',
+                email: 'Vui lòng nhập địa chỉ email hợp lệ',
+                phone: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 0',
+                username: 'Tên đăng nhập chỉ chứa chữ cái, số và dấu gạch dưới (4-50 ký tự)',
+                minlength: 'Tối thiểu {min} ký tự',
+                maxlength: 'Tối đa {max} ký tự',
+                age: 'Tuổi phải từ 13 đến 100'
+            };
+
+            function validateField(field) {
+                const $field = $(field);
+                const value = $field.val();
+                const validationAttr = $field.data('validation');
+                
+                if (!validationAttr) return true;
+
+                const rules = validationAttr.split('|');
+                let isValid = true;
+                let errorMessage = '';
+
+                for (let rule of rules) {
+                    const [ruleName, ruleValue] = rule.split(':');
+                    
+                    if (ruleName === 'required' && !validationRules.required(value)) {
+                        isValid = false;
+                        errorMessage = errorMessages.required;
+                        break;
+                    } else if (value && ruleName in validationRules) {
+                        if (ruleValue) {
+                            if (!validationRules[ruleName](value, ruleValue)) {
+                                isValid = false;
+                                errorMessage = errorMessages[ruleName].replace('{min}', ruleValue).replace('{max}', ruleValue);
+                                break;
+                            }
+                        } else {
+                            if (!validationRules[ruleName](value)) {
+                                isValid = false;
+                                errorMessage = errorMessages[ruleName];
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                const $invalidFeedback = $field.siblings('.invalid-feedback');
+
+                if (!isValid) {
+                    // Show error state
+                    $field.removeClass('is-valid').addClass('is-invalid');
+                    $invalidFeedback.html('<i class="fa fa-times error-icon"></i>' + errorMessage);
+                } else {
+                    // Return to normal state (no success indicators)
+                    $field.removeClass('is-valid is-invalid');
+                    $invalidFeedback.text('');
+                }
+
+                return isValid;
+            }
+
+            // Real-time validation on input/blur events
+            $('input[data-validation], select[data-validation], textarea[data-validation]').on('input blur', function() {
+                validateField(this);
+            });
+
+            // Form submission validation
+            $('#profileForm').on('submit', function(e) {
+                let isFormValid = true;
+                
+                $('input[data-validation], select[data-validation], textarea[data-validation]').each(function() {
+                    if (!validateField(this)) {
+                        isFormValid = false;
+                    }
+                });
+
+                if (!isFormValid) {
+                    e.preventDefault();
+                    $('html, body').animate({
+                        scrollTop: $('.is-invalid').first().offset().top - 100
+                    }, 500);
+                    return false;
+                }
+
+                // Show loading state
+                $('#submitBtn').prop('disabled', true).html('<i class="fa fa-spinner fa-spin mr-2"></i>Đang cập nhật...');
+            });
+
+            // Initialize validation on page load for fields with values
+            $('input[data-validation], select[data-validation], textarea[data-validation]').each(function() {
+                if ($(this).val()) {
+                    validateField(this);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+</merged_code>
