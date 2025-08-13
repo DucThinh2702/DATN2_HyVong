@@ -1,0 +1,26 @@
+﻿@model DATN1API.Models.Category
+@{
+    ViewData["Title"] = "Xoá danh mục";
+    var fileName = System.IO.Path.GetFileName((Model.CategoryImage ?? "").Replace("\\", "/"));
+    var imgUrl = string.IsNullOrEmpty(fileName) ? null : Url.Content($"~/hinh/{fileName}");
+}
+<h2>@ViewData["Title"]</h2>
+<hr />
+
+<div class="alert alert-warning">
+    Bạn chắc chắn muốn xoá danh mục <strong>@Model.CategoryName</strong>?
+</div>
+
+@if (!string.IsNullOrEmpty(imgUrl))
+{
+    <div class="mb-3">
+        <img src="@imgUrl" alt="thumb" style="width:120px;height:120px;object-fit:cover;border-radius:8px" />
+    </div>
+}
+
+<form asp-action="Delete">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="CategoryId" />
+    <button type="submit" class="btn btn-danger">Xoá</button>
+    <a asp-action="Index" class="btn btn-secondary">Huỷ</a>
+</form>

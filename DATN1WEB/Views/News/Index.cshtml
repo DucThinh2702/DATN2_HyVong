@@ -1,0 +1,62 @@
+﻿@model List<DATN1API.Models.News>
+@{
+    ViewData["Title"] = "Bài viết";
+    string Img(string? p) => string.IsNullOrWhiteSpace(p) ? "" : (p!.StartsWith("~/") ? p : "~" + (p.StartsWith("/") ? p : "/" + p));
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Danh sách bài viết</h2>
+    <a asp-controller="News" asp-action="Create" class="btn btn-warning">+ Tạo bài viết</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Ảnh</th>
+                <th>Tiêu đề</th>
+                <th>Ngày đăng</th>
+                <th>Tác giả (ID)</th>
+                <th class="text-end">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var n in Model)
+                {
+                    <tr>
+                        <td style="width:80px">
+                            @if (!string.IsNullOrEmpty(n.ThumbnailImage))
+                            {
+                                <img src="@Url.Content(Img(n.ThumbnailImage))" alt="thumb"
+                                     class="img-fluid rounded" style="width:70px;height:70px;object-fit:cover" />
+                            }
+                        </td>
+                        <td>@n.Title</td>
+                        <td>@(n.PostedDate?.ToString("dd/MM/yyyy HH:mm"))</td>
+                        <td>@(n.AuthorId?.ToString() ?? "-")</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-route-id="@n.NewsId">Xem</a>
+                            <a class="btn btn-sm btn-outline-warning" asp-action="Edit" asp-route-id="@n.NewsId">Sửa</a>
+                            <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@n.NewsId">Xoá</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="5" class="text-center text-muted">Chưa có bài viết</td></tr>
+            }
+        </tbody>
+    </table>
+</div>

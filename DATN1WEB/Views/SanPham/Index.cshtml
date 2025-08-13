@@ -1,7 +1,12 @@
-﻿@model List<DATN1API.Models.Product>
+﻿@using System.Linq
+@model List<DATN1API.Models.Product>
+
 @{
     ViewData["Title"] = "Danh sách sản phẩm";
     var lowStockProducts = ViewBag.LowStockProducts as List<DATN1API.Models.Product> ?? new();
+    int page = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 0;
+    string search = ViewBag.Search as string ?? "";
 }
 
 <div class="content-header">
@@ -17,7 +22,7 @@
     <div class="d-flex align-items-center gap-3">
         <form method="get" class="input-group" style="width: 300px;">
             <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input type="text" name="search" class="form-control search-box" placeholder="Tìm kiếm sản phẩm..." />
+            <input type="text" name="search" value="@search" class="form-control search-box" placeholder="Tìm kiếm sản phẩm..." />
         </form>
         <div class="dropdown">
             <button class="btn btn-outline-warning position-relative" data-bs-toggle="dropdown" aria-expanded="false">
@@ -116,66 +121,152 @@
             </a>
         </div>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-modern mb-0">
-                <thead>
-                    <tr>
-                        <th>Ảnh</th>
-                        <th>Tên sản phẩm</th>
-                        <th>Giá bán</th>
-                        <th>Ngày tạo</th>
-                        <th class="text-center">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var item in Model)
-                        {
-                            <tr>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(item.ThumbnailImage))
-                                    {
-                                        <img src="~/hinh/@System.IO.Path.GetFileName(item.ThumbnailImage)"
-                                             class="product-image" alt="@item.ProductName" />
 
-                                    }
-                                    else
-                                    {
-                                        <div class="product-image bg-light d-flex align-items-center justify-content-center">
-                                            <i class="fas fa-image text-muted"></i>
-                                        </div>
-                                    }
-                                </td>
-
-                                <td>
-                                    <div class="product-name">@item.ProductName</div>
-                                    <small class="product-sku">SKU: BAG-@item.ProductId</small>
-                                </td>
-                                <td><span class="price">@((item.SalePrice ?? 0).ToString("N0")) ₫</span></td>
-                                <td><span class="text-muted">@item.CreatedDate?.ToString("dd/MM/yyyy")</span></td>
-                                <td class="text-center">
-                                    <div class="d-flex gap-1 justify-content-center">
-                                        <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-action btn-outline-info" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
-                                        <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-action btn-outline-warning" title="Chỉnh sửa"><i class="fas fa-edit"></i></a>
-                                        <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-action btn-outline-danger" title="Xóa"><i class="fas fa-trash"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
+    <div class="table-responsive">
+        <table class="table table-modern mb-0">
+            <thead>
+                <tr>
+                    <th>Ảnh</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Giá bán</th>
+                    <th>Tồn kho</th>
+                    <th>Trạng thái</th>
+                    <th class="text-center">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
                     {
+                        var totalStock = item?.ProductVariants?.Sum(v => v.Stock ?? 0) ?? 0;
+                        string statusLabel;
+                        if (!string.IsNullOrWhiteSpace(item?.Status) && item!.Status!.Equals("Inactive", StringComparison.OrdinalIgnoreCase))
+                            statusLabel = "Ngừng bán";
+                        else if (totalStock <= 0)
+                            statusLabel = "Hết hàng";
+                        else if (totalStock <= 5)
+                            statusLabel = "Sắp hết";
+                        else
+                            statusLabel = "Đang bán";
+
                         <tr>
-                            <td colspan="5" class="text-center text-muted">
-                                Không có sản phẩm nào
+                            <!-- Ảnh -->
+                            <td style="width: 100px;">
+                                @if (!string.IsNullOrEmpty(item?.ThumbnailImage))
+                                {
+                                    <div class="ratio ratio-1x1 bg-light rounded d-flex justify-content-center align-items-center overflow-hidden" style="max-width:80px;">
+                                        <img src="~/hinh/@System.IO.Path.GetFileName(item.ThumbnailImage)"
+                                             alt="@item.ProductName"
+                                             class="img-fluid"
+                                             style="object-fit: cover; width: 100%; height: 100%;" />
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="ratio ratio-1x1 bg-light rounded d-flex justify-content-center align-items-center text-muted" style="max-width:80px;">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                }
+                            </td>
+
+
+                            <!-- Tên sản phẩm -->
+                            <td>
+                                <div class="product-name">@item?.ProductName</div>
+                                <small class="product-sku">SKU: BAG-@item?.ProductId</small>
+                            </td>
+
+                            <!-- Giá bán (server-side format) -->
+                            <td><span class="price">@((item?.SalePrice ?? 0).ToString("N0")) ₫</span></td>
+
+                            <!-- Tồn kho -->
+                            <td>@totalStock</td>
+
+                            <!-- Trạng thái -->
+                            <td>
+                                @switch (statusLabel)
+                                {
+                                    case "Ngừng bán":
+                                        @:<span class="badge bg-secondary">Ngừng bán</span>
+                                        break;
+                                    case "Hết hàng":
+                                        @:<span class="badge bg-danger">Hết hàng</span>
+                                        break;
+                                    case "Sắp hết":
+                                        @:<span class="badge bg-warning text-dark">Sắp hết</span>
+                                        break;
+                                    default:
+                                        @:<span class="badge bg-success">Đang bán</span>
+                                        break;
+                                }
+                            </td>
+
+                            <!-- Hành động -->
+                            <td class="text-center">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a asp-action="Details" asp-route-id="@item?.ProductId" class="btn btn-action btn-outline-info" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
+                                    <a asp-action="Edit" asp-route-id="@item?.ProductId" class="btn btn-action btn-outline-warning" title="Chỉnh sửa"><i class="fas fa-edit"></i></a>
+                                    <a asp-action="Delete" asp-route-id="@item?.ProductId" class="btn btn-action btn-outline-danger" title="Xóa"><i class="fas fa-trash"></i></a>
+                                </div>
                             </td>
                         </tr>
                     }
-                </tbody>
-            </table>
-        </div>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">Không có sản phẩm nào</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
+
+    <!-- PHÂN TRANG: chỉ hiện khi tổng trang > 1 (tức là > 6 sản phẩm) -->
+    @if (totalPages > 1)
+    {
+        <nav aria-label="Page navigation" class="mt-3">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(page <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = page - 1, search = search })">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == page ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { page = i, search = search })">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(page >= totalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = page + 1, search = search })">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
 </div>
-    
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // SweetAlert: hiện thông báo thành công và tự tắt sau 3 giây
+        (function () {
+            var msg = '@Html.Raw(TempData["SuccessMessage"])';
+            if (msg) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: msg,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+            }
+        })();
+    </script>
+}

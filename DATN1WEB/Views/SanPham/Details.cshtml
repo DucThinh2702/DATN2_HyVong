@@ -2,8 +2,25 @@
 @{
     ViewData["Title"] = "Chi tiết sản phẩm";
     Layout = "~/Views/Shared/_Layout.cshtml";
-}
 
+    string ToViStatus(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return "—";
+        var t = s.Trim();
+        if (t.Equals("Active", StringComparison.OrdinalIgnoreCase) || t.Equals("Đang bán", StringComparison.OrdinalIgnoreCase))
+            return "Đang bán";
+        if (t.Equals("Inactive", StringComparison.OrdinalIgnoreCase) || t.Equals("Ngừng bán", StringComparison.OrdinalIgnoreCase))
+            return "Ngừng bán";
+        return t; // fallback: giữ nguyên nếu có giá trị khác
+    }
+    string StatusBadgeClass(string? s)
+    {
+        var vi = ToViStatus(s);
+        return vi == "Đang bán" ? "badge bg-success"
+             : vi == "Ngừng bán" ? "badge bg-secondary"
+             : "badge bg-light text-dark";
+    }
+}
 <div class="content-header">
 
     <h1 class="mb-4">Chi tiết sản phẩm</h1>
@@ -35,7 +52,8 @@
                     <p class="card-text">
                         <strong>Chất liệu:</strong> @Model.Material <br />
                         <strong>Danh mục:</strong> @Model.Category?.CategoryName <br />
-                        <strong>Trạng thái:</strong> @Model.Status
+                        <strong>Trạng thái:</strong>
+                        <span class="@StatusBadgeClass(Model.Status)">@ToViStatus(Model.Status)</span>
                     </p>
                     <p class="card-text">
                         <small class="text-muted">
@@ -67,6 +85,7 @@
                     <th>Kích cỡ</th>
                     <th>Tồn kho</th>
                     <th>Giá bán</th>
+                    <th>Trạng thái</th>
                     <th>Ảnh</th>
                     <th class="text-center" style="width:180px;">Hành động</th>
                 </tr>
@@ -80,6 +99,9 @@
                         <td>@(v.Size?.SizeName ?? "N/A")</td>
                         <td>@v.Stock</td>
                         <td>@(v.SalePrice?.ToString("N0") ?? "Chưa có") ₫</td>
+                        <td>
+                            <span class="@StatusBadgeClass(v.Status)">@ToViStatus(v.Status)</span>
+                        </td>
                         <td>
                             @if (!string.IsNullOrEmpty(v.ThumbnailImage))
                             {

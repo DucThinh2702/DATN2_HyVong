@@ -1,0 +1,60 @@
+﻿@model DATN1API.Models.ProductVariant
+@{
+    ViewData["Title"] = "Thêm biến thể";
+}
+<h2>@ViewData["Title"]</h2>
+<hr />
+<form asp-action="Create" enctype="multipart/form-data">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Sản phẩm</label>
+            <select asp-for="ProductId" class="form-select" asp-items="ViewBag.Products">
+                <option value="">-- Chọn sản phẩm --</option>
+            </select>
+            <span asp-validation-for="ProductId" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Màu</label>
+            <select asp-for="ColorId" class="form-select" asp-items="ViewBag.Colors">
+                <option value="">-- Chọn màu --</option>
+            </select>
+            <span asp-validation-for="ColorId" class="text-danger"></span>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Kích cỡ</label>
+            <select asp-for="SizeId" class="form-select" asp-items="ViewBag.Sizes">
+                <option value="">-- Chọn size --</option>
+            </select>
+            <span asp-validation-for="SizeId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">SKU (tùy chọn)</label>
+            <input asp-for="Sku" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Tồn kho</label>
+            <input asp-for="Stock" class="form-control" type="number" min="0" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Giá gốc</label>
+            <input asp-for="OriginalPrice" class="form-control" type="number" step="0.01" min="0" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Giá bán</label>
+            <input asp-for="SalePrice" class="form-control" type="number" step="0.01" min="0" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Trạng thái</label>
+            <input asp-for="Status" class="form-control" value="Active" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Ảnh biến thể</label>
+            <input asp-for="ImageFile" type="file" class="form-control" />
+        </div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Lưu</button>
+        <a asp-action="Index" class="btn btn-secondary">Huỷ</a>
+    </div>
+</form>

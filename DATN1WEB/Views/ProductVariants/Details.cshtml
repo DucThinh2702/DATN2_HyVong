@@ -1,0 +1,69 @@
+﻿@model DATN1API.Models.ProductVariant
+@{
+    ViewData["Title"] = "Chi tiết biến thể";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle me-2"></i>@ViewData["Title"]
+            </h5>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3 fw-bold">Mã biến thể</dt>
+                <dd class="col-sm-9">@Model.VariantId</dd>
+
+                <dt class="col-sm-3 fw-bold">Sản phẩm</dt>
+                <dd class="col-sm-9">@Model.Product?.ProductName</dd>
+
+                <dt class="col-sm-3 fw-bold">Màu sắc</dt>
+                <dd class="col-sm-9">@Model.Color?.ColorName</dd>
+
+                <dt class="col-sm-3 fw-bold">Kích cỡ</dt>
+                <dd class="col-sm-9">@Model.Size?.SizeName</dd>
+
+                <dt class="col-sm-3 fw-bold">SKU</dt>
+                <dd class="col-sm-9">@Model.Sku</dd>
+
+                <dt class="col-sm-3 fw-bold">Tồn kho</dt>
+                <dd class="col-sm-9">@(Model.Stock ?? 0)</dd>
+
+                <dt class="col-sm-3 fw-bold">Giá bán</dt>
+                <dd class="col-sm-9">@(Model.SalePrice?.ToString("N0") ?? "-") ₫</dd>
+
+                <dt class="col-sm-3 fw-bold">Giá gốc</dt>
+                <dd class="col-sm-9">@(Model.OriginalPrice?.ToString("N0") ?? "-") ₫</dd>
+
+                <dt class="col-sm-3 fw-bold">Trạng thái</dt>
+                <dd class="col-sm-9">@Model.Status</dd>
+
+                <dt class="col-sm-3 fw-bold">Ảnh</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrEmpty(Model.ThumbnailImage))
+                    {
+                        <div class="ratio ratio-1x1" style="max-width: 150px;">
+                            <img src="@($"{ViewBag.ApiUrl}{Model.ThumbnailImage}")"
+                                 alt="@Model.Product?.ProductName"
+                                 class="img-fluid rounded"
+                                 style="object-fit: cover;" />
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted fst-italic">Chưa có ảnh</span>
+                    }
+                </dd>
+            </dl>
+        </div>
+        <div class="card-footer text-end">
+            <a class="btn btn-warning" asp-action="Edit" asp-route-id="@Model.VariantId">
+                <i class="fas fa-edit me-1"></i> Sửa
+            </a>
+            <a class="btn btn-secondary" asp-action="Index" asp-route-productId="@Model.ProductId">
+                <i class="fas fa-arrow-left me-1"></i> Quay lại
+            </a>
+        </div>
+    </div>
+</div>

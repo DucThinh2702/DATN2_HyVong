@@ -4,6 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Linq;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 public class SanPhamController : Controller
 {
@@ -16,31 +21,78 @@ public class SanPhamController : Controller
         _logger = logger;
     }
 
+    private static int TotalStock(Product? p)
+        => p?.ProductVariants?.Sum(v => v.Stock ?? 0) ?? 0;
+
     // ======================= INDEX =======================
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
+        const int pageSize = 6;
+
         try
         {
-            // Gán URL API cho View
             ViewBag.ApiUrl = _client.BaseAddress?.ToString() ?? "https://localhost:5002/";
 
-            var products = await _client.GetFromJsonAsync<List<Product>>("api/Product") ?? new List<Product>();
+            var products = await _client.GetFromJsonAsync<List<Product>>("api/Product")
+                           ?? new List<Product>();
 
-            _logger.LogInformation("Số sản phẩm từ API: {Count}", products.Count);
-
-            ViewBag.TotalCount = products.Count;
-            ViewBag.InStockCount = products.Count(x => x.ProductVariants != null && x.ProductVariants.Any(v => v.Stock > 0));
-            ViewBag.OutOfStockCount = products.Count(x => x.ProductVariants != null && x.ProductVariants.All(v => v.Stock == 0));
-            ViewBag.LowStockProducts = products
-                .Where(x => x.ProductVariants != null && x.ProductVariants.Any(v => v.Stock > 0 && v.Stock <= 5))
+            // Sắp xếp mới nhất lên đầu (CreatedDate desc, fallback ProductId desc)
+            products = products
+                .OrderByDescending(p => p.CreatedDate ?? DateTime.MinValue)
+                .ThenByDescending(p => p.ProductId)
                 .ToList();
-            ViewBag.LowStockCount = ViewBag.LowStockProducts.Count;
 
-            return View(products);
+            // Tìm kiếm (nếu có)
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var key = search.Trim().ToLower();
+                products = products
+                    .Where(p => (p.ProductName ?? string.Empty).ToLower().Contains(key))
+                    .ToList();
+            }
+
+            // Thống kê
+            ViewBag.TotalCount = products.Count;
+            ViewBag.InStockCount = products.Count(p => TotalStock(p) > 0);
+            ViewBag.OutOfStockCount = products.Count(p => TotalStock(p) == 0);
+
+            var lowStock = products.Where(p => {
+                var t = TotalStock(p);
+                return t > 0 && t <= 5;
+            }).ToList();
+            ViewBag.LowStockProducts = lowStock;
+            ViewBag.LowStockCount = lowStock.Count;
+
+            // Phân trang
+            var totalItems = products.Count;
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var pageData = products
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            ViewBag.Page = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.Search = search ?? string.Empty;
+
+            return View(pageData);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi lấy danh sách sản phẩm");
+            ViewBag.TotalCount = 0;
+            ViewBag.InStockCount = 0;
+            ViewBag.OutOfStockCount = 0;
+            ViewBag.LowStockProducts = new List<Product>();
+            ViewBag.LowStockCount = 0;
+            ViewBag.Page = 1;
+            ViewBag.PageSize = 6;
+            ViewBag.TotalPages = 0;
+            ViewBag.Search = search ?? string.Empty;
             return View(new List<Product>());
         }
     }
@@ -75,52 +127,39 @@ public class SanPhamController : Controller
         {
             var formData = new MultipartFormDataContent();
 
-            // ===== Thông tin sản phẩm =====
             formData.Add(new StringContent(product.ProductName ?? ""), "ProductName");
             formData.Add(new StringContent(product.Description ?? ""), "Description");
             formData.Add(new StringContent(product.OriginalPrice?.ToString() ?? "0"), "OriginalPrice");
             formData.Add(new StringContent(product.SalePrice?.ToString() ?? "0"), "SalePrice");
             formData.Add(new StringContent(product.Material ?? ""), "Material");
             formData.Add(new StringContent(product.CategoryId?.ToString() ?? ""), "CategoryId");
-            formData.Add(new StringContent(product.Status ?? "Đang bán"), "Status");
+            formData.Add(new StringContent(string.IsNullOrWhiteSpace(product.Status) ? "Đang bán" : product.Status!), "Status");
 
-            // ===== Ảnh chính =====
             if (product.ImageFile != null)
             {
-                var imageContent = new StreamContent(product.ImageFile.OpenReadStream())
-                {
-                    Headers =
-                    {
-                        ContentLength = product.ImageFile.Length,
-                        ContentType = new MediaTypeHeaderValue(product.ImageFile.ContentType)
-                    }
-                };
+                var imageContent = new StreamContent(product.ImageFile.OpenReadStream());
+                imageContent.Headers.ContentLength = product.ImageFile.Length;
+                imageContent.Headers.ContentType = new MediaTypeHeaderValue(product.ImageFile.ContentType);
                 formData.Add(imageContent, "ImageFile", product.ImageFile.FileName);
             }
 
-            // ===== Biến thể =====
             var variants = product.ProductVariants.ToList();
             for (int i = 0; i < variants.Count; i++)
             {
-                var variant = variants[i];
-                formData.Add(new StringContent(variant.ColorId.ToString()), $"ProductVariants[{i}].ColorId");
-                formData.Add(new StringContent(variant.SizeId.ToString()), $"ProductVariants[{i}].SizeId");
-                formData.Add(new StringContent(variant.Stock?.ToString() ?? "0"), $"ProductVariants[{i}].Stock");
-                formData.Add(new StringContent(variant.SalePrice?.ToString() ?? "0"), $"ProductVariants[{i}].SalePrice");
-                formData.Add(new StringContent(variant.OriginalPrice?.ToString() ?? "0"), $"ProductVariants[{i}].OriginalPrice");
-                formData.Add(new StringContent(variant.Status ?? "Active"), $"ProductVariants[{i}].Status");
+                var v = variants[i];
+                formData.Add(new StringContent(v.ColorId.ToString()), $"ProductVariants[{i}].ColorId");
+                formData.Add(new StringContent(v.SizeId.ToString()), $"ProductVariants[{i}].SizeId");
+                formData.Add(new StringContent((v.Stock ?? 0).ToString()), $"ProductVariants[{i}].Stock");
+                formData.Add(new StringContent((v.SalePrice ?? 0).ToString()), $"ProductVariants[{i}].SalePrice");
+                formData.Add(new StringContent((v.OriginalPrice ?? 0).ToString()), $"ProductVariants[{i}].OriginalPrice");
+                formData.Add(new StringContent(string.IsNullOrWhiteSpace(v.Status) ? "Active" : v.Status!), $"ProductVariants[{i}].Status");
 
-                if (variant.ImageFile != null)
+                if (v.ImageFile != null)
                 {
-                    var vImageContent = new StreamContent(variant.ImageFile.OpenReadStream())
-                    {
-                        Headers =
-                        {
-                            ContentLength = variant.ImageFile.Length,
-                            ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(variant.ImageFile.ContentType)
-                        }
-                    };
-                    formData.Add(vImageContent, $"ProductVariants[{i}].ImageFile", variant.ImageFile.FileName);
+                    var vImage = new StreamContent(v.ImageFile.OpenReadStream());
+                    vImage.Headers.ContentLength = v.ImageFile.Length;
+                    vImage.Headers.ContentType = new MediaTypeHeaderValue(v.ImageFile.ContentType);
+                    formData.Add(vImage, $"ProductVariants[{i}].ImageFile", v.ImageFile.FileName);
                 }
             }
 
@@ -128,7 +167,8 @@ public class SanPhamController : Controller
 
             if (response.IsSuccessStatusCode)
             {
-                TempData["SuccessMessage"] = "Thêm sản phẩm và biến thể thành công!";
+                // >> Theo yêu cầu:
+                TempData["SuccessMessage"] = "Thêm sản phẩm thành công!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -144,7 +184,7 @@ public class SanPhamController : Controller
         return View(product);
     }
 
-    // ======================= DETAILS =======================
+    // ===== DETAILS =====
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
@@ -161,7 +201,96 @@ public class SanPhamController : Controller
         }
     }
 
-    // ======================= DELETE =======================
+    // ===== EDIT (GET) =====
+    [HttpGet]
+    public async Task<IActionResult> Edit(int id)
+    {
+        try
+        {
+            var product = await _client.GetFromJsonAsync<Product>($"api/Product/{id}");
+            if (product == null) return NotFound();
+
+            await LoadCategoryColorSize();
+            return View(product);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy sản phẩm để chỉnh sửa (id={Id})", id);
+            return StatusCode(500, "Lỗi server");
+        }
+    }
+
+    // ===== EDIT (POST) =====
+    [HttpPost]
+    public async Task<IActionResult> Edit(int id, Product product, IFormFile? ImageFile)
+    {
+        if (id != product.ProductId) return BadRequest();
+
+        if (!ModelState.IsValid)
+        {
+            await LoadCategoryColorSize();
+            return View(product);
+        }
+
+        try
+        {
+            var formData = new MultipartFormDataContent();
+
+            formData.Add(new StringContent(product.ProductId.ToString()), "ProductId");
+            formData.Add(new StringContent(product.ProductName ?? ""), "ProductName");
+            formData.Add(new StringContent(product.Description ?? ""), "Description");
+            formData.Add(new StringContent((product.SalePrice ?? 0).ToString()), "SalePrice");
+            formData.Add(new StringContent((product.OriginalPrice ?? 0).ToString()), "OriginalPrice");
+            formData.Add(new StringContent(product.Material ?? ""), "Material");
+            formData.Add(new StringContent(product.CategoryId?.ToString() ?? ""), "CategoryId");
+            formData.Add(new StringContent(product.Status ?? ""), "Status");
+
+            if (ImageFile != null && ImageFile.Length > 0)
+            {
+                var imageContent = new StreamContent(ImageFile.OpenReadStream());
+                imageContent.Headers.ContentLength = ImageFile.Length;
+                imageContent.Headers.ContentType = new MediaTypeHeaderValue(ImageFile.ContentType);
+                formData.Add(imageContent, "ImageFile", ImageFile.FileName);
+            }
+
+            var response = await _client.PutAsync($"api/Product/{id}", formData);
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ModelState.AddModelError("", "Lỗi khi cập nhật: " + await response.Content.ReadAsStringAsync());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi cập nhật sản phẩm");
+            ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật sản phẩm.");
+        }
+
+        await LoadCategoryColorSize();
+        return View(product);
+    }
+
+    // ===== DELETE (GET) =====
+    [HttpGet]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
+        {
+            var product = await _client.GetFromJsonAsync<Product>($"api/Product/{id}");
+            if (product == null) return NotFound();
+
+            return View(product);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi lấy sản phẩm để xoá (id={Id})", id);
+            return StatusCode(500, "Lỗi server");
+        }
+    }
+
+    // ===== DELETE (POST) =====
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
@@ -186,25 +315,7 @@ public class SanPhamController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // ======================= DELETE (GET): Hiển thị form xác nhận =======================
-    [HttpGet]
-    public async Task<IActionResult> Delete(int id)
-    {
-        try
-        {
-            var product = await _client.GetFromJsonAsync<Product>($"api/Product/{id}");
-            if (product == null) return NotFound();
-
-            return View(product); // Trả về view Delete.cshtml
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lấy sản phẩm để xoá (id={Id})", id);
-            return StatusCode(500, "Lỗi server");
-        }
-    }
-
-    // ======================= Load Data =======================
+    // ===== Load Data cho Create/Edit =====
     private async Task LoadCategoryColorSize()
     {
         var categories = await _client.GetFromJsonAsync<List<Category>>("api/Categories") ?? new();
@@ -215,79 +326,4 @@ public class SanPhamController : Controller
         ViewBag.Colors = colors;
         ViewBag.Sizes = sizes;
     }
-    [HttpGet]
-    public async Task<IActionResult> Edit(int id)
-    {
-        try
-        {
-            var product = await _client.GetFromJsonAsync<Product>($"api/Product/{id}");
-            if (product == null) return NotFound();
-
-            await LoadCategoryColorSize(); // load danh mục
-            return View(product);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lấy sản phẩm để chỉnh sửa (id={Id})", id);
-            return StatusCode(500, "Lỗi server");
-        }
-    }
-    [HttpPost]
-    public async Task<IActionResult> Edit(int id, Product product, IFormFile? ImageFile)
-    {
-        if (id != product.ProductId)
-            return BadRequest();
-
-        if (!ModelState.IsValid)
-        {
-            await LoadCategoryColorSize();
-            return View(product);
-        }
-
-        try
-        {
-            var formData = new MultipartFormDataContent();
-
-            formData.Add(new StringContent(product.ProductId.ToString()), "ProductId");
-            formData.Add(new StringContent(product.ProductName ?? ""), "ProductName");
-            formData.Add(new StringContent(product.Description ?? ""), "Description");
-            formData.Add(new StringContent(product.SalePrice?.ToString() ?? "0"), "SalePrice");
-            formData.Add(new StringContent(product.OriginalPrice?.ToString() ?? "0"), "OriginalPrice");
-            formData.Add(new StringContent(product.Material ?? ""), "Material");
-            formData.Add(new StringContent(product.CategoryId?.ToString() ?? ""), "CategoryId");
-            formData.Add(new StringContent(product.Status ?? ""), "Status");
-
-            // Gửi ảnh mới nếu có
-            if (ImageFile != null && ImageFile.Length > 0)
-            {
-                var imageContent = new StreamContent(ImageFile.OpenReadStream())
-                {
-                    Headers =
-                {
-                    ContentLength = ImageFile.Length,
-                    ContentType = new MediaTypeHeaderValue(ImageFile.ContentType)
-                }
-                };
-                formData.Add(imageContent, "ImageFile", ImageFile.FileName);
-            }
-
-            var response = await _client.PutAsync($"api/Product/{id}", formData);
-            if (response.IsSuccessStatusCode)
-            {
-                TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công!";
-                return RedirectToAction(nameof(Index));
-            }
-
-            ModelState.AddModelError("", "Lỗi khi cập nhật: " + await response.Content.ReadAsStringAsync());
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi cập nhật sản phẩm");
-            ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật sản phẩm.");
-        }
-
-        await LoadCategoryColorSize();
-        return View(product);
-    }
-
 }

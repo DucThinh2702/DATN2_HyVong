@@ -1,0 +1,199 @@
+﻿@model DATN1API.Models.Order
+@using System.Globalization
+@{
+    ViewData["Title"] = $"Đơn hàng #{Model.OrderId}";
+
+    string Badge(string s) => s?.ToLower() switch
+    {
+        "pending" => "badge bg-warning-subtle text-warning fw-semibold",
+        "processing" => "badge bg-primary-subtle text-primary fw-semibold",
+        "completed" => "badge bg-success-subtle text-success fw-semibold",
+        "paid" => "badge bg-success-subtle text-success fw-semibold",
+        "unpaid" => "badge bg-secondary-subtle text-secondary fw-semibold",
+        "cancelled" or "canceled" => "badge bg-danger-subtle text-danger fw-semibold",
+        _ => "badge bg-light text-dark fw-semibold"
+    };
+
+    string VNPayment(string? s) => (s ?? "").ToLowerInvariant() switch
+    {
+        "paid" => "Đã thanh toán",
+        "unpaid" => "Chưa thanh toán",
+        _ => "Không rõ"
+    };
+
+    string VNOrder(string? s) => (s ?? "").ToLowerInvariant() switch
+    {
+        "pending" => "Đang chuẩn bị",
+        "processing" => "Đang giao",
+        "completed" => "Hoàn tất",
+        "cancelled" or "canceled" => "Đã hủy",
+        _ => "Không rõ"
+    };
+
+    string FmtDate(DateTime? d) => d.HasValue ? d.Value.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture) : "";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+
+    decimal itemsSubtotal = ViewBag.ItemsSubtotal ?? 0m;
+    decimal shippingFee = ViewBag.ShippingFee ?? 0m;
+    decimal grandTotal = ViewBag.GrandTotal ?? (itemsSubtotal + shippingFee);
+}
+
+<div class="content-header d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="mb-1">
+            <i class="fas fa-receipt me-2 text-success"></i>
+            Chi tiết đơn hàng #@Model.OrderId
+        </h1>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="@Badge(Model.OrderStatus)">@VNOrder(Model.OrderStatus)</span>
+            <span class="@Badge(Model.PaymentStatus)">@VNPayment(Model.PaymentStatus)</span>
+            <small class="text-muted">• @FmtDate(Model.OrderDate)</small>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i>Quay lại</a>
+        <!-- Nút in (tuỳ chọn) -->
+        <button class="btn btn-outline-primary" onclick="window.print()"><i class="fas fa-print me-1"></i>In</button>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-transparent fw-bold"><i class="fas fa-user me-2 text-primary"></i>Thông tin người nhận</div>
+            <div class="card-body">
+                <div class="mb-2"><span class="text-muted">Người nhận:</span> <strong>@Model.RecipientName</strong></div>
+                <div class="mb-2"><span class="text-muted">SĐT:</span> <strong>@Model.RecipientPhone</strong></div>
+                <div class="mb-2"><span class="text-muted">Địa chỉ:</span> <strong>@Model.DeliveryAddress</strong></div>
+                @if (!string.IsNullOrWhiteSpace(Model.Note))
+                {
+                    <div class="mb-2"><span class="text-muted">Ghi chú:</span> <em>@Model.Note</em></div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.PromoCode))
+                {
+                    <div class="mb-2"><span class="text-muted">Mã khuyến mãi:</span> <strong>@Model.PromoCode</strong></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-transparent fw-bold"><i class="fas fa-credit-card me-2 text-primary"></i>Thanh toán & Giao hàng</div>
+            <div class="card-body">
+                <div class="mb-2"><span class="text-muted">Thanh toán:</span> <span class="@Badge(Model.PaymentStatus)">@VNPayment(Model.PaymentStatus)</span></div>
+                <div class="mb-2"><span class="text-muted">Trạng thái đơn:</span> <span class="@Badge(Model.OrderStatus)">@VNOrder(Model.OrderStatus)</span></div>
+                <div class="mb-2"><span class="text-muted">Phí vận chuyển:</span> <strong>@(shippingFee.ToString("N0", vi)) ₫</strong></div>
+                <div class="mb-2"><span class="text-muted">Tổng hàng (tính lại):</span> <strong>@(itemsSubtotal.ToString("N0", vi)) ₫</strong></div>
+                @if (Model.TotalAmount.HasValue)
+                {
+                    <div class="mb-2"><span class="text-muted">Tổng hàng (theo đơn):</span> <strong>@(Model.TotalAmount.Value.ToString("N0", vi)) ₫</strong></div>
+                }
+                <div class="border-top pt-2 mt-2 d-flex justify-content-between">
+                    <span class="fw-bold">Tổng thanh toán</span>
+                    <span class="fw-bold text-danger">@grandTotal.ToString("N0", vi) ₫</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bảng sản phẩm -->
+<div class="card">
+    <div class="card-header bg-transparent fw-bold"><i class="fas fa-box-open me-2 text-primary"></i>Sản phẩm trong đơn</div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-modern mb-0">
+                <thead>
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Sản phẩm</th>
+                        <th>Thuộc tính</th>
+                        <th>SKU</th>
+                        <th class="text-end">Đơn giá</th>
+                        <th class="text-center">SL</th>
+                        <th class="text-end">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.OrderDetails?.Any() == true)
+                    {
+                        foreach (var d in Model.OrderDetails)
+                        {
+                            var pv = d.ProductVariant;
+                            var productName = pv?.Product?.ProductName ?? $"Variant #{pv?.VariantId}";
+                            var color = pv?.Color?.ColorName;
+                            var size = pv?.Size?.SizeName;
+
+                            // Ảnh: hỗ trợ cả URL tuyệt đối và đường dẫn /hinh/...
+                            string? imgUrl = null;
+                            var thumb = pv?.ThumbnailImage ?? "";
+                            if (Uri.TryCreate(thumb, UriKind.Absolute, out _))
+                            {
+                                imgUrl = thumb;
+                            }
+                            else
+                            {
+                                var fileName = System.IO.Path.GetFileName(thumb.Replace("\\", "/"));
+                                if (!string.IsNullOrEmpty(fileName))
+                                    imgUrl = Url.Content($"~/hinh/{fileName}");
+                            }
+
+                            var unit = d.UnitPrice ?? (pv?.SalePrice ?? pv?.OriginalPrice ?? 0m);
+                            var qty = d.Quantity ?? 0;
+                            var line = d.TotalPrice ?? unit * qty;
+
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(imgUrl))
+                                    {
+                                        <img src="@imgUrl" alt="thumb" style="width:56px;height:56px;object-fit:cover;border-radius:6px" />
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light d-inline-flex align-items-center justify-content-center" style="width:56px;height:56px;border-radius:6px">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    }
+                                </td>
+                                <td class="fw-semibold">@productName</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(color))
+                                    {
+                                        <span class="me-2"><i class="fas fa-palette me-1"></i>@color</span>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(size))
+                                    {
+                                        <span><i class="fas fa-ruler-combined me-1"></i>@size</span>
+                                    }
+                                </td>
+                                <td>@pv?.Sku</td>
+                                <td class="text-end">@unit.ToString("N0", vi) ₫</td>
+                                <td class="text-center">@qty</td>
+                                <td class="text-end fw-semibold">@line.ToString("N0", vi) ₫</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Không có sản phẩm nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-modern th {
+        white-space: nowrap;
+    }
+
+    .badge {
+        font-size: .75rem;
+        padding: .5em .6em;
+        border-radius: .5rem;
+    }
+</style>

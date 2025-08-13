@@ -902,7 +902,7 @@
                         <!-- Cart Icons -->
                         <div class="cart-icons d-none d-lg-flex">
                             <a href="@Url.Action("Wishlist", "Account")" class="cart-icon-link">
-                                <i class="fas fa-heart"></i>
+                                <i class="fas fa-heart"></i> 
                                 <span class="cart-badge">0</span>
                             </a>
                             <a href="@Url.Action("Cart", "Orders")" class="cart-icon-link">
@@ -1023,42 +1023,66 @@
             </div>
         </div>
 
-        <!-- Categories Section -->
-        <div class="container-fluid pt-5">
-            <div class="container-fluid pt-5 pb-3">
-                <div class="d-flex align-items-center mb-4">
-                    <h2 class="section-title mb-0">THỂ LOẠI</h2>
-                    <div class="flex-grow-1 border-bottom ml-3"></div>
-                </div>
-            </div>
-            <div class="row px-xl-5">
-                @if (ViewBag.Categories is List<DATN1API.Models.Category> categoryList && categoryList != null)
-                {
-                    @foreach (var category in categoryList)
-                    {
-                        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                            <a href="#" class="text-decoration-none">
-                                <div class="category-card">
-                                    <img src="/placeholder.svg?height=80&width=80&text=@category.CategoryName"
-                                         class="category-img"
-                                         alt="@category.CategoryName" />
-                                    <div class="category-info">
-                                        <h6>@category.CategoryName</h6>
-                                        <small>10 sản phẩm</small>
-                                    </div>
-                                </div>
-                            </a>
+                <!-- Categories Section -->
+                <div class="container-fluid pt-5">
+                    <div class="container-fluid pt-5 pb-3">
+                        <div class="d-flex align-items-center mb-4">
+                            <h2 class="section-title mb-0">THỂ LOẠI</h2>
+                            <div class="flex-grow-1 border-bottom ml-3"></div>
                         </div>
-                    }
-                }
-                else
-                {
-                    <div class="col-12">
-                        <p class="text-center text-muted">Không có thể loại nào được tìm thấy.</p>
                     </div>
-                }
-            </div>
-        </div>
+
+                    <div class="row px-xl-5">
+                        @{
+                            var catList = ViewBag.Categories as List<DATN1API.Models.Category>
+                            ?? new List<DATN1API.Models.Category>();
+                        }
+
+                        @if (catList.Any())
+                        {
+                            foreach (var cat in catList)
+                            {
+                                // Build URL ảnh an toàn
+                                var raw = (cat.CategoryImage ?? "").Replace("\\", "/");
+                                string imgUrl;
+                                if (!string.IsNullOrWhiteSpace(raw) && Uri.IsWellFormedUriString(raw, UriKind.Absolute))
+                                {
+                                    imgUrl = raw; // URL tuyệt đối
+                                }
+                                else
+                                {
+                                    var fileName = System.IO.Path.GetFileName(raw.TrimStart('/'));
+                                    imgUrl = !string.IsNullOrEmpty(fileName)
+                                    ? Url.Content($"~/hinh/{fileName}")                   // /hinh/xxx
+                                    : Url.Content("~/images/placeholder-category.png");   // fallback (tuỳ bạn)
+                                }
+
+                                var productCount = cat.Products?.Count ?? 0;
+
+                                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <a href="#" class="text-decoration-none">
+                                        <div class="category-card">
+                                            <img src="@imgUrl"
+                                                 class="img-fluid w-100 category-img"
+                                                 alt="@cat.CategoryName" />
+                                            <div class="category-info">
+                                                <h6>@cat.CategoryName</h6>
+                                                <small>@productCount sản phẩm</small>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="col-12">
+                                <p class="text-center text-muted">Không có thể loại nào được tìm thấy.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
 
         <div id="productContainer">
             <div class="row px-xl-5" id="recentProducts">

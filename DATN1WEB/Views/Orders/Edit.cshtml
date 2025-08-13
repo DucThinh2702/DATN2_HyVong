@@ -1,0 +1,177 @@
+﻿@model DATN1API.Models.Order
+@using System.Globalization
+@{
+    ViewData["Title"] = $"Sửa đơn hàng #{Model.OrderId}";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+
+    string VNPayment(string? s) => (s ?? "").ToLowerInvariant() switch
+    {
+        "paid" => "Đã thanh toán",
+        "unpaid" => "Chưa thanh toán",
+        _ => "Không rõ"
+    };
+
+    string VNOrder(string? s) => (s ?? "").ToLowerInvariant() switch
+    {
+        "pending" => "Đang chuẩn bị",
+        "processing" => "Đang giao",
+        "completed" => "Hoàn tất",
+        "cancelled" or "canceled" => "Đã hủy",
+        _ => "Không rõ"
+    };
+}
+
+<h1 class="mb-3"><i class="fas fa-edit me-2 text-primary"></i>Sửa đơn hàng #@Model.OrderId</h1>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="text-danger mb-2"></div>
+
+    <!-- OrderId phải gửi lên -->
+    <input type="hidden" name="OrderId" value="@Model.OrderId" />
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-transparent fw-bold"><i class="fas fa-user me-2 text-primary"></i>Thông tin người nhận</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Người nhận</label>
+                        <input name="RecipientName" class="form-control" value="@Model.RecipientName" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">SĐT</label>
+                        <input name="RecipientPhone" class="form-control" value="@Model.RecipientPhone" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Địa chỉ</label>
+                        <textarea name="DeliveryAddress" class="form-control" rows="2">@Model.DeliveryAddress</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ghi chú</label>
+                        <textarea name="Note" class="form-control" rows="2">@Model.Note</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mã khuyến mãi</label>
+                        <input name="PromoCode" class="form-control" value="@Model.PromoCode" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-transparent fw-bold"><i class="fas fa-cogs me-2 text-primary"></i>Trạng thái & phí</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái thanh toán</label>
+                        <select name="PaymentStatus" class="form-select">
+                            <option value="Paid" selected="@(string.Equals(Model.PaymentStatus,"Paid",StringComparison.OrdinalIgnoreCase))">Đã thanh toán</option>
+                            <option value="Unpaid" selected="@(string.Equals(Model.PaymentStatus,"Unpaid",StringComparison.OrdinalIgnoreCase))">Chưa thanh toán</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái đơn</label>
+                        <select name="OrderStatus" class="form-select">
+                            <option value="Pending" selected="@(string.Equals(Model.OrderStatus,"Pending",StringComparison.OrdinalIgnoreCase))">Đang chuẩn bị</option>
+                            <option value="Processing" selected="@(string.Equals(Model.OrderStatus,"Processing",StringComparison.OrdinalIgnoreCase))">Đang giao</option>
+                            <option value="Completed" selected="@(string.Equals(Model.OrderStatus,"Completed",StringComparison.OrdinalIgnoreCase))">Hoàn tất</option>
+                            <option value="Cancelled" selected="@(string.Equals(Model.OrderStatus,"Cancelled",StringComparison.OrdinalIgnoreCase))">Đã hủy</option>
+                        </select>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label">Phí vận chuyển</label>
+                        <!-- Gửi theo InvariantCulture: dấu chấm -->
+                        <input name="ShippingFee" type="number" step="0.01" class="form-control"
+                               value="@((Model.ShippingFee ?? 0m).ToString(CultureInfo.InvariantCulture))" />
+                        <div class="form-text">Nhập số thập phân bằng dấu chấm (ví dụ: 15000.50)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng chi tiết -->
+    <div class="card mb-3">
+        <div class="card-header bg-transparent fw-bold"><i class="fas fa-box-open me-2 text-primary"></i>Sản phẩm trong đơn</div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-modern mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Sản phẩm</th>
+                            <th>Thuộc tính</th>
+                            <th class="text-center">SL</th>
+                            <th class="text-end">Đơn giá</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.OrderDetails?.Any() == true)
+                        {
+                            var idx = 0;
+                            foreach (var d in Model.OrderDetails)
+                            {
+                                var pv = d.ProductVariant;
+                                var name = pv?.Product?.ProductName ?? $"Variant #{pv?.VariantId}";
+                                var color = pv?.Color?.ColorName;
+                                var size = pv?.Size?.SizeName;
+
+                                <tr>
+                                    <!-- Khóa dòng: Lines[idx].OrderDetailId -->
+                                    <input type="hidden" name="Lines[@idx].OrderDetailId" value="@d.OrderDetailId" />
+
+                                    <td>@pv?.Sku</td>
+                                    <td class="fw-semibold">@name</td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(color))
+                                        {
+                                            <span class="me-2"><i class="fas fa-palette me-1"></i>@color</span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(size))
+                                        {
+                                            <span><i class="fas fa-ruler-combined me-1"></i>@size</span>
+                                        }
+                                    </td>
+                                    <td class="text-center" style="width:120px">
+                                        <input name="Lines[@idx].Quantity" type="number" min="0" class="form-control text-center"
+                                               value="@(d.Quantity ?? 0)" />
+                                    </td>
+                                    <td class="text-end" style="width:160px">
+                                        <input name="Lines[@idx].UnitPrice" type="number" step="0.01" class="form-control text-end"
+                                               value="@((d.UnitPrice ?? 0m).ToString(CultureInfo.InvariantCulture))" />
+                                    </td>
+                                    <td class="text-end fw-semibold">
+                                        @(((d.TotalPrice ?? (d.UnitPrice ?? 0m) * (d.Quantity ?? 0)).ToString("N0", vi))) ₫
+                                    </td>
+                                </tr>
+
+                                idx++;
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="6" class="text-center text-muted">Không có sản phẩm nào</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a asp-action="Details" asp-route-id="@Model.OrderId" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Quay lại
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i>Lưu thay đổi
+        </button>
+    </div>
+</form>
+
+<style>
+    .table-modern th {
+        white-space: nowrap;
+    }
+</style>

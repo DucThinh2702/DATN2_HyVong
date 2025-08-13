@@ -1,0 +1,13 @@
+﻿@model DATN1API.Models.ProductVariant
+@{
+    ViewData["Title"] = "Xoá biến thể";
+}
+<h2>@ViewData["Title"]</h2>
+<hr />
+<div class="alert alert-warning">Bạn có chắc chắn muốn xoá biến thể <strong>@Model.Sku</strong> của sản phẩm <strong>@Model.Product?.ProductName</strong> không?</div>
+<form asp-action="Delete">
+    <input type="hidden" name="id" value="@Model.VariantId" />
+    <input type="hidden" name="productId" value="@Model.ProductId" />
+    <button type="submit" class="btn btn-danger">Xoá</button>
+    <a asp-action="Index" asp-route-productId="@Model.ProductId" class="btn btn-secondary">Huỷ</a>
+</form>

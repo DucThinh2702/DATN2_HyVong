@@ -1,0 +1,42 @@
+﻿@model DATN1API.Models.News
+@{
+    ViewData["Title"] = "Edit News";
+}
+
+<h2>Sửa tin tức</h2>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="NewsId" />
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Content" class="form-label"></label>
+        <textarea asp-for="Content" rows="6" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ảnh hiện tại</label><br />
+        @if (!string.IsNullOrEmpty(Model.ThumbnailImage))
+        {
+            <img src="@Model.ThumbnailImage" alt="thumb" style="max-height:120px" />
+        }
+        else
+        {
+            <span class="text-muted">Chưa có ảnh</span>
+        }
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ảnh mới (tuỳ chọn)</label>
+        <input type="file" name="ThumbnailImageFile" class="form-control" />
+        <small class="text-muted">Nếu chọn ảnh mới, ảnh cũ sẽ được thay bằng đường dẫn /hinh/... mới</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>

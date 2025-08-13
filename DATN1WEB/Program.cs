@@ -87,6 +87,6 @@ app.UseAuthorization();   // Thêm middleware cho phân quyền
 app.MapControllerRoute(
     name: "default",
 //pattern: "{controller=SanPham}/{action=Index}/{id?}");
-pattern: "{controller=Account}/{action=Login}/{id?}");
+pattern: "{controller=SanPham}/{action=Index}/{id?}");
 
 app.Run();

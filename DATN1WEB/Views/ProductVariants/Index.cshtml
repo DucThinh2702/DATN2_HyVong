@@ -1,0 +1,103 @@
+﻿@model List<DATN1API.Models.ProductVariant>
+@{
+    ViewData["Title"] = "Biến thể sản phẩm";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>@ViewData["Title"]</h2>
+    <a class="btn btn-primary" asp-action="Create" asp-route-productId="@ViewBag.ProductId">+ Thêm biến thể</a>
+</div>
+
+<div class="mb-3">
+    <span class="badge bg-secondary">Tổng: @ViewBag.TotalCount</span>
+    <span class="badge bg-success">Còn hàng: @ViewBag.InStockCount</span>
+    <span class="badge bg-danger">Hết hàng: @ViewBag.OutOfStockCount</span>
+</div>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Ảnh</th>
+            <th>SKU</th>
+            <th>Sản phẩm</th>
+            <th>Màu</th>
+            <th>Size</th>
+            <th>Tồn kho</th>
+            <th>Giá bán</th>
+            <th>Trạng thái</th>
+            <th class="text-end"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model != null && Model.Any())
+        {
+            foreach (var v in Model)
+            {
+                <tr>
+                    <td>
+                        @{
+                            string? imgUrl = null;
+                            if (!string.IsNullOrWhiteSpace(v.ThumbnailImage))
+                            {
+                                // nếu là URL tuyệt đối (http/https) thì dùng luôn
+                                if (Uri.TryCreate(v.ThumbnailImage, UriKind.Absolute, out _))
+                                {
+                                    imgUrl = v.ThumbnailImage;
+                                }
+                                else
+                                {
+                                    // còn lại: lấy tên file và trỏ về ~/hinh/<file>
+                                    var fileName = System.IO.Path.GetFileName((v.ThumbnailImage ?? "").Replace("\\", "/"));
+                                    if (!string.IsNullOrEmpty(fileName))
+                                    {
+                                        imgUrl = Url.Content($"~/hinh/{fileName}");
+                                    }
+                                }
+                            }
+                        }
+                        @if (!string.IsNullOrEmpty(imgUrl))
+                        {
+                            <img src="@imgUrl"
+                                 class="product-image"
+                                 alt="@($"{v.Product?.ProductName} - {v.Sku}")" />
+                        }
+                        else
+                        {
+                            <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                <i class="fas fa-image text-muted"></i>
+                            </div>
+                        }
+                    </td>
+
+                    <td>@v.Sku</td>
+                    <td>@v.Product?.ProductName (@v.ProductId)</td>
+                    <td>@v.Color?.ColorName (@v.ColorId)</td>
+                    <td>@v.Size?.SizeName (@v.SizeId)</td>
+                    <td>@(v.Stock ?? 0)</td>
+                    <td>@(v.SalePrice?.ToString("N0") ?? "-")</td>
+                    <td>@v.Status</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-route-id="@v.VariantId">Xem</a>
+                        <a class="btn btn-sm btn-outline-warning" asp-action="Edit" asp-route-id="@v.VariantId">Sửa</a>
+                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@v.VariantId">Xoá</a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="9" class="text-center text-muted">Không có biến thể nào</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    /* dùng chung với trang Products nếu chưa có */
+    .product-image {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px
+    }
+</style>

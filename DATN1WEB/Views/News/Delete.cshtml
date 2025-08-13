@@ -1,0 +1,32 @@
+﻿@model DATN1API.Models.News
+@{
+    ViewData["Title"] = "Xoá bài viết";
+    string Img(string? p) => string.IsNullOrWhiteSpace(p) ? "" : (p!.StartsWith("~/") ? p : "~" + (p.StartsWith("/") ? p : "/" + p));
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<div class="alert alert-warning">
+    Bạn có chắc muốn xoá bài viết này?
+</div>
+
+<div class="card mb-3">
+    <div class="card-body d-flex gap-3">
+        @if (!string.IsNullOrEmpty(Model.ThumbnailImage))
+        {
+                <img src="@Url.Content(Img(Model.ThumbnailImage))"
+                     class="img-thumbnail" style="width:120px;height:120px;object-fit:cover" />
+        }
+        <div>
+            <h5 class="mb-1">@Model.Title</h5>
+            <div class="text-muted">Đăng lúc: @Model.PostedDate?.ToString("dd/MM/yyyy HH:mm")</div>
+            <div class="mt-2 text-truncate" style="max-width:700px">@Model.Content</div>
+        </div>
+    </div>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="NewsId" />
+    <button type="submit" class="btn btn-danger">Xoá</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Huỷ</a>
+</form>

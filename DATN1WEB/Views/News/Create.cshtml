@@ -1,0 +1,28 @@
+﻿@model DATN1API.Models.News
+@{
+    ViewData["Title"] = "Create News";
+}
+
+<h2>Tạo tin tức</h2>
+
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Content" class="form-label"></label>
+        <textarea asp-for="Content" rows="6" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ảnh đại diện</label>
+        <input type="file" name="ThumbnailImageFile" class="form-control" />
+        <small class="text-muted">Ảnh sẽ được lưu tại /hinh/...</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu</button>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</form>
