@@ -36,5 +36,16 @@ namespace DATN1API.Data
         public virtual DbSet<Color> Colors { get; set; }
         public virtual DbSet<Size> Sizes { get; set; }
         public DbSet<ShippingProvider> ShippingProviders { get; set; }
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    base.OnModelCreating(modelBuilder);
+
+        //    // Cấu hình mối quan hệ nhiều-nhiều giữa Promotion và ShippingProvider
+        //    modelBuilder.Entity<ShippingProvider>()
+        //        .HasMany(sp => sp.Promotions)
+        //        .WithMany(p => p.ShippingProviders)
+        //        .UsingEntity(j => j.ToTable("ShippingProviderPromotions")); // Bảng nối giữa ShippingProvider và Promotion
+        //}
     }
+
 }

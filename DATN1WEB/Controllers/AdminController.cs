@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -103,15 +104,6 @@ namespace DATN1API.Controllers
 
             return View(model);
         }
-        public IActionResult PhanTich()
-        {
-            return View();
-        }
-
-        public IActionResult ChienDich()
-        {
-            return View();
-        }
 
         public IActionResult DanhMuc()
         {
@@ -198,14 +190,38 @@ namespace DATN1API.Controllers
             return View(danhSach);
         }
 
-        public IActionResult KhachHang()
+        public async Task<IActionResult> KhachHang()
         {
-            return View();
+            var users = (await _userManager.Users.ToListAsync())
+                .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
+                .Select(u => new CustomerViewModel
+                {
+                    Id = u.Id,
+                    FullName = u.FullName ?? u.UserName,
+                    Email = u.Email,
+                    Phone = u.PhoneNumber,
+                    Address = u.Address,
+                    Gender = u.Gender,
+                    DateOfBirth = u.BirthDate,
+                    Status = u.Status // bool
+                })
+                .ToList();
+
+            var totalCustomers = users.Count;
+            var verifiedCustomers = users.Count(u => u.Status == true);   // Đã xác thực
+            var unverifiedCustomers = users.Count(u => u.Status == false); // Chưa xác thực
+            var activeCustomers = users.Count(u => !string.IsNullOrEmpty(u.Email));
+
+            ViewBag.TotalCustomers = totalCustomers;
+            ViewBag.VerifiedCustomers = verifiedCustomers;
+            ViewBag.UnverifiedCustomers = unverifiedCustomers;
+            ViewBag.ActiveCustomers = activeCustomers;
+
+            return View(users);
         }
-        public IActionResult KhoHang()
-        {
-            return View();
-        }
+
+
+
         public IActionResult DonHang()
         {
             return View();
@@ -214,13 +230,60 @@ namespace DATN1API.Controllers
         {
             return View();
         }
-        public IActionResult CaiDat()
+        [HttpGet]
+        public async Task<IActionResult> Profile()
         {
-            return View();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            // Lấy danh sách role của user
+            var roles = await _userManager.GetRolesAsync(user);
+            string position = roles.FirstOrDefault() ?? "Không có chức vụ";
+
+            var model = new ProfileViewModel
+            {
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.PhoneNumber,
+                Address = user.Address,
+                Gender = user.Gender,
+                DateOfBirth = user.BirthDate,
+                Position = position // Lấy từ role
+            };
+
+            return View(model);
         }
-        public IActionResult Profile()
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(ProfileViewModel model)
         {
-            return View();
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Dữ liệu không hợp lệ!";
+                return View(model);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            user.FullName = model.FullName;
+            user.PhoneNumber = model.Phone;
+            user.Address = model.Address;
+            user.Gender = model.Gender;
+            user.BirthDate = model.DateOfBirth;
+
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+                TempData["Success"] = "Cập nhật thông tin thành công!";
+            else
+                TempData["Error"] = "Đã có lỗi xảy ra khi cập nhật!";
+
+            return RedirectToAction(nameof(Profile));
         }
+
+
     }
 }

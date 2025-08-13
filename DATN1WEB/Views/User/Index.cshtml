@@ -768,24 +768,36 @@
                 <div class="col-lg-6 d-flex justify-content-end align-items-center">
                     <!-- Account Dropdown -->
                     <div class="dropdown me-2">
-                        <button class="btn btn-sm dropdown-toggle border"
-                                type="button"
-                                data-bs-toggle="dropdown">
-                            @(User.Identity?.IsAuthenticated == true ? User.Identity.Name : "Tài khoản")
-                        </button>
-
-                        <div class="dropdown-menu dropdown-menu-end">
-                            @if (User.Identity?.IsAuthenticated == true)
+                        <button class="btn btn-sm dropdown-toggle border" type="button" data-toggle="dropdown">
+                            @if (User.Identity.IsAuthenticated)
                             {
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="px-2">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="dropdown-item">Đăng xuất</button>
-                                </form>
+                                <text>@User.Identity.Name</text>
                             }
                             else
                             {
-                                <a class="dropdown-item" asp-controller="Account" asp-action="Login">Đăng nhập</a>
-                                <a class="dropdown-item" asp-controller="Account" asp-action="Register">Đăng ký</a>
+                                <text>Tài khoản</text>
+                            }
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <!-- Added personal information link for logged in users -->
+                                <a class="dropdown-item" href="@Url.Action("ProfileUser", "User")">
+                                    <i class="fa fa-user mr-2"></i>Thông tin cá nhân
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="@Url.Action("Logout", "Account")">
+                                    <i class="fa fa-sign-out-alt mr-2"></i>Đăng xuất
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="dropdown-item" href="@Url.Action("Login", "Account")">
+                                    <i class="fa fa-sign-in-alt mr-2"></i>Đăng nhập
+                                </a>
+                                <a class="dropdown-item" href="@Url.Action("Register", "Account")">
+                                    <i class="fa fa-user-plus mr-2"></i>Đăng ký
+                                </a>
                             }
                         </div>
                     </div>
@@ -1103,6 +1115,13 @@
                                             <i class="fa fa-shopping-cart"></i>
                                         </a>
 
+                                        <a href="#" class="btn add-to-cart"
+                                           data-id="@item.ProductId"
+                                           data-name="@item.ProductName"
+                                           data-price="@item.SalePrice"
+                                           data-img="@item.ProductVariants?.FirstOrDefault()?.ImageFile">
+                                            <i class="fa fa-shopping-cart"></i>
+                                        </a>
                                         <a href="#" class="btn"><i class="far fa-heart"></i></a>
                                         <a href="#" class="btn"><i class="fa fa-sync-alt"></i></a>
                                         <a href="#" class="btn"><i class="fa fa-search"></i></a>

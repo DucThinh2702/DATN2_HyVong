@@ -2,9 +2,12 @@
 using DATN1API.Data;
 using DATN1API.Helpers;
 using DATN1API.Services;
+using DATN1API.Models.ViewModels;
 using DATN1WEB.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +60,7 @@ using (var scope = builder.Services.BuildServiceProvider().CreateScope())  // Bu
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     await SeedRoles.CreateRoles(services, userManager, roleManager);
 }
+
 builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddCors(options =>
@@ -70,7 +74,6 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
