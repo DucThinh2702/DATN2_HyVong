@@ -31,30 +31,40 @@
                         <a href="#" class="small text-secondary text-decoration-none me-3">Liên hệ</a>
                         <a href="#" class="small text-secondary text-decoration-none">Giúp đỡ</a>
                     </div>
-                </div>
-
-                <!-- Nút phải -->
-                <div class="col-lg-6 d-flex justify-content-lg-end align-items-center gap-2">
-                    <!-- Account -->
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light border dropdown-toggle"
-                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            @(User.Identity?.IsAuthenticated == true ? User.Identity.Name : "Tài khoản")
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            @if (User.Identity?.IsAuthenticated == true)
+                   </div>
+                <div class="col-lg-6 d-flex justify-content-end align-items-center">
+                    <!-- Account Dropdown -->
+                    <div class="dropdown me-2">
+                        <button class="btn btn-sm dropdown-toggle border" type="button" data-toggle="dropdown">
+                            @if (User.Identity.IsAuthenticated)
                             {
-                                <li>
-                                    <form asp-controller="Account" asp-action="Logout" method="post" class="px-2">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="dropdown-item">Đăng xuất</button>
-                                    </form>
-                                </li>
+                                <text>@User.Identity.Name</text>
                             }
                             else
                             {
-                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Login">Đăng nhập</a></li>
-                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Register">Đăng ký</a></li>
+                                <text>Tài khoản</text>
+                            }
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <!-- Added personal information link for logged in users -->
+                                <a class="dropdown-item" href="@Url.Action("ProfileUser", "User")">
+                                    <i class="fa fa-user mr-2"></i>Thông tin cá nhân
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="@Url.Action("Logout", "Account")">
+                                    <i class="fa fa-sign-out-alt mr-2"></i>Đăng xuất
+                                </a>
+                            }
+                            else
+                            {
+                                <a class="dropdown-item" href="@Url.Action("Login", "Account")">
+                                    <i class="fa fa-sign-in-alt mr-2"></i>Đăng nhập
+                                </a>
+                                <a class="dropdown-item" href="@Url.Action("Register", "Account")">
+                                    <i class="fa fa-user-plus mr-2"></i>Đăng ký
+                                </a>
                             }
                         </ul>
                     </div>

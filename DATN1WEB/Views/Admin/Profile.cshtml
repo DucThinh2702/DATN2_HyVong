@@ -1,7 +1,9 @@
-﻿@{
+﻿@using DATN1API.Models.ViewModels
+@{
     ViewData["Title"] = "Hồ sơ cá nhân";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+@model ProfileViewModel
 
 <div class="content-header">
     <div class="d-flex justify-content-between align-items-center">
@@ -27,34 +29,13 @@
     <div class="col-lg-4 col-md-6 mb-4">
         <div class="card h-100">
             <div class="card-body text-center">
-                <div class="position-relative d-inline-block mb-4">
-                    <img src="~/hinh/logo.jpg" alt="Avatar" class="rounded-circle border border-3 border-warning" style="width: 120px; height: 120px; object-fit: cover;">
-                    <button class="btn btn-warning btn-sm rounded-circle position-absolute bottom-0 end-0" style="width: 35px; height: 35px;" onclick="changeAvatar()">
-                        <i class="fas fa-camera"></i>
-                    </button>
+                <div class="mb-4">
+                    @* Updated avatar to be fixed/non-editable, removed camera button *@
+                    <img src="@(Model.AvatarUrl ?? "~/hinh/logo.jpg")" alt="Avatar" class="user-avatar rounded-circle border border-3 border-warning" style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;" onclick="goToProfile()" />
                 </div>
 
-                <h4 class="card-title mb-1">Nguyễn Văn Admin</h4>
-                <p class="text-muted mb-3">Quản trị viên hệ thống</p>
-
-                <div class="row text-center">
-                    <div class="col-4">
-                        <div class="border-end">
-                            <h5 class="text-warning mb-0">156</h5>
-                            <small class="text-muted">Sản phẩm</small>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="border-end">
-                            <h5 class="text-success mb-0">89</h5>
-                            <small class="text-muted">Đơn hàng</small>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <h5 class="text-info mb-0">234</h5>
-                        <small class="text-muted">Khách hàng</small>
-                    </div>
-                </div>
+                <h4 class="card-title mb-1">@Model.FullName</h4>
+                <p class="text-muted mb-3">@Model.Position</p>
             </div>
         </div>
     </div>
@@ -68,19 +49,21 @@
                 </h5>
             </div>
             <div class="card-body">
-                <form id="profileForm">
+                <form id="profileForm" method="post" asp-action="Profile" asp-controller="Admin">
+                    @Html.AntiForgeryToken()
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">
                                 <i class="fas fa-user me-2 text-primary"></i>Họ và tên
                             </label>
-                            <input type="text" class="form-control" id="fullName" value="Nguyễn Văn Admin" readonly>
+                            <input asp-for="FullName" class="form-control" readonly disabled />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">
                                 <i class="fas fa-envelope me-2 text-primary"></i>Email
                             </label>
-                            <input type="email" class="form-control" id="email" value="admin@thebagstudio.com" readonly>
+                            <input asp-for="Email" class="form-control" readonly disabled />
                         </div>
                     </div>
 
@@ -89,13 +72,13 @@
                             <label class="form-label fw-semibold">
                                 <i class="fas fa-phone me-2 text-primary"></i>Số điện thoại
                             </label>
-                            <input type="tel" class="form-control" id="phone" value="0123456789" readonly>
+                            <input asp-for="Phone" class="form-control" readonly disabled />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">
                                 <i class="fas fa-calendar me-2 text-primary"></i>Ngày sinh
                             </label>
-                            <input type="date" class="form-control" id="birthDate" value="1990-01-01" readonly>
+                            <input asp-for="DateOfBirth" type="date" class="form-control" readonly disabled />
                         </div>
                     </div>
 
@@ -104,8 +87,8 @@
                             <label class="form-label fw-semibold">
                                 <i class="fas fa-venus-mars me-2 text-primary"></i>Giới tính
                             </label>
-                            <select class="form-select" id="gender" disabled>
-                                <option value="Nam" selected>Nam</option>
+                            <select asp-for="Gender" class="form-select" disabled>
+                                <option value="Nam">Nam</option>
                                 <option value="Nữ">Nữ</option>
                                 <option value="Khác">Khác</option>
                             </select>
@@ -114,7 +97,7 @@
                             <label class="form-label fw-semibold">
                                 <i class="fas fa-briefcase me-2 text-primary"></i>Chức vụ
                             </label>
-                            <input type="text" class="form-control" id="position" value="Quản trị viên hệ thống" readonly>
+                            <input asp-for="Position" class="form-control" readonly disabled />
                         </div>
                     </div>
 
@@ -122,18 +105,11 @@
                         <label class="form-label fw-semibold">
                             <i class="fas fa-map-marker-alt me-2 text-primary"></i>Địa chỉ
                         </label>
-                        <textarea class="form-control" id="address" rows="2" readonly>123 Đường ABC, Phường XYZ, Quận 1, TP.HCM</textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            <i class="fas fa-info-circle me-2 text-primary"></i>Giới thiệu
-                        </label>
-                        <textarea class="form-control" id="bio" rows="3" readonly>Quản trị viên hệ thống với hơn 5 năm kinh nghiệm trong lĩnh vực công nghệ thông tin và quản lý dự án.</textarea>
+                        <textarea asp-for="Address" class="form-control" rows="2" readonly disabled></textarea>
                     </div>
 
                     <div class="d-none" id="editButtons">
-                        <button type="button" class="btn btn-success me-2" onclick="saveProfile()">
+                        <button type="submit" class="btn btn-success me-2">
                             <i class="fas fa-save me-2"></i>Lưu thay đổi
                         </button>
                         <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
@@ -145,7 +121,6 @@
         </div>
     </div>
 </div>
-
 <!-- Security Settings -->
 <div class="row">
     <div class="col-lg-6 mb-4">
@@ -272,6 +247,15 @@
     .timeline-content small {
         font-size: 0.8rem;
     }
+
+    @* Added styles for fixed avatar *@
+    .user-avatar {
+        transition: transform 0.2s ease;
+    }
+
+    .user-avatar:hover {
+        transform: scale(1.05);
+    }
 </style>
 
 <script>
@@ -332,22 +316,14 @@
         toggleEditMode();
     }
 
-    function changeAvatar() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.querySelector('img[alt="Avatar"]').src = e.target.result;
-                    showNotification('Cập nhật ảnh đại diện thành công!', 'success');
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-        input.click();
+    @* Removed changeAvatar() function since avatar is now fixed *@
+
+    @* Added goToProfile() function to match your HTML example *@
+    function goToProfile() {
+        // Navigate to profile or perform desired action when avatar is clicked
+        console.log('Avatar clicked - navigating to profile');
+        // You can add your navigation logic here
+        // window.location.href = '@Url.Action("Index", "Profile")';
     }
 
     function changePassword() {
