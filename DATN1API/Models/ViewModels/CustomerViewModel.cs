@@ -10,7 +10,8 @@
         public string? Gender { get; set; }
         public DateTime? DateOfBirth { get; set; } // << dùng DateTime? thay vì string
         public bool Status { get; set; }
-
+        public int OrdersCount { get; set; }
+        public decimal TotalSpent { get; set; }
     }
 
 }

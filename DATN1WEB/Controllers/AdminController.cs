@@ -192,8 +192,12 @@ namespace DATN1API.Controllers
 
         public async Task<IActionResult> KhachHang()
         {
-            var users = (await _userManager.Users.ToListAsync())
-                .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
+            // Lấy danh sách user KHÔNG phải Admin
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+            var adminIds = admins.Select(a => a.Id).ToHashSet();
+
+            var users = await _userManager.Users
+                .Where(u => !adminIds.Contains(u.Id))
                 .Select(u => new CustomerViewModel
                 {
                     Id = u.Id,
@@ -203,22 +207,46 @@ namespace DATN1API.Controllers
                     Address = u.Address,
                     Gender = u.Gender,
                     DateOfBirth = u.BirthDate,
-                    Status = u.Status // bool
+                    Status = u.Status
                 })
-                .ToList();
+                .ToListAsync();
 
-            var totalCustomers = users.Count;
-            var verifiedCustomers = users.Count(u => u.Status == true);   // Đã xác thực
-            var unverifiedCustomers = users.Count(u => u.Status == false); // Chưa xác thực
-            var activeCustomers = users.Count(u => !string.IsNullOrEmpty(u.Email));
+            // Gom thống kê đơn hàng theo UserId
+            var orderStatsByUserId = await _context.Orders
+                .Where(o => !string.IsNullOrEmpty(o.UserId))                // đảm bảo có UserId
+                                                                            //.Where(o => o.OrderStatus == "Delivered")                 // nếu chỉ tính đơn hoàn tất
+                .GroupBy(o => o.UserId)
+                .Select(g => new {
+                    UserId = g.Key,
+                    OrdersCount = g.Count(),
+                    TotalSpent = g.Sum(x => (decimal?)(x.TotalAmount ?? 0)) ?? 0m
+                })
+                .ToDictionaryAsync(x => x.UserId, x => new { x.OrdersCount, x.TotalSpent });
 
-            ViewBag.TotalCustomers = totalCustomers;
-            ViewBag.VerifiedCustomers = verifiedCustomers;
-            ViewBag.UnverifiedCustomers = unverifiedCustomers;
-            ViewBag.ActiveCustomers = activeCustomers;
+            // Map thống kê vào danh sách user
+            foreach (var u in users)
+            {
+                if (orderStatsByUserId.TryGetValue(u.Id, out var s))
+                {
+                    u.OrdersCount = s.OrdersCount;
+                    u.TotalSpent = s.TotalSpent;
+                }
+                else
+                {
+                    u.OrdersCount = 0;
+                    u.TotalSpent = 0m;
+                }
+            }
+
+            // Thẻ thống kê
+            ViewBag.TotalCustomers = users.Count;
+            ViewBag.VerifiedCustomers = users.Count(x => x.Status == true);
+            ViewBag.UnverifiedCustomers = users.Count(x => x.Status == false);
+            ViewBag.ActiveCustomers = users.Count(x => !string.IsNullOrEmpty(x.Email));
 
             return View(users);
         }
+
 
 
 

@@ -257,8 +257,20 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="customer-avatar me-3">
-                                        @(user.FullName.Split(" ").LastOrDefault()?.Substring(0, 2).ToUpper())
-                                    </div>
+                                        @functions {
+                                        string GetAvatarInitials(string fullName)
+                                        {
+                                            if (string.IsNullOrWhiteSpace(fullName)) return "NN"; // mặc định
+
+                                            var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                                            var last = parts.LastOrDefault() ?? parts.First();    // ưu tiên tên cuối, fallback tên đầu
+                                            last = last.ToUpperInvariant();
+
+                                            // Lấy tối đa 2 ký tự, không dùng Substring mù quáng
+                                            return new string(last.Take(2).ToArray());
+                                        }
+                                    }
+                                </div>
                                     <div>
                                         <div class="fw-bold">@user.FullName</div>
                                         <small class="text-muted">ID: @user.Id</small>
@@ -271,8 +283,13 @@
                                     <small class="text-muted">@user.Phone</small>
                                 </div>
                             </td>
-                            <td><span class="badge bg-primary">—</span></td> <!-- Đơn hàng sẽ update sau -->
-                            <td><strong class="text-success">—</strong></td> <!-- Chi tiêu -->
+                        <td><span class="badge bg-primary">@user.OrdersCount</span></td>
+                        <td>
+                            <strong class="text-success">
+                                @user.TotalSpent.ToString("c0", new System.Globalization.CultureInfo("vi-VN"))
+                            </strong>
+                        </td>
+
                             <td><span class="badge bg-success">Đang hoạt động</span></td>
                             <td class="text-center">
                                 <div class="d-flex gap-1 justify-content-center">
