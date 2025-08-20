@@ -9,7 +9,7 @@
     string search = ViewBag.Search as string ?? "";
 }
 
-<div class="content-header">
+<div class="content-header d-flex align-items-center justify-content-between">
     <div>
         <h1 class="mb-2"><i class="fas fa-shopping-bag me-3 text-success"></i>Sản phẩm</h1>
         <nav aria-label="breadcrumb">
@@ -19,17 +19,16 @@
             </ol>
         </nav>
     </div>
-    <div class="d-flex align-items-center gap-3">
-        <form method="get" class="input-group" style="width: 300px;">
-            <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input type="text" name="search" value="@search" class="form-control search-box" placeholder="Tìm kiếm sản phẩm..." />
-        </form>
+
+    <!-- bên phải -->
+    <div class="d-flex align-items-center gap-3 ms-auto">
+        <!-- Chuông trước -->
         <div class="dropdown">
-            <button class="btn btn-outline-warning position-relative" data-bs-toggle="dropdown" aria-expanded="false">
+            <button id="lowStockBtn" class="btn btn-outline-warning position-relative" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-bell"></i>
                 @if (lowStockProducts.Any())
                 {
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    <span id="lowStockBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                         @lowStockProducts.Count
                     </span>
                 }
@@ -60,8 +59,15 @@
                 }
             </ul>
         </div>
+
+        <!-- Ô tìm kiếm nằm ngoài cùng bên phải -->
+        <form method="get" class="input-group" style="width:340px;">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="text" name="search" value="@search" class="form-control search-box" placeholder="Tìm kiếm sản phẩm..." />
+        </form>
     </div>
 </div>
+
 
 <!-- Stats Cards -->
 <div class="row g-4 mb-4">
@@ -170,14 +176,13 @@
                                 }
                             </td>
 
-
                             <!-- Tên sản phẩm -->
                             <td>
                                 <div class="product-name">@item?.ProductName</div>
                                 <small class="product-sku">SKU: BAG-@item?.ProductId</small>
                             </td>
 
-                            <!-- Giá bán (server-side format) -->
+                            <!-- Giá bán -->
                             <td><span class="price">@((item?.SalePrice ?? 0).ToString("N0")) ₫</span></td>
 
                             <!-- Tồn kho -->
@@ -223,7 +228,6 @@
         </table>
     </div>
 
-    <!-- PHÂN TRANG: chỉ hiện khi tổng trang > 1 (tức là > 6 sản phẩm) -->
     @if (totalPages > 1)
     {
         <nav aria-label="Page navigation" class="mt-3">
@@ -250,23 +254,22 @@
         </nav>
     }
 </div>
+<script>
+    (function () {
+        const btn   = document.getElementById('lowStockBtn');
+        const badge = document.getElementById('lowStockBadge');
 
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        // SweetAlert: hiện thông báo thành công và tự tắt sau 3 giây
-        (function () {
-            var msg = '@Html.Raw(TempData["SuccessMessage"])';
-            if (msg) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Thành công!',
-                    text: msg,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                });
-            }
-        })();
-    </script>
-}
+        // Ẩn sẵn nếu trước đó đã xem
+        if (badge && localStorage.getItem('lowStockSeen') === '1') {
+            badge.classList.add('d-none');
+        }
+
+        if (!btn) return;
+
+        // Khi dropdown mở -> ẩn badge và lưu trạng thái đã xem
+        btn.addEventListener('show.bs.dropdown' in window ? 'show.bs.dropdown' : 'click', function () {
+            if (badge) badge.classList.add('d-none');
+            localStorage.setItem('lowStockSeen', '1');
+        });
+    })();
+</script>

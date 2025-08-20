@@ -439,6 +439,42 @@
             .nav-link:nth-child(5) {
                 animation-delay: 0.5s;
             }
+
+
+
+
+        :root {
+            --sidebar-offset: 300px;
+        }
+        /* đúng với width Sidebar desktop của bạn */
+        .flash-container {
+            position: fixed;
+            top: 16px;
+            left: var(--sidebar-offset); /* bắt đầu sau sidebar */
+            right: 16px; /* chừa mép phải */
+            display: flex;
+            justify-content: center; /* căn giữa phần nội dung */
+            z-index: 1100;
+            pointer-events: none;
+        }
+
+            .flash-container .alert {
+                pointer-events: auto;
+                width: min(560px, calc(100vw - var(--sidebar-offset) - 32px));
+                box-shadow: 0 10px 30px rgba(0,0,0,.12);
+                margin: 0;
+            }
+        /* Mobile: sidebar overlay -> offset = 0 */
+            @@media (max-width: 768px) {
+            : root
+
+        {
+            --sidebar-offset: 0px;
+        }
+
+        }
+
+
     </style>
 </head>
 <body>
@@ -688,6 +724,64 @@
 
     <!-- Các script khác -->
     @RenderSection("Scripts", required: false)
+    @* Đặt ngay trong body, 1 lần duy nhất *@
+    <div class="flash-container">
+        @{
+            // Hỗ trợ cả key cũ lẫn mới
+            var successMsg = (TempData["Success"] ?? TempData["SuccessMessage"]) as string;
+            var errorMsg = (TempData["Error"] ?? TempData["ErrorMessage"]) as string;
+        }
+        @if (!string.IsNullOrEmpty(successMsg))
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>@successMsg
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(errorMsg))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMsg
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+
+
+
+
+    @* @section Scripts { *@
+    @*     <script> *@
+    @*         // Tự ẩn sau 3 giây (tuỳ chọn) *@
+    @*         setTimeout(() => { *@
+    @*           document.querySelectorAll('.alert').forEach(a => { *@
+    @*             const inst = bootstrap.Alert.getOrCreateInstance(a); *@
+    @*             inst.close(); *@
+    @*           }); *@
+    @*         }, 3000); *@
+    @*     </script> *@
+    @* } *@
+
+    <script>
+        function updateSidebarOffset() {
+          const isMobile = window.innerWidth <= 768;
+          const isCollapsed = document.getElementById('mainContent')?.classList.contains('expanded');
+          const px = isMobile ? 0 : (isCollapsed ? 80 : 300);
+          document.documentElement.style.setProperty('--sidebar-offset', px + 'px');
+        }
+        document.addEventListener('DOMContentLoaded', updateSidebarOffset);
+        window.addEventListener('resize', updateSidebarOffset);
+        document.addEventListener('keydown', e => { if (e.ctrlKey && e.key === 'b') setTimeout(updateSidebarOffset, 0); });
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        if (sidebarToggle) sidebarToggle.addEventListener('click', () => setTimeout(updateSidebarOffset, 300));
+
+        // Auto close sau 3s
+        setTimeout(() => {
+          document.querySelectorAll('.flash-container .alert').forEach(a => {
+            bootstrap.Alert.getOrCreateInstance(a).close();
+          });
+        }, 3000);
+    </script>
 
 </body>
 </html>

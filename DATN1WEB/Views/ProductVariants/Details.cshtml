@@ -1,69 +1,248 @@
 ﻿@model DATN1API.Models.ProductVariant
 @{
     ViewData["Title"] = "Chi tiết biến thể";
+
+    string productName = Model.Product?.ProductName ?? "Sản phẩm";
+    string colorName = Model.Color?.ColorName;
+    string sizeName = Model.Size?.SizeName;
+    string variantTitle = productName;
+
+    if (!string.IsNullOrWhiteSpace(colorName) || !string.IsNullOrWhiteSpace(sizeName))
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(colorName)) parts.Add(colorName);
+        if (!string.IsNullOrWhiteSpace(sizeName)) parts.Add(sizeName);
+        variantTitle += $" · {string.Join(" / ", parts)}";
+    }
+
+    string StatusBadgeClass(string? status)
+        => (status ?? "").Trim().ToLower() switch
+        {
+            "active" or "đang bán" => "bg-success",
+            "inactive" or "ngừng bán" => "bg-secondary",
+            "outofstock" or "out_of_stock" or "hết hàng" => "bg-warning text-dark",
+            "archived" => "bg-dark",
+            "draft" => "bg-info",
+            _ => "bg-info"
+        };
+
+    string StatusVi(string? status)
+    {
+        var s = (status ?? "").Trim().ToLowerInvariant();
+        return s switch
+        {
+            "active" => "Đang bán",
+            "inactive" => "Ngừng bán",
+            "outofstock" or "out_of_stock" => "Hết hàng",
+            "archived" => "Đã lưu trữ",
+            "draft" => "Bản nháp",
+            _ => string.IsNullOrWhiteSpace(status) ? "Không rõ" : status
+        };
+    }
+
+    string PriceVND(decimal? v) => v.HasValue ? v.Value.ToString("N0") + " ₫" : "-";
+    bool hasSale = Model.SalePrice.HasValue && Model.SalePrice!.Value > 0;
+    bool hasOriginal = Model.OriginalPrice.HasValue && Model.OriginalPrice!.Value > 0;
+    bool showDiscount = hasSale && hasOriginal && Model.OriginalPrice! > Model.SalePrice!;
+
+    // Ảnh đại diện
+    var mainUrl = string.IsNullOrWhiteSpace(Model.ThumbnailImage) ? null : Url.Content(Model.ThumbnailImage);
+
+    // Danh sách ảnh hiển thị: ảnh đại diện (nếu có) + gallery (nếu có)
+    var gallery = new List<string>();
+    if (!string.IsNullOrWhiteSpace(mainUrl)) gallery.Add(mainUrl);
+    if (Model.GalleryPaths != null && Model.GalleryPaths.Any())
+    {
+        gallery.AddRange(Model.GalleryPaths.Select(p => Url.Content(p)));
+    }
 }
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="fas fa-info-circle me-2"></i>@ViewData["Title"]
-            </h5>
+<div class="container my-4">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="p-4 p-md-5 pb-2">
+            <h1 class="fw-bold display-6 mb-0">Chi tiết biến thể</h1>
         </div>
-        <div class="card-body">
-            <dl class="row mb-0">
-                <dt class="col-sm-3 fw-bold">Mã biến thể</dt>
-                <dd class="col-sm-9">@Model.VariantId</dd>
 
-                <dt class="col-sm-3 fw-bold">Sản phẩm</dt>
-                <dd class="col-sm-9">@Model.Product?.ProductName</dd>
+        <div class="px-4 px-md-5 pb-4">
+            <div class="row g-4 align-items-start">
+                <!-- IMAGE + GALLERY -->
+                <div class="col-12 col-lg-5">
+                    <div class="ratio ratio-1x1 rounded-4 overflow-hidden border mb-3">
+                        @if (gallery.Any())
+                        {
+                            <img id="mainVariantImg" src="@gallery[0]" alt="@productName" class="w-100 h-100" style="object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="d-flex align-items-center justify-content-center bg-light text-muted">
+                                <div class="text-center p-4">
+                                    <i class="far fa-image fa-2x mb-2 d-block"></i>
+                                    <div>Chưa có ảnh</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
 
-                <dt class="col-sm-3 fw-bold">Màu sắc</dt>
-                <dd class="col-sm-9">@Model.Color?.ColorName</dd>
-
-                <dt class="col-sm-3 fw-bold">Kích cỡ</dt>
-                <dd class="col-sm-9">@Model.Size?.SizeName</dd>
-
-                <dt class="col-sm-3 fw-bold">SKU</dt>
-                <dd class="col-sm-9">@Model.Sku</dd>
-
-                <dt class="col-sm-3 fw-bold">Tồn kho</dt>
-                <dd class="col-sm-9">@(Model.Stock ?? 0)</dd>
-
-                <dt class="col-sm-3 fw-bold">Giá bán</dt>
-                <dd class="col-sm-9">@(Model.SalePrice?.ToString("N0") ?? "-") ₫</dd>
-
-                <dt class="col-sm-3 fw-bold">Giá gốc</dt>
-                <dd class="col-sm-9">@(Model.OriginalPrice?.ToString("N0") ?? "-") ₫</dd>
-
-                <dt class="col-sm-3 fw-bold">Trạng thái</dt>
-                <dd class="col-sm-9">@Model.Status</dd>
-
-                <dt class="col-sm-3 fw-bold">Ảnh</dt>
-                <dd class="col-sm-9">
-                    @if (!string.IsNullOrEmpty(Model.ThumbnailImage))
+                    @if (gallery.Count > 1)
                     {
-                        <div class="ratio ratio-1x1" style="max-width: 150px;">
-                            <img src="@($"{ViewBag.ApiUrl}{Model.ThumbnailImage}")"
-                                 alt="@Model.Product?.ProductName"
-                                 class="img-fluid rounded"
-                                 style="object-fit: cover;" />
+                        <div class="thumb-strip d-flex flex-wrap gap-2">
+                            @for (int i = 0; i < gallery.Count; i++)
+                            {
+                                var g = gallery[i];
+                                <button type="button"
+                                        class="thumb-btn p-0 border-0 bg-transparent"
+                                        data-full="@g"
+                                        title="Xem ảnh @(@i+1)">
+                                    <img src="@g"
+                                         class="thumb-img rounded border"
+                                         style="width:78px;height:78px;object-fit:cover;" />
+                                </button>
+                            }
                         </div>
                     }
-                    else
-                    {
-                        <span class="text-muted fst-italic">Chưa có ảnh</span>
-                    }
-                </dd>
-            </dl>
+                </div>
+
+                <!-- DETAILS -->
+                <div class="col-12 col-lg-7">
+                    <h2 class="h3 fw-semibold mb-2">@variantTitle</h2>
+                    <div class="text-muted mb-3">
+                        Sản phẩm: <strong>@productName</strong>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge @StatusBadgeClass(Model.Status) rounded-pill px-3 py-2">
+                            <i class="fas fa-circle me-1" style="font-size:.6rem"></i>@StatusVi(Model.Status)
+                        </span>
+
+                        @if (Model.Stock.HasValue)
+                        {
+                            <span class="badge bg-light text-dark rounded-pill px-3 py-2">
+                                <i class="fas fa-box me-1"></i>Tồn kho: @Model.Stock
+                            </span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Sku))
+                        {
+                            <span class="badge bg-light text-dark rounded-pill px-3 py-2">
+                                <i class="fas fa-barcode me-1"></i>SKU: @Model.Sku
+                            </span>
+                        }
+                    </div>
+
+                    <!-- PRICE BLOCK -->
+                    <div class="mb-4">
+                        @if (hasSale || hasOriginal)
+                        {
+                            <div class="d-flex flex-wrap align-items-baseline gap-3">
+                                <div class="display-6 fw-bold m-0">
+                                    @(hasSale ? PriceVND(Model.SalePrice) : PriceVND(Model.OriginalPrice))
+                                </div>
+                                @if (showDiscount)
+                                {
+                                    var discountPct = (int)Math.Round(
+                                    (double)((Model.OriginalPrice!.Value - Model.SalePrice!.Value) / Model.OriginalPrice!.Value * 100m)
+                                    );
+
+                                    <span class="text-muted text-decoration-line-through fs-5">
+                                        @PriceVND(Model.OriginalPrice)
+                                    </span>
+                                    <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3 py-2">
+                                        -@discountPct%
+                                    </span>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="fs-5 text-muted">Chưa có giá</div>
+                        }
+                    </div>
+
+                    <!-- ATTRIBUTES -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 border bg-white h-100">
+                                <div class="text-muted small mb-1">Màu sắc</div>
+                                <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(colorName) ? colorName : "—")</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 border bg-white h-100">
+                                <div class="text-muted small mb-1">Kích cỡ</div>
+                                <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(sizeName) ? sizeName : "—")</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 border bg-white h-100">
+                                <div class="text-muted small mb-1">Mã biến thể</div>
+                                <div class="fw-semibold">@Model.VariantId</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded-3 border bg-white h-100">
+                                <div class="text-muted small mb-1">Sản phẩm</div>
+                                <div class="fw-semibold">@productName</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ACTIONS -->
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="btn btn-warning btn-lg rounded-3 px-4"
+                           asp-controller="ProductVariants"
+                           asp-action="Edit"
+                           asp-route-id="@Model.VariantId">
+                            <i class="fas fa-edit me-2"></i>Sửa
+                        </a>
+
+                        <a class="btn btn-outline-secondary btn-lg rounded-3 px-4"
+                           asp-controller="SanPham" asp-action="Details" asp-route-id="@Model.ProductId">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-footer text-end">
-            <a class="btn btn-warning" asp-action="Edit" asp-route-id="@Model.VariantId">
-                <i class="fas fa-edit me-1"></i> Sửa
-            </a>
-            <a class="btn btn-secondary" asp-action="Index" asp-route-productId="@Model.ProductId">
-                <i class="fas fa-arrow-left me-1"></i> Quay lại
-            </a>
-        </div>
+
+
     </div>
 </div>
+
+<style>
+    .bg-danger-subtle {
+        background-color: rgba(220,53,69,.12) !important;
+    }
+
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+
+    .rounded-3 {
+        border-radius: .75rem !important;
+    }
+
+    .thumb-strip .thumb-btn {
+        cursor: pointer;
+    }
+
+    .thumb-strip .thumb-img {
+        transition: transform .12s ease, box-shadow .12s ease;
+    }
+
+        .thumb-strip .thumb-img:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 0 2px rgba(13,110,253,.25);
+        }
+</style>
+
+@section Scripts {
+    <script>
+        // Đổi ảnh lớn khi click thumbnail
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.thumb-btn');
+            if (!btn) return;
+            const url = btn.getAttribute('data-full');
+            const main = document.getElementById('mainVariantImg');
+            if (main && url) main.src = url;
+        }, false);
+    </script>
+}

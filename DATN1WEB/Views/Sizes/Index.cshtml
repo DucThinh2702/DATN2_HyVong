@@ -91,7 +91,7 @@
 </style>
 
 <!-- Content Header -->
-<div class="content-header">
+<div class="content-full">
     <div class="d-flex justify-content-between align-items-center flex-wrap">
         <div>
             <h1 class="mb-2">
@@ -252,18 +252,18 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Hiển thị thông báo thành công (TempData)
-        var successMessage = '@Html.Raw(TempData["SuccessMessage"])';
-        if (successMessage) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Thành công!',
-                text: successMessage,
-                timer: 3000,
-                timerProgressBar: true,
-                showConfirmButton: true,
-                confirmButtonText: 'OK'
-            });
-        }
+        // var successMessage = '@Html.Raw(TempData["SuccessMessage"])';
+        // if (successMessage) {
+        //     Swal.fire({
+        //         icon: 'success',
+        //         title: 'Thành công!',
+        //         text: successMessage,
+        //         timer: 3000,
+        //         timerProgressBar: true,
+        //         showConfirmButton: true,
+        //         confirmButtonText: 'OK'
+        //     });
+        // }
 
         // Xác nhận xoá SweetAlert2
         function confirmDelete(id) {

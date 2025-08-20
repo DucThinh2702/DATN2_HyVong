@@ -74,7 +74,17 @@
     </div>
 
     <!-- Danh sách biến thể -->
-    <h4 class="mt-4">Các biến thể của sản phẩm</h4>
+    <!-- Danh sách biến thể -->
+    <div class="d-flex align-items-center justify-content-between mt-4 mb-2">
+        <h4 class="m-0">Các biến thể của sản phẩm</h4>
+        <a asp-controller="ProductVariants"
+           asp-action="Create"
+           asp-route-productId="@Model.ProductId"
+           class="btn btn-primary">
+            <i class="fa-solid fa-plus me-1"></i> Thêm biến thể
+        </a>
+    </div>
+
     @if (Model.ProductVariants != null && Model.ProductVariants.Any())
     {
         <table class="table table-hover table-bordered align-middle">
@@ -139,3 +149,4 @@
         <p class="text-muted">Sản phẩm chưa có biến thể nào.</p>
     }
 </div>
+

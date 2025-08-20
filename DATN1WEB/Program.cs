@@ -79,6 +79,14 @@ app.UseSession();
 // Sử dụng Routing và Middleware cho Authentication và Authorization
 app.UseRouting();
 
+// ======= Thêm middleware chống cache cho toàn site =======
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+    ctx.Response.Headers["Pragma"] = "no-cache";
+    ctx.Response.Headers["Expires"] = "0";
+    await next();
+});
 // Thêm xác thực và phân quyền
 app.UseAuthentication();  // Thêm middleware cho xác thực
 app.UseAuthorization();   // Thêm middleware cho phân quyền
@@ -87,6 +95,6 @@ app.UseAuthorization();   // Thêm middleware cho phân quyền
 app.MapControllerRoute(
     name: "default",
 //pattern: "{controller=SanPham}/{action=Index}/{id?}");
-pattern: "{controller=SanPham}/{action=Index}/{id?}");
+pattern: "{controller=User}/{action=Index}/{id?}");
 
 app.Run();

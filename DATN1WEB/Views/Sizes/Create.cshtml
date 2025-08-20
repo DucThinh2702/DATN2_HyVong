@@ -72,7 +72,7 @@
 
 <!-- Form Section -->
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="container-full">
         <div class="card form-card">
             <div class="card-header">
                 <h5 class="mb-0">
@@ -112,49 +112,4 @@
     </div>
 </div>
 
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        var successMessage = '@Html.Raw(TempData["SuccessMessage"])';
-        var errorMessage = '@Html.Raw(TempData["ErrorMessage"])';
-        if (successMessage) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Thành công!',
-                text: successMessage,
-                timer: 3000,
-                timerProgressBar: true,
-                confirmButtonText: 'OK'
-            });
-        }
-        if (errorMessage) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Lỗi!',
-                text: errorMessage,
-                confirmButtonText: 'OK'
-            });
-        }
 
-        document.getElementById('sizeForm').addEventListener('submit', async function (e) {
-            let sizeNameInput = document.getElementById('SizeName');
-            let errorSpan = document.getElementById('sizeNameError');
-            let sizeName = sizeNameInput.value.trim();
-            errorSpan.textContent = '';
-            if (!sizeName) {
-                e.preventDefault();
-                errorSpan.textContent = 'Vui lòng nhập tên kích cỡ';
-                sizeNameInput.focus();
-                return;
-            }
-            let response = await fetch('/Sizes/CheckSizeName?sizeName=' + encodeURIComponent(sizeName));
-            let result = await response.json();
-            if (result.exists) {
-                e.preventDefault();
-                errorSpan.textContent = 'Tên kích cỡ đã tồn tại';
-                sizeNameInput.focus();
-            }
-        });
-    </script>
-}

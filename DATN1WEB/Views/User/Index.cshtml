@@ -4,868 +4,146 @@
 }
 @model IEnumerable<DATN1API.Models.Product>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="utf-8">
-    <title>DuAn_NhomHyVong</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="Free HTML Templates" name="keywords">
-    <meta content="Free HTML Templates" name="description">
+    <meta charset="utf-8" />
+    <title>The Bag Studio</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link href="~/img/favicon.ico" rel="icon" />
 
-    <!-- Favicon -->
-    <link href="~/img/favicon.ico" rel="icon">
-
-    <!-- Google Fonts -->
+    <!-- Google Fonts (tuỳ chọn) -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-
-    <!-- Libraries Stylesheet -->
-    <link href="~/lib/animate/animate.min.css" rel="stylesheet" />
-    <link href="~/lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet" />
-
-    <!-- Bootstrap 4 -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Custom CSS -->
-    <link href="~/css/style.css" rel="stylesheet" />
+    <!-- Bootstrap 5 + Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 </head>
-
-<style>
-    /* Global Styles */
-    * {
-        font-family: 'Poppins', sans-serif;
-    }
-
-    body {
-        background: #f8f9fa;
-        line-height: 1.6;
-    }
-
-    /* Top Header - cải thiện alignment */
-    .top-header {
-        background: #f8f9fa;
-        border-bottom: 1px solid #e9ecef;
-        padding: 8px 0;
-    }
-
-        .top-header a {
-            color: #6c757d;
-            text-decoration: none;
-            font-size: 13px;
-            transition: color 0.3s ease;
-        }
-
-            .top-header a:hover {
-                color: #ffc107;
-            }
-
-        .top-header .dropdown-toggle {
-            font-size: 13px;
-            padding: 4px 12px;
-            border-radius: 4px;
-        }
-
-    /* Logo Section - cải thiện căn chỉnh */
-    .logo-section {
-        background: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        padding: 15px 0;
-    }
-
-    .logo-brand {
-        display: inline-flex;
-        align-items: center;
-        text-decoration: none;
-    }
-
-        .logo-brand span {
-            font-weight: 700;
-            font-size: 1.8rem;
-            padding: 8px 16px;
-            display: inline-block;
-            line-height: 1;
-        }
-
-    /* Search Bar - cải thiện */
-    .search-container {
-        max-width: 500px;
-        width: 100%;
-    }
-
-    .search-input {
-        border: 2px solid #e9ecef;
-        border-radius: 6px 0 0 6px;
-        padding: 12px 20px;
-        font-size: 14px;
-        height: 48px;
-        transition: border-color 0.3s ease;
-    }
-
-        .search-input:focus {
-            border-color: #ffc107;
-            box-shadow: none;
-            outline: none;
-        }
-
-    .search-btn {
-        border-radius: 0 6px 6px 0;
-        background: #ffc107;
-        border: 2px solid #ffc107;
-        color: #000;
-        padding: 0 20px;
-        height: 48px;
-        transition: all 0.3s ease;
-        font-weight: 500;
-    }
-
-        .search-btn:hover {
-            background: #e0a800;
-            border-color: #e0a800;
-            color: #000;
-        }
-
-    /* Hotline Section - cải thiện alignment */
-    .hotline-section {
-        text-align: right;
-        min-width: 180px;
-    }
-
-        .hotline-section small {
-            font-size: 12px;
-            color: #6c757d;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .hotline-section h5 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #495057;
-            margin: 0;
-        }
-
-    /* Navigation Menu - cải thiện */
-    .main-nav {
-        background: #343a40;
-        min-height: 55px;
-    }
-
-    .category-btn {
-        background: #ffc107;
-        border: none;
-        color: #000;
-        font-weight: 600;
-        height: 55px;
-        width: 260px;
-        border-radius: 0;
-        transition: background-color 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 30px;
-    }
-
-        .category-btn:hover,
-        .category-btn:focus {
-            background: #e0a800;
-            color: #000;
-        }
-
-        .category-btn h6 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-    /* Main Menu Links */
-    .main-menu .nav-link {
-        color: rgba(255,255,255,0.9) !important;
-        font-weight: 500;
-        padding: 0 20px !important;
-        line-height: 55px;
-        font-size: 14px;
-        transition: color 0.3s ease;
-        height: 55px;
-        display: flex;
-        align-items: center;
-    }
-
-        .main-menu .nav-link:hover,
-        .main-menu .nav-link.active {
-            color: #ffc107 !important;
-        }
-
-    /* Cart Icons - cải thiện alignment */
-    .cart-icons {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        height: 55px;
-    }
-
-    .cart-icon-link {
-        position: relative;
-        color: #ffc107;
-        font-size: 18px;
-        transition: color 0.3s ease;
-        padding: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-        .cart-icon-link:hover {
-            color: #e0a800;
-            text-decoration: none;
-        }
-
-    .cart-badge {
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        background: #dc3545;
-        color: white;
-        border-radius: 50%;
-        width: 18px;
-        height: 18px;
-        font-size: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        line-height: 1;
-    }
-
-    /* Banner Section */
-    .carousel-item {
-        position: relative;
-        overflow: hidden;
-    }
-
-        .carousel-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.3);
-            z-index: 1;
-        }
-
-    .carousel-caption {
-        z-index: 2;
-        background: rgba(0,0,0,0.4);
-        border-radius: 10px;
-        padding: 30px;
-        backdrop-filter: blur(5px);
-    }
-
-    /* Offer Cards */
-    .offer-card {
-        height: 200px;
-        overflow: hidden;
-        border-radius: 8px;
-        position: relative;
-        transition: transform 0.3s ease;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-        .offer-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .offer-card img {
-            transition: transform 0.3s ease;
-        }
-
-        .offer-card:hover img {
-            transform: scale(1.05);
-        }
-
-    .offer-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.4);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        transition: background 0.3s ease;
-    }
-
-    .offer-card:hover .offer-overlay {
-        background: rgba(0,0,0,0.5);
-    }
-
-    /* Feature Cards - cải thiện alignment */
-    .feature-card {
-        background: white;
-        border-radius: 10px;
-        padding: 25px;
-        text-align: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        transition: transform 0.3s ease;
-        border: 1px solid #f1f1f1;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-        .feature-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
-        }
-
-    .feature-icon {
-        font-size: 2.2rem;
-        color: #ffc107;
-        min-width: 60px;
-        flex-shrink: 0;
-    }
-
-    .feature-text h5 {
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0;
-        color: #343a40;
-    }
-
-    /* Category Cards - cải thiện */
-    .category-card {
-        background: white;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-        border: 1px solid #f1f1f1;
-        height: 120px;
-        display: flex;
-        align-items: center;
-    }
-
-        .category-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
-            background: #f8f9fa;
-        }
-
-    .category-img {
-        width: 80px;
-        height: 80px;
-        object-fit: cover;
-        border-radius: 8px;
-        transition: transform 0.3s ease;
-        flex-shrink: 0;
-    }
-
-    .category-info {
-        padding-left: 15px;
-        flex-grow: 1;
-    }
-
-        .category-info h6 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #343a40;
-        }
-
-        .category-info small {
-            color: #6c757d;
-            font-size: 13px;
-        }
-
-    /* Product Cards - cải thiện */
-    .product-item {
-        background: white;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-        border: 1px solid #f1f1f1;
-        height: 100%;
-    }
-
-        .product-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
-
-    .product-img {
-        position: relative;
-        overflow: hidden;
-        height: 280px;
-    }
-
-        .product-img img {
-            height: 100%;
-            width: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-
-    .product-item:hover .product-img img {
-        transform: scale(1.08);
-    }
-
-    .product-action {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        display: flex;
-        gap: 8px;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        z-index: 2;
-    }
-
-    .product-item:hover .product-action {
-        opacity: 1;
-    }
-
-    .product-action .btn {
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: white;
-        border: 1px solid #ddd;
-        color: #495057;
-        transition: all 0.3s ease;
-        font-size: 14px;
-    }
-
-        .product-action .btn:hover {
-            background: #ffc107;
-            color: #000;
-            border-color: #ffc107;
-            transform: scale(1.1);
-        }
-
-    .product-info {
-        padding: 20px;
-        text-align: center;
-    }
-
-        .product-info a {
-            font-size: 15px;
-            font-weight: 500;
-            color: #343a40;
-            text-decoration: none;
-            display: block;
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-
-            .product-info a:hover {
-                color: #ffc107;
-            }
-
-    .product-price {
-        margin: 10px 0;
-    }
-
-        .product-price h5 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #e74c3c;
-            margin: 0;
-            display: inline-block;
-        }
-
-        .product-price h6 {
-            font-size: 14px;
-            color: #6c757d;
-            margin: 0 0 0 8px;
-            display: inline-block;
-        }
-
-    .product-rating {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        margin-top: 8px;
-    }
-
-        .product-rating .fa-star {
-            color: #ffc107;
-            font-size: 12px;
-        }
-
-        .product-rating small {
-            color: #6c757d;
-            font-size: 12px;
-            margin-left: 5px;
-        }
-
-    /* Section Titles */
-    .section-title {
-        font-weight: 700;
-        color: #343a40;
-        font-size: 24px;
-        position: relative;
-        padding-bottom: 10px;
-    }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: #ffc107;
-            border-radius: 2px;
-        }
-
-    /* Pagination - cải thiện */
-    .pagination {
-        margin-top: 30px;
-    }
-
-        .pagination .page-link {
-            border: 1px solid #dee2e6;
-            color: #495057;
-            background: white;
-            margin: 0 3px;
-            border-radius: 6px;
-            padding: 8px 12px;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-            .pagination .page-link:hover,
-            .pagination .page-item.active .page-link {
-                background: #ffc107;
-                border-color: #ffc107;
-                color: #000;
-                transform: translateY(-1px);
-            }
-
-    /* Footer */
-    .footer {
-        background: #343a40;
-        color: white;
-        margin-top: 50px;
-        padding: 40px 0 20px;
-    }
-
-        .footer h5 {
-            color: #ffc107;
-            font-weight: 600;
-            margin-bottom: 20px;
-            font-size: 16px;
-        }
-
-        .footer a {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            transition: color 0.3s ease;
-            display: block;
-            padding: 3px 0;
-            font-size: 14px;
-        }
-
-            .footer a:hover {
-                color: #ffc107;
-                padding-left: 5px;
-            }
-
-        .footer p {
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-    .social-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 6px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: #ffc107;
-        color: #000;
-        transition: all 0.3s ease;
-        margin-right: 8px;
-        text-decoration: none;
-        font-size: 16px;
-    }
-
-        .social-btn:hover {
-            background: #e0a800;
-            color: #000;
-            transform: translateY(-2px);
-        }
-
-    /* Back to Top */
-    .back-to-top {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        background: #ffc107 !important;
-        border: none;
-        color: #000;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 999;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        font-size: 18px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-
-        .back-to-top:hover {
-            background: #e0a800 !important;
-            color: #000;
-            transform: translateY(-3px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-    /* Responsive Improvements */
-    @@media (max-width: 768px) {
-        .logo-brand span {
-            font-size: 1.5rem;
-            padding: 6px 12px;
-        }
-
-        .search-container {
-            margin: 15px 0;
-        }
-
-        .hotline-section {
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        .category-btn {
-            width: 100%;
-        }
-
-        .feature-card {
-            text-align: center;
-            flex-direction: column;
-            padding: 20px;
-        }
-
-        .feature-icon {
-            margin-bottom: 10px;
-        }
-    }
-
-    /* Additional Improvements */
-    .container-fluid.border-bottom {
-        background-color: #f8f9fa;
-    }
-
-    .dropdown-menu {
-        border: none;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        border-radius: 6px;
-    }
-
-    .dropdown-item {
-        padding: 8px 16px;
-        font-size: 14px;
-        transition: background-color 0.3s ease;
-    }
-
-        .dropdown-item:hover {
-            background-color: #f8f9fa;
-            color: #ffc107;
-        }
-
-    /* Smooth transitions */
-    * {
-        transition: all 0.3s ease;
-    }
-
-    /* Fix button alignment */
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 500;
-    }
-
-    /* Improve form controls */
-    .form-control:focus {
-        border-color: #ffc107;
-        box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
-    }
-
-
-    .product-offer {
-        position: relative;
-        height: 300px; /* giữ đúng chiều cao bạn đang dùng */
-        overflow: hidden;
-        border-radius: 8px; /* tuỳ chọn */
-    }
-
-        .product-offer img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* CHÍNH: không bị bể ảnh */
-            object-position: center; /* canh giữa vùng cắt */
-            display: block;
-        }
-
-        .product-offer .offer-text {
-            position: absolute;
-            inset: 0; /* top:0; right:0; bottom:0; left:0 */
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* căn giữa ngang */
-            justify-content: center; /* căn giữa dọc */
-            text-align: center;
-            padding: 1rem;
-        }
-
-        .product-offer::after { /* lớp mờ giúp chữ nổi bật (tuỳ chọn) */
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.25);
-        }
-
-</style>
-
-<body>
-    <div class="container-fluid border-bottom">
-        <!-- Top Header -->
-        <div class="top-header">
-            <div class="row px-4">
+<body style="font-family: 'Poppins', sans-serif;">
+
+    <!--menu -->
+    <div class="bg-body-tertiary border-0">
+        <div class="container-fluid">
+            <div class="row align-items-center py-1 px-4 g-0">
+                <!-- Links trái -->
                 <div class="col-lg-6 d-none d-lg-block">
-                    <div class="d-flex align-items-center h-100">
-                        <a href="#" class="me-3">Liên hệ</a>
-                        <a href="#">Giúp đỡ</a>
+                    <div class="d-flex">
+                        <a href="#" class="small text-secondary text-decoration-none me-3">Liên hệ</a>
+                        <a href="#" class="small text-secondary text-decoration-none">Giúp đỡ</a>
                     </div>
-                   </div>
-                <div class="col-lg-6 d-flex justify-content-end align-items-center">
-                    <!-- Account Dropdown -->
-                    <div class="dropdown me-2">
-                        <button class="btn btn-sm dropdown-toggle border"
-                                type="button"
-                                data-bs-toggle="dropdown">
+                </div>
+
+                <!-- Nút phải -->
+                <div class="col-lg-6 d-flex justify-content-lg-end align-items-center gap-2">
+                    <!-- Account -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light border dropdown-toggle"
+                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             @(User.Identity?.IsAuthenticated == true ? User.Identity.Name : "Tài khoản")
                         </button>
-
-                        <div class="dropdown-menu dropdown-menu-end">
+                        <ul class="dropdown-menu dropdown-menu-end">
                             @if (User.Identity?.IsAuthenticated == true)
                             {
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="px-2">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="dropdown-item">Đăng xuất</button>
-                                </form>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="px-2">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dropdown-item">Đăng xuất</button>
+                                    </form>
+                                </li>
                             }
                             else
                             {
-                                <a class="dropdown-item" asp-controller="Account" asp-action="Login">Đăng nhập</a>
-                                <a class="dropdown-item" asp-controller="Account" asp-action="Register">Đăng ký</a>
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Login">Đăng nhập</a></li>
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Register">Đăng ký</a></li>
                             }
-                        </div>
+                        </ul>
                     </div>
 
-
-                    <!-- Language Dropdown -->
+                    <!-- Language -->
                     <div class="dropdown">
-                        <button class="btn btn-sm dropdown-toggle border"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                data-toggle="dropdown">
+                        <button class="btn btn-sm btn-light border dropdown-toggle"
+                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Ngôn ngữ
                         </button>
-                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
-                            <a class="dropdown-item" href="#">Tiếng Việt</a>
-                            <a class="dropdown-item" href="#">Tiếng Anh</a>
-                        </div>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#">Tiếng Việt</a></li>
+                            <li><a class="dropdown-item" href="#">Tiếng Anh</a></li>
+                        </ul>
                     </div>
-                </div>
-
-
-        <!-- Logo + Search + Hotline -->
-        <div class="logo-section">
-            <div class="d-flex align-items-center justify-content-between px-4">
-                <!-- Logo -->
-                <a href="#" class="logo-brand">
-                    <span class="text-warning" style="background:#343a40;">THE BAG</span>
-                    <span class="text-dark" style="background:#ffc107;">STUDIO</span>
-                </a>
-
-                <!-- Search -->
-                <div class="flex-grow-1 d-flex justify-content-center px-3">
-                    <form method="get" asp-action="Index" class="search-container">
-                        <div class="input-group">
-                            <input type="text" name="search" value="@ViewBag.Search"
-                                   class="form-control search-input" placeholder="Tìm kiếm sản phẩm...">
-                            <button class="btn search-btn" type="submit">
-                                <i class="fa fa-search"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Hotline -->
-                <div class="hotline-section">
-                    <small>Chăm sóc khách hàng</small>
-                    <h5>012 345 6789</h5>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Navigation Menu -->
-        <div class="main-nav">
-            <div class="d-flex">
-                <!-- Category Button -->
-                <div>
-                    <button class="category-btn" data-toggle="collapse" data-target="#navbar-vertical">
-                        <h6><i class="fa fa-bars mr-2"></i>Thể loại</h6>
-                        <i class="fa fa-angle-down"></i>
+
+    <!-- Logo + Search + Hotline (lùi vào giống ảnh 2) -->
+    <div class="bg-white shadow-sm">
+        <div class="container-fluid">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3
+            ps-4 pe-3 pe-lg-5 py-3">
+
+                <!-- Logo -->
+                <a href="#" class="text-decoration-none d-inline-flex align-items-center">
+                    <span class="bg-dark text-warning fw-bold fs-3 px-3 py-2">THE BAG</span>
+                    <span class="bg-warning text-dark fw-bold fs-3 px-3 py-2">STUDIO</span>
+                </a>
+
+                <!-- Search -->
+                <form method="get" asp-action="Index" class="flex-grow-1 d-flex justify-content-center">
+                    <div class="input-group" style="max-width:500px;">
+                        <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm kiếm sản phẩm...">
+                        <button class="btn btn-warning" type="submit"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+
+                <!-- Hotline -->
+                <div class="text-end">
+                    <div class="small text-secondary">Chăm sóc khách hàng</div>
+                    <div class="fw-semibold">012 345 6789</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation + Categories -->
+    <div class="bg-dark">
+        <!-- Lùi nội dung vào thêm 1 nấc trên màn lớn + tăng chiều cao thanh menu -->
+        <div class="container-fluid px-3 px-lg-5">
+            <div class="d-flex align-items-stretch" style="min-height:58px;">
+
+                <!-- Category Button (lùi vào và cao bằng thanh menu) -->
+                <div class="position-relative d-flex align-items-stretch me-2 ps-0">
+                    <button type="button"
+                            class="btn btn-warning fw-semibold d-flex align-items-center justify-content-between px-4
+                 border-0 rounded-0 h-100
+                 ms-n2 ms-lg-n3"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#navbar-vertical">
+                        <span class="d-flex align-items-center">
+                            <i class="bi bi-list me-2"></i> Thể loại
+                        </span>
+                        <i class="bi bi-chevron-down ms-2"></i>
                     </button>
 
-                    <!-- Category Dropdown -->
-                    <nav class="collapse position-absolute bg-white border shadow-sm"
-                         id="navbar-vertical" style="width:260px; z-index:999;">
-                        <div class="navbar-nav w-100">
-                            <div class="dropdown dropend">
-                                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                    <!-- Category Dropdown (đặt ngay dưới nút, cách xuống 1 chút) -->
+                    <nav id="navbar-vertical"
+                         class="collapse position-absolute top-100 start-0 bg-white border rounded shadow mt-2"
+                         style="width:260px; z-index:1050;">
+                        <div class="list-group list-group-flush">
+                            <div class="dropend">
+                                <a class="list-group-item list-group-item-action dropdown-toggle text-dark hover-gold"
+                                   data-bs-toggle="dropdown" data-bs-offset="0,8" href="#">
                                     Sản phẩm
                                 </a>
-                                <ul class="dropdown-menu rounded border-0 shadow">
+                                <ul class="dropdown-menu">
                                     @if (ViewBag.Categories is List<DATN1API.Models.Category> categories && categories != null)
                                     {
                                         @foreach (var cat in categories)
                                         {
                                             <li>
-                                                <a class="dropdown-item"
-                                                   asp-controller="User"
-                                                   asp-action="Index"
-                                                   asp-route-categoryId="@cat.CategoryId"
-                                                   asp-fragment="recentProducts">
+                                                <a class="dropdown-item text-dark hover-gold"
+                                                   asp-controller="User" asp-action="Index"
+                                                   asp-route-categoryId="@cat.CategoryId" asp-fragment="recentProducts">
                                                     @cat.CategoryName
                                                 </a>
                                             </li>
@@ -873,298 +151,463 @@
                                     }
                                 </ul>
                             </div>
-                            <a asp-controller="Products" asp-action="Index" class="nav-item nav-link">Balo</a>
-                            <a asp-controller="Products" asp-action="Index" class="nav-item nav-link">Phụ kiện khác</a>
+
+                            <a asp-controller="Products" asp-action="Index"
+                               class="list-group-item list-group-item-action text-dark hover-gold">Balo</a>
+                            <a asp-controller="Products" asp-action="Index"
+                               class="list-group-item list-group-item-action text-dark hover-gold">Phụ kiện khác</a>
                         </div>
                     </nav>
                 </div>
 
                 <!-- Main Menu -->
-                <nav class="navbar navbar-expand-lg flex-grow-1 py-0">
-                    <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                <nav class="navbar navbar-expand-lg navbar-dark flex-grow-1 p-0">
+                    <button class="navbar-toggler my-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
                         <span class="navbar-toggler-icon"></span>
                     </button>
-                    <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
-                        <div class="navbar-nav d-flex main-menu">
-                            <a href="@Url.Action("Index", "User")" class="nav-item nav-link active">Trang chủ</a>
-                            <a href="@Url.Action("Shop", "Products")" class="nav-item nav-link">Khuyến mãi</a>
-                            <a href="@Url.Action("Collection", "Products")" class="nav-item nav-link">Bộ sưu tập</a>
+
+                    <div id="navbarCollapse" class="collapse navbar-collapse">
+                        <!-- links trái (tăng cỡ chữ chút bằng fs-6) -->
+                        <div class="navbar-nav align-items-center fs-6">
+                            <a href="@Url.Action("Index", "User")" class="nav-link px-3 fw-semibold text-warning">Trang chủ</a>
+
+                            <a href="@Url.Action("Shop", "Products")"
+                               class="nav-link px-3 text-white-50 nav-hover-gold">Khuyến mãi</a>
+
+                            <a href="@Url.Action("Collection", "Products")"
+                               class="nav-link px-3 text-white-50 nav-hover-gold">Bộ sưu tập</a>
+
                             <div class="nav-item dropdown">
-                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Trang</a>
+                                <a href="#" class="nav-link dropdown-toggle px-3 text-white-50 nav-hover-gold" data-bs-toggle="dropdown">
+                                    Trang
+                                </a>
                                 <div class="dropdown-menu">
                                     <a href="@Url.Action("Cart", "Orders")" class="dropdown-item">Giỏ hàng</a>
                                     <a href="@Url.Action("Checkout", "Orders")" class="dropdown-item">Thanh toán</a>
                                 </div>
                             </div>
-                            <a href="@Url.Action("Contact", "Home")" class="nav-item nav-link">Tin tức</a>
+
+                            <a href="@Url.Action("Contact", "Home")"
+                               class="nav-link px-3 text-white-50 nav-hover-gold">Tin tức</a>
                         </div>
 
-                        <!-- Cart Icons -->
-                        <div class="cart-icons d-none d-lg-flex">
-                            <a href="@Url.Action("Wishlist", "Account")" class="cart-icon-link">
-                                <i class="fas fa-heart"></i> 
-                                <span class="cart-badge">0</span>
+                        <!-- Icons phải -->
+                        <div class="ms-auto d-none d-lg-flex align-items-center gap-3">
+                            <a href="@Url.Action("Wishlist", "Account")" class="position-relative text-decoration-none">
+                                <i class="bi bi-heart text-warning fs-5"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">0</span>
                             </a>
-                            <a href="@Url.Action("Cart", "Orders")" class="cart-icon-link">
-                                <i class="fas fa-shopping-cart"></i>
-                                <span class="cart-badge">0</span>
+                            <a href="@Url.Action("Cart", "Orders")" class="position-relative text-decoration-none">
+                                <i class="bi bi-cart3 text-warning fs-5"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">0</span>
                             </a>
                         </div>
                     </div>
                 </nav>
+
             </div>
         </div>
+    </div>
 
-        <!-- Banner Section -->
-        <div class="container-fluid mb-4" style="margin-top:20px;">
-            <div class="row px-xl-5">
-                <!-- Main Carousel -->
-                <div class="col-lg-8 mb-3 mb-lg-0">
-                    <div id="header-carousel" class="carousel slide carousel-fade" data-ride="carousel">
-                        <ol class="carousel-indicators">
-                            <li data-target="#header-carousel" data-slide-to="0" class="active"></li>
-                            <li data-target="#header-carousel" data-slide-to="1"></li>
-                            <li data-target="#header-carousel" data-slide-to="2"></li>
-                        </ol>
-                        <div class="carousel-inner rounded">
-                            <div class="carousel-item active" style="height:430px;">
-                                <img class="d-block w-100 h-100" src="/hinh/hinh3.jpg" alt="Ưu đãi đặc biệt">
-                                <div class="carousel-caption">
-                                    <h1 class="display-4 text-white mb-3">Thời trang nữ</h1>
-                                    <p class="mb-4">Mang lại phong cách và lịch lãm, sang trọng cho phụ nữ trước đám đông</p>
-                                    <a class="btn btn-warning text-dark py-2 px-4 font-weight-bold" href="#">Mua ngay</a>
+    <!-- Hover chữ vàng (giữ nguyên) -->
+    <script>
+        (function () {
+          document.querySelectorAll('.nav-hover-gold').forEach(function(el){
+            el.addEventListener('mouseenter', function(){ el.classList.remove('text-white-50'); el.classList.add('text-warning'); });
+            el.addEventListener('mouseleave', function(){ el.classList.remove('text-warning'); el.classList.add('text-white-50'); });
+          });
+          document.querySelectorAll('#navbar-vertical .hover-gold').forEach(function(el){
+            el.addEventListener('mouseenter', function(){ el.classList.remove('text-dark'); el.classList.add('text-warning'); });
+            el.addEventListener('mouseleave', function(){ el.classList.remove('text-warning'); el.classList.add('text-dark'); });
+          });
+        })();
+    </script>
+
+
+
+    <!-- Banner  -->
+    <div class="container-fluid my-4">
+        <div class="row px-4 g-4 align-items-stretch">
+            <!-- Main Carousel -->
+            <div class="col-lg-8">
+                <div class="rounded-0 overflow-hidden shadow-sm"
+                     onmouseenter="this.querySelectorAll('.carousel-item img').forEach(i=>i.style.transform='scale(1.02)');"
+                     onmouseleave="this.querySelectorAll('.carousel-item img').forEach(i=>i.style.transform='scale(1)');">
+                    <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-indicators">
+                            <button type="button" data-bs-target="#header-carousel" data-bs-slide-to="0" class="active"></button>
+                            <button type="button" data-bs-target="#header-carousel" data-bs-slide-to="1"></button>
+                            <button type="button" data-bs-target="#header-carousel" data-bs-slide-to="2"></button>
+                        </div>
+
+                        <div class="carousel-inner" style="height:430px;">
+                            <!-- item 1 -->
+                            <div class="carousel-item active h-100 position-relative">
+                                <img src="/hinh/hinh3.jpg" class="w-100 h-100" alt="Ưu đãi 1"
+                                     style="object-fit:cover; transition:transform .35s ease;">
+                                <!-- overlay full để căn giữa; KHÔNG bo tròn -->
+                                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                                    <div class="bg-dark bg-opacity-50 rounded-0 px-4 px-md-5 py-4 text-center"
+                                         style="max-width:860px; width:85%;">
+                                        <h1 class="display-3 fw-bold text-white lh-1 mb-4">Thời trang nữ</h1>
+                                        <p class="lead text-white-50 mb-4">
+                                            Mang lại phong cách và lịch lãm, sang trọng cho phụ nữ trước đám đông
+                                        </p>
+                                        <a class="btn btn-warning fw-semibold text-dark px-4" href="#">Mua ngay</a>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="carousel-item" style="height:430px;">
-                                <img class="d-block w-100 h-100" src="/hinh/hinh6.jpg" alt="Ưu đãi đặc biệt">
-                                <div class="carousel-caption">
-                                    <h1 class="display-4 text-white mb-3">Phong cách, hiện đại</h1>
-                                    <p class="mb-4">Cuốn hút mọi ánh nhìn, tôn dáng người phụ nữ hiện đại</p>
-                                    <a class="btn btn-warning text-dark py-2 px-4 font-weight-bold" href="#">Mua ngay</a>
+
+                            <!-- item 2 -->
+                            <div class="carousel-item h-100 position-relative">
+                                <img src="/hinh/hinh6.jpg" class="w-100 h-100" alt="Ưu đãi 2"
+                                     style="object-fit:cover; transition:transform .35s ease;">
+                                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                                    <div class="bg-dark bg-opacity-50 rounded-0 px-4 px-md-5 py-4 text-center"
+                                         style="max-width:860px; width:85%;">
+                                        <h1 class="display-3 fw-bold text-white lh-1 mb-4">Phong cách, hiện đại</h1>
+                                        <p class="lead text-white-50 mb-4">Cuốn hút mọi ánh nhìn, tôn dáng người phụ nữ hiện đại</p>
+                                        <a class="btn btn-warning fw-semibold text-dark px-4" href="#">Mua ngay</a>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="carousel-item" style="height:430px;">
-                                <img class="d-block w-100 h-100" src="/hinh/hinh5.jpg" alt="Ưu đãi đặc biệt">
-                                <div class="carousel-caption">
-                                    <h1 class="display-4 text-white mb-3">Thời trang trẻ em</h1>
-                                    <p class="mb-4">Tôn lên sự sang trọng, hiện đại của giới trẻ</p>
-                                    <a class="btn btn-warning text-dark py-2 px-4 font-weight-bold" href="#">Mua ngay</a>
+
+                            <!-- item 3 -->
+                            <div class="carousel-item h-100 position-relative">
+                                <img src="/hinh/hinh5.jpg" class="w-100 h-100" alt="Ưu đãi 3"
+                                     style="object-fit:cover; transition:transform .35s ease;">
+                                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                                    <div class="bg-dark bg-opacity-50 rounded-0 px-4 px-md-5 py-4 text-center"
+                                         style="max-width:860px; width:85%;">
+                                        <h1 class="display-3 fw-bold text-white lh-1 mb-4">Thời trang trẻ em</h1>
+                                        <p class="lead text-white-50 mb-4">Tôn lên sự sang trọng, hiện đại của giới trẻ</p>
+                                        <a class="btn btn-warning fw-semibold text-dark px-4" href="#">Mua ngay</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Side Offers -->
-                <div class="col-lg-4 d-flex flex-column justify-content-between">
-                    <div class="offer-card mb-3">
-                        <img class="d-block w-100 h-100" src="/hinh/hinh7.jpg" alt="Ưu đãi đặc biệt">
-                        <div class="offer-overlay">
-                            <h6 class="text-white text-uppercase font-weight-bold">GIẢM GIÁ 20%</h6>
-                            <h3 class="text-white mb-3 font-weight-bold">Ưu đãi đặc biệt</h3>
-                            <a href="#" class="btn btn-warning text-dark font-weight-bold px-4">Mua ngay</a>
-                        </div>
-                    </div>
-                    <div class="offer-card">
-                        <img class="d-block w-100 h-100" src="/hinh/hinh9.jpg" alt="Ưu đãi đặc biệt">
-                        <div class="offer-overlay">
-                            <h6 class="text-white text-uppercase font-weight-bold">GIẢM GIÁ 20%</h6>
-                            <h3 class="text-white mb-3 font-weight-bold">Ưu đãi đặc biệt</h3>
-                            <a href="#" class="btn btn-warning text-dark font-weight-bold px-4">Mua ngay</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Features Section -->
-        <div class="container-fluid pt-5">
-            <div class="row px-xl-5 pb-3">
-                <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fa fa-check"></i>
-                        </div>
-                        <div class="feature-text">
-                            <h5>Sản phẩm chất lượng</h5>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fa fa-shipping-fast"></i>
-                        </div>
-                        <div class="feature-text">
-                            <h5>Miễn phí vận chuyển</h5>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-exchange-alt"></i>
-                        </div>
-                        <div class="feature-text">
-                            <h5>Hoàn trả 10 ngày</h5>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fa fa-phone-volume"></i>
-                        </div>
-                        <div class="feature-text">
-                            <h5>Hỗ trợ 24/7</h5>
-                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#header-carousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <!-- Side Offers -->
+            <div class="col-lg-4 d-flex flex-column gap-4">
+
+                <!-- Offer 1 -->
+                <div class="card border-0 rounded-0 overflow-hidden shadow-sm"
+                     style="height:205px; cursor:pointer; transition:box-shadow .3s ease;"
+                     onmouseenter="this.style.boxShadow='0 .8rem 1.6rem rgba(0,0,0,.15)'; this.querySelector('img').style.transform='scale(1.04)';"
+                     onmouseleave="this.style.boxShadow=''; this.querySelector('img').style.transform='scale(1)';">
+                    <img src="/hinh/hinh7.jpg" class="card-img h-100"
+                         style="object-fit:cover; transition:transform .35s ease;" alt="Offer 1">
+
+                    <!-- Overlay căn giữa -->
+                    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center bg-dark bg-opacity-50">
+                        <small class="text-uppercase fw-bold text-white mb-2">GIẢM GIÁ 20%</small>
+                        <h3 class="fw-bold text-white mb-3">Ưu đãi đặc biệt</h3>
+                        <a href="#" class="btn btn-warning fw-semibold text-dark px-4">Mua ngay</a>
+                    </div>
+                </div>
+
+                <!-- Offer 2 -->
+                <div class="card border-0 rounded-0 overflow-hidden shadow-sm"
+                     style="height:205px; cursor:pointer; transition:box-shadow .3s ease;"
+                     onmouseenter="this.style.boxShadow='0 .8rem 1.6rem rgba(0,0,0,.15)'; this.querySelector('img').style.transform='scale(1.04)';"
+                     onmouseleave="this.style.boxShadow=''; this.querySelector('img').style.transform='scale(1)';">
+                    <img src="/hinh/hinh9.jpg" class="card-img h-100"
+                         style="object-fit:cover; transition:transform .35s ease;" alt="Offer 2">
+
+                    <!-- Overlay căn giữa -->
+                    <div class="card-img-overlay d-flex flex-column justify-content-center align-items-center text-center bg-dark bg-opacity-50">
+                        <small class="text-uppercase fw-bold text-white mb-2">GIẢM GIÁ 20%</small>
+                        <h3 class="fw-bold text-white mb-3">Ưu đãi đặc biệt</h3>
+                        <a href="#" class="btn btn-warning fw-semibold text-dark px-4">Mua ngay</a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <!-- công cụ -->
+    <div class="container-fluid pt-4">
+        <div class="row px-4 g-3">
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card h-100 shadow-sm feature-hover cursor-pointer">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <i class="bi bi-check2-circle fs-2 text-warning"></i>
+                        <h6 class="mb-0">Sản phẩm chất lượng</h6>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card h-100 shadow-sm feature-hover cursor-pointer">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <i class="bi bi-truck fs-2 text-warning"></i>
+                        <h6 class="mb-0">Miễn phí vận chuyển</h6>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card h-100 shadow-sm feature-hover cursor-pointer">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <i class="bi bi-arrow-left-right fs-2 text-warning"></i>
+                        <h6 class="mb-0">Hoàn trả 10 ngày</h6>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="card h-100 shadow-sm feature-hover cursor-pointer">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <i class="bi bi-telephone fs-2 text-warning"></i>
+                        <h6 class="mb-0">Hỗ trợ 24/7</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hover vàng + chuyển động nhẹ CÔNG CỤ -->
+    <script>
+        document.querySelectorAll('.feature-hover').forEach(function(card){
+          const icon = card.querySelector('i');
+          const text = card.querySelector('h6');
+          card.style.transition = 'transform .25s ease, box-shadow .25s ease, background-color .25s ease';
+
+          card.addEventListener('mouseenter', function(){
+            card.classList.add('bg-warning','shadow');
+            card.style.transform = 'translateY(-3px)';
+            icon.classList.replace('text-warning','text-dark');
+            text.classList.add('text-dark');
+          });
+
+          card.addEventListener('mouseleave', function(){
+            card.classList.remove('bg-warning','shadow');
+            card.style.transform = 'translateY(0)';
+            icon.classList.replace('text-dark','text-warning');
+            text.classList.remove('text-dark');
+          });
+        });
+    </script>
+
+
+    <!-- Categories -->
+    <div class="container-fluid pt-5">
+        <div class="px-4 mb-3 d-flex align-items-center">
+            <h2 class="fw-bold me-3 mb-0">THỂ LOẠI</h2>
+            <div class="flex-grow-1 border-bottom"></div>
         </div>
 
-                <!-- Categories Section -->
-                <div class="container-fluid pt-5">
-                    <div class="container-fluid pt-5 pb-3">
-                        <div class="d-flex align-items-center mb-4">
-                            <h2 class="section-title mb-0">THỂ LOẠI</h2>
-                            <div class="flex-grow-1 border-bottom ml-3"></div>
-                        </div>
+        <div class="row px-4 g-4">
+            @{
+                var catList = ViewBag.Categories as List<DATN1API.Models.Category> ?? new();
+            }
+            @if (catList.Any())
+            {
+                foreach (var cat in catList)
+                {
+                    var raw = (cat.CategoryImage ?? "").Replace("\\", "/");
+                    string imgUrl;
+                    if (!string.IsNullOrWhiteSpace(raw) && Uri.IsWellFormedUriString(raw, UriKind.Absolute))
+                        imgUrl = raw;
+                    else
+                    {
+                        var fileName = System.IO.Path.GetFileName(raw.TrimStart('/'));
+                        imgUrl = !string.IsNullOrEmpty(fileName)
+                        ? Url.Content($"~/hinh/{fileName}")
+                        : Url.Content("~/images/placeholder-category.png");
+                    }
+                    var productCount = cat.Products?.Count ?? 0;
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <a href="#" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm"
+                                 style="transition: box-shadow .25s ease, transform .25s ease;">
+                                <div class="card-body d-flex align-items-center gap-3">
+
+                                    <!-- Ảnh FULL, không bao khung -->
+                                    <div class="flex-shrink-0 overflow-hidden"
+                                         style="width:125px; height:95px; border-radius:.5rem;">
+                                        <img src="@imgUrl" alt="@cat.CategoryName"
+                                             class="w-100 h-100"
+                                             style="object-fit:cover; transition:transform .3s ease;" />
+                                    </div>
+
+                                    <!-- Text (không tràn) -->
+                                    <div class="min-w-0">
+                                        <h6 class="mb-1 fw-semibold text-truncate" title="@cat.CategoryName">
+                                            @cat.CategoryName
+                                        </h6>
+                                        <div class="small text-muted text-truncate">@productCount sản phẩm</div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </a>
                     </div>
 
-                    <div class="row px-xl-5">
-                        @{
-                            var catList = ViewBag.Categories as List<DATN1API.Models.Category>
-                            ?? new List<DATN1API.Models.Category>();
-                        }
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <p class="text-center text-muted">Không có thể loại nào được tìm thấy.</p>
+                </div>
+            }
+        </div>
+    </div>
 
-                        @if (catList.Any())
-                        {
-                            foreach (var cat in catList)
-                            {
-                                // Build URL ảnh an toàn
-                                var raw = (cat.CategoryImage ?? "").Replace("\\", "/");
-                                string imgUrl;
-                                if (!string.IsNullOrWhiteSpace(raw) && Uri.IsWellFormedUriString(raw, UriKind.Absolute))
-                                {
-                                    imgUrl = raw; // URL tuyệt đối
-                                }
-                                else
-                                {
-                                    var fileName = System.IO.Path.GetFileName(raw.TrimStart('/'));
-                                    imgUrl = !string.IsNullOrEmpty(fileName)
-                                    ? Url.Content($"~/hinh/{fileName}")                   // /hinh/xxx
-                                    : Url.Content("~/images/placeholder-category.png");   // fallback (tuỳ bạn)
-                                }
+    <script>
+        document.querySelectorAll('.card.h-100').forEach(function (card) {
+          const img = card.querySelector('img');
+          card.addEventListener('mouseenter', function () {
+            card.style.boxShadow = '0 .8rem 1.6rem rgba(0,0,0,.10)';
+            card.style.transform = 'translateY(-2px)';
+            if (img) img.style.transform = 'scale(1.05)'; // zoom nhẹ ảnh
+          });
+          card.addEventListener('mouseleave', function () {
+            card.style.boxShadow = '';
+            card.style.transform = 'none';
+            if (img) img.style.transform = 'none';
+          });
+        });
+    </script>
 
-                                var productCount = cat.Products?.Count ?? 0;
 
-                                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                                    <a href="#" class="text-decoration-none">
-                                        <div class="category-card">
-                                            <img src="@imgUrl"
-                                                 class="img-fluid w-100 category-img"
-                                                 alt="@cat.CategoryName" />
-                                            <div class="category-info">
-                                                <h6>@cat.CategoryName</h6>
-                                                <small>@productCount sản phẩm</small>
-                                            </div>
+
+
+    <!-- Sản phẩm mới -->
+
+    <div id="productContainer" class="px-1">
+        <!-- Selected Category Alert -->
+        @if (ViewBag.SelectedCategoryId != null)
+        {
+            var selectedCategory = (ViewBag.Categories as List<DATN1API.Models.Category>)
+            .FirstOrDefault(c => c.CategoryId == (int)ViewBag.SelectedCategoryId);
+            if (selectedCategory != null)
+            {
+                <div class="container mt-3 mb-4">
+                    <div class="alert alert-info border-0 rounded">
+                        <h6 class="mb-0">
+                            <i class="bi bi-filter me-2"></i>
+                            Mời bạn tham khảo những mẫu:
+                            <span class="fw-bold text-primary">@selectedCategory.CategoryName</span>
+                        </h6>
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- Recent (Newest) Products -->
+        <div class="container-fluid px-1 mt-4 mt-lg-5 pt-1" id="recentProducts">
+            <div class="px-4 mb-3 d-flex align-items-center">
+                <h2 class="fw-bold me-3 mb-0">SẢN PHẨM MỚI NHẤT</h2>
+                <div class="flex-grow-1 border-bottom"></div>
+            </div>
+
+            @if (Model != null && Model.Any())
+            {
+                <div class="row px-4 g-4">
+                    @foreach (var item in Model)
+                    {
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <div class="card h-100 border-0 shadow-sm product-card">
+                                <!-- Ảnh + overlay (hover) -->
+                                <div class="ratio ratio-1x1 position-relative overflow-hidden">
+                                    <img src="@item.ThumbnailImage"
+                                         alt="@item.ProductName"
+                                         class="position-absolute top-0 start-0 w-100 h-100 p-img"
+                                         style="object-fit:cover; transition:transform .35s ease, filter .35s ease;" />
+
+                                    <!-- Overlay action (ẩn mặc định, hiện khi hover) -->
+                                    <div class="p-overlay position-absolute top-0 start-0 w-100 h-100
+                                            d-flex align-items-center justify-content-center"
+                                         style="background:rgba(255,255,255,.55); opacity:0; transition:opacity .28s ease;">
+                                        <div class="d-flex gap-2">
+                                            <!-- Mua (đi tới trang chọn biến thể) -->
+                                            <a class="btn btn-light border shadow-sm p-0 d-inline-flex align-items-center justify-content-center"
+                                               href="/User/ChonBienThe/@item.ProductId"
+                                               title="Mua"
+                                               style="width:46px;height:46px; transition:transform .2s ease;">
+                                                <i class="bi bi-cart fs-5"></i>
+                                            </a>
+
+                                            <!-- Thêm vào giỏ (LocalStorage) -->
+                                            <button type="button"
+                                                    class="btn btn-light border shadow-sm p-0 d-inline-flex align-items-center justify-content-center add-to-cart"
+                                                    data-id="@item.ProductId"
+                                                    data-name="@item.ProductName"
+                                                    data-price="@((int)(item.SalePrice ?? 0))"
+                                                    data-img="@item.ThumbnailImage"
+                                                    title="Thêm vào giỏ"
+                                                    style="width:46px;height:46px; transition:transform .2s ease;">
+                                                <i class="bi bi-bag-plus fs-5"></i>
+                                            </button>
+
+                                            <!-- Yêu thích -->
+                                            <button type="button"
+                                                    class="btn btn-light border shadow-sm p-0 d-inline-flex align-items-center justify-content-center"
+                                                    title="Yêu thích"
+                                                    style="width:46px;height:46px; transition:transform .2s ease;">
+                                                <i class="bi bi-heart fs-5"></i>
+                                            </button>
+
+                                            <!-- Xem nhanh -->
+                                            <button type="button"
+                                                    class="btn btn-light border shadow-sm p-0 d-inline-flex align-items-center justify-content-center"
+                                                    title="Xem nhanh"
+                                                    style="width:46px;height:46px; transition:transform .2s ease;">
+                                                <i class="bi bi-search fs-5"></i>
+                                            </button>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <!-- Thông tin -->
+                                <div class="card-body text-center">
+                                    <a class="text-decoration-none text-dark fw-medium d-block mb-2" href="#">
+                                        @item.ProductName
                                     </a>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="col-12">
-                                <p class="text-center text-muted">Không có thể loại nào được tìm thấy.</p>
-                            </div>
-                        }
-                    </div>
-                </div>
-
-
-        <div id="productContainer">
-            <div class="row px-xl-5" id="recentProducts">
-                <div class="container-fluid pt-5 pb-3">
-                    <div class="d-flex align-items-center mb-4">
-                        <h2 class="section-title mb-0">SẢN PHẨM MỚI NHẤT</h2>
-                        <div class="flex-grow-1 border-bottom ml-3"></div>
-                    </div>
-                </div>
-
-                @if (ViewBag.SelectedCategoryId != null)
-                {
-                    var selectedCategory = (ViewBag.Categories as List<DATN1API.Models.Category>)
-                    .FirstOrDefault(c => c.CategoryId == (int)ViewBag.SelectedCategoryId);
-                    if (selectedCategory != null)
-                    {
-                        <div class="container mt-1 mb-5">
-                            <div class="alert alert-info border-0 rounded">
-                                <h5 class="mb-0">
-                                    <i class="fa fa-filter mr-2"></i>
-                                    Mời bạn tham khảo những mẫu:
-                                    <span class="font-weight-bold text-primary">@selectedCategory.CategoryName</span>
-                                </h5>
-                            </div>
-                        </div>
-                    }
-                }
-
-                @if (Model != null && Model.Any())
-                {
-                    foreach (var item in Model)
-                    {
-                        <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
-                            <div class="product-item mb-4">
-                                <div class="product-img">
-                                    <img src="@item.ThumbnailImage" alt="@item.ProductName" class="img-fluid w-100" />
-
-
-
-                                    <div class="product-action">
-                                        <a class="btn btn-outline-dark btn-square" href="/User/ChonBienThe/@item.ProductId">
-                                            <i class="fa fa-shopping-cart"></i>
-                                        </a>
-
-                                        <a href="#" class="btn"><i class="far fa-heart"></i></a>
-                                        <a href="#" class="btn"><i class="fa fa-sync-alt"></i></a>
-                                        <a href="#" class="btn"><i class="fa fa-search"></i></a>
+                                    <div class="mb-2">
+                                        <span class="fw-bold text-danger">@((item.SalePrice ?? 0).ToString("N0")) VNĐ</span>
+                                        <small class="text-muted">
+                                            <del>@((item.OriginalPrice ?? 0).ToString("N0")) VNĐ</del>
+                                        </small>
                                     </div>
                                 </div>
-                                <div class="product-info">
-                                    <a href="#">@item.ProductName</a>
-                                    <div class="product-price">
-                                        <h5>@(item.SalePrice?.ToString("N0") ?? "0") VNĐ</h5>
-                                        <h6><del>@(item.OriginalPrice?.ToString("N0") ?? "0") VNĐ</del></h6>
-                                    </div>
-                                    <div class="product-rating">
-                                        <i class="fa fa-star"></i><i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i><i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <small>(99)</small>
-                                    </div>
+                                <div class="card-footer bg-white border-0 text-center small text-muted">
+                                    ★★★★★ <span class="ms-1">(99)</span>
                                 </div>
                             </div>
                         </div>
                     }
-                }
-                else
-                {
-                    <p class="text-muted">Không có sản phẩm nào được tìm thấy.</p>
-                }
-
-            </div>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted px-4">Không có sản phẩm nào được tìm thấy.</p>
+            }
 
             <!-- Pagination -->
             @if (ViewBag.TotalPages > 1)
             {
-                <nav aria-label="Page navigation">
+                <nav aria-label="Page navigation" class="mt-4">
                     <ul class="pagination justify-content-center">
                         <li class="page-item @(ViewBag.Page == 1 ? "disabled" : "")">
-                            <a class="page-link page-ajax" data-page="@(ViewBag.Page - 1)" href="#" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
+                            <a class="page-link page-ajax" data-page="@(ViewBag.Page - 1)" href="#">&laquo;</a>
                         </li>
                         @for (int i = 1; i <= ViewBag.TotalPages; i++)
                         {
@@ -1173,276 +616,458 @@
                             </li>
                         }
                         <li class="page-item @(ViewBag.Page == ViewBag.TotalPages ? "disabled" : "")">
-                            <a class="page-link page-ajax" data-page="@(ViewBag.Page + 1)" href="#" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
+                            <a class="page-link page-ajax" data-page="@(ViewBag.Page + 1)" href="#">&raquo;</a>
                         </li>
                     </ul>
                 </nav>
             }
         </div>
+    </div>
 
-        <!-- Special Offers -->
-        <div class="container-fluid pt-5 pb-3">
-            <div class="row px-xl-5">
-                <div class="col-md-6">
-                    <div class="product-offer mb-30 hover-zoom">
-                        <img src="/hinh/hinh3.jpg" alt="Ưu đãi đặc biệt">
-                        <div class="offer-text">
-                            <h6 class="text-white text-uppercase">Giảm giá 20%</h6>
-                            <h3 class="text-white mb-3">Ưu đãi đặc biệt</h3>
-                            <a href="#" class="btn btn-warning text-dark font-weight-bold">Mua ngay</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="product-offer mb-30 hover-zoom">
-                        <img src="/hinh/hinh10.jpg" alt="Ưu đãi đặc biệt">
-                        <div class="offer-text">
-                            <h6 class="text-white text-uppercase">Giảm giá 20%</h6>
-                            <h3 class="text-white mb-3">Ưu đãi đặc biệt</h3>
-                            <a href="#" class="btn btn-warning text-dark font-weight-bold">Mua ngay</a>
-                        </div>
+    <!-- Script: hover mượt + add-to-cart -->
+    <script>
+        // Hover card: phóng ảnh + hiện overlay + bounce nhẹ cho buttons
+        document.querySelectorAll('.product-card').forEach(function (card) {
+          const img = card.querySelector('.p-img');
+          const overlay = card.querySelector('.p-overlay');
+
+          card.addEventListener('mouseenter', function () {
+            if (img) { img.style.transform = 'scale(1.05)'; img.style.filter = 'brightness(0.95)'; }
+            if (overlay) overlay.style.opacity = '1';
+
+            overlay?.querySelectorAll('.btn').forEach((b, i) => {
+              b.style.transform = 'scale(0.9)';
+              setTimeout(() => b.style.transform = 'scale(1)', 40 * i);
+            });
+          });
+
+          card.addEventListener('mouseleave', function () {
+            if (img) { img.style.transform = 'none'; img.style.filter = 'none'; }
+            if (overlay) overlay.style.opacity = '0';
+          });
+        });
+
+        // Thêm vào giỏ (LocalStorage) — giữ nguyên cách bạn dùng data-*
+        document.querySelectorAll('.add-to-cart').forEach(btn => {
+          btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            const price = parseInt(this.dataset.price || '0', 10);
+            const img = this.dataset.img;
+
+            let cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
+            const found = cart.find(p => p.id == id);
+            if (found) {
+              found.quantity += 1;
+              found.total = found.quantity * found.price;
+            } else {
+              cart.push({ id, name, price, img, quantity: 1, total: price });
+            }
+            localStorage.setItem('cartItems', JSON.stringify(cart));
+            localStorage.setItem('cartTotal', cart.reduce((acc, p) => acc + p.total, 0));
+            alert('Đã thêm sản phẩm vào giỏ!');
+          });
+        });
+    </script>
+
+
+        <!-- banner cuối -->
+    <div class="container-fluid pt-5 pb-3">
+        <div class="row px-4 g-4">
+
+            <!-- Banner trái -->
+            <div class="col-md-6">
+                <div class="position-relative overflow-hidden shadow ratio ratio-21x9"
+                     style="cursor:pointer"
+                     onmouseenter="
+          const o=this.querySelector('.promo-layer');
+          this.querySelector('img').style.transform='scale(1.06)';
+          o.classList.remove('opacity-50'); o.classList.add('opacity-75');"
+                     onmouseleave="
+          const o=this.querySelector('.promo-layer');
+          this.querySelector('img').style.transform='scale(1)';
+          o.classList.remove('opacity-75'); o.classList.add('opacity-50');">
+                    <img src="/hinh/hinh3.jpg"
+                         alt="Ưu đãi 1"
+                         class="position-absolute top-0 start-0 w-100 h-100 z-0"
+                         style="object-fit:cover; transition:transform .45s ease;" />
+
+                    <!-- lưu ý: dùng opacity-50 (có thật) -->
+                    <div class="promo-layer position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50 z-1"
+                         style="transition:opacity .25s ease;"></div>
+
+                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column
+                    align-items-center justify-content-center text-center text-white z-2 px-3">
+                        <small class="text-uppercase fw-semibold mb-2">Giảm giá 20%</small>
+                        <h3 class="fw-bold mb-3">Ưu đãi đặc biệt</h3>
+                        <a href="#" class="btn btn-warning fw-semibold text-dark px-4">Mua ngay</a>
                     </div>
                 </div>
             </div>
-        </div>
 
+            <!-- Banner phải -->
+            <div class="col-md-6">
+                <div class="position-relative overflow-hidden shadow ratio ratio-21x9"
+                     style="cursor:pointer"
+                     onmouseenter="
+          const o=this.querySelector('.promo-layer');
+          this.querySelector('img').style.transform='scale(1.06)';
+          o.classList.remove('opacity-50'); o.classList.add('opacity-75');"
+                     onmouseleave="
+          const o=this.querySelector('.promo-layer');
+          this.querySelector('img').style.transform='scale(1)';
+          o.classList.remove('opacity-75'); o.classList.add('opacity-50');">
+                    <img src="/hinh/hinh10.jpg"
+                         alt="Ưu đãi 2"
+                         class="position-absolute top-0 start-0 w-100 h-100 z-0"
+                         style="object-fit:cover; transition:transform .45s ease;" />
 
-        <!-- Recent Products -->
-        <div class="container-fluid pt-5 pb-3">
-            <div class="container-fluid pt-5 pb-3">
-                <div class="d-flex align-items-center mb-4">
-                    <h2 class="section-title mb-0">SẢN PHẨM GẦN ĐÂY</h2>
-                    <div class="flex-grow-1 border-bottom ml-3"></div>
+                    <div class="promo-layer position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50 z-1"
+                         style="transition:opacity .25s ease;"></div>
+
+                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column
+                    align-items-center justify-content-center text-center text-white z-2 px-3">
+                        <small class="text-uppercase fw-semibold mb-2">Giảm giá 20%</small>
+                        <h3 class="fw-bold mb-3">Ưu đãi đặc biệt</h3>
+                        <a href="#" class="btn btn-warning fw-semibold text-dark px-4">Mua ngay</a>
+                    </div>
                 </div>
             </div>
-            <div class="row px-xl-5">
-                @if (ViewBag.Top4Products is List<DATN1API.Models.Product> topProducts && topProducts != null)
-                {
-                    @foreach (var item in topProducts)
-                    {
-                        <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
-                            <div class="product-item mb-4">
-                                <div class="product-img">
-                                    <img src="@item.ThumbnailImage" alt="@item.ProductName" class="img-fluid w-100" />
-                                    <div class="product-action">
-                                        <a href="ChonBienThe" class="btn"><i class="fa fa-shopping-cart"></i></a>
-                                        <a href="#" class="btn"><i class="far fa-heart"></i></a>
-                                        <a href="#" class="btn"><i class="fa fa-sync-alt"></i></a>
-                                        <a href="#" class="btn"><i class="fa fa-search"></i></a>
-                                    </div>
-                                </div>
-                                <div class="product-info">
-                                    <a href="#">@item.ProductName</a>
-                                    <div class="product-price">
-                                        <h5>@(item.SalePrice.HasValue ? item.SalePrice.Value.ToString("N0") : "0") VNĐ</h5>
-                                        <h6><del>@(item.OriginalPrice.HasValue ? item.OriginalPrice.Value.ToString("N0") : "0") VNĐ</del></h6>
-                                    </div>
-                                    <div class="product-rating">
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <i class="fa fa-star"></i>
-                                        <small>(99)</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="col-12">
-                        <p class="text-center text-muted py-5">Không có sản phẩm nổi bật nào được tìm thấy.</p>
-                    </div>
-                }
-            </div>
+
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container-fluid">
-            <div class="row px-xl-5">
-                <!-- Contact Info -->
-                <div class="col-lg-4 col-md-12 mb-5">
-                    <h5>Liên lạc</h5>
-                    <p class="mb-4">
-                        Hãy liên lạc với chúng tôi nếu bạn đang thất mất hoặc muốn chúng tôi tư vấn sản phẩm phù hợp với bạn thì cứ liên lạc với chúng tôi
-                    </p>
-                    <p class="mb-2">
-                        <i class="fa fa-map-marker-alt text-warning mr-3"></i>123 Ngô Quyền, P. Thường Thạnh, Q. Cái Răng, TP. Cần Thơ
-                    </p>
-                    <p class="mb-2">
-                        <i class="fa fa-envelope text-warning mr-3"></i>nhomhyvongdatn@gmail.com
-                    </p>
-                    <p class="mb-0">
-                        <i class="fa fa-phone-alt text-warning mr-3"></i>012 345 67890
-                    </p>
-                </div>
 
-                <!-- Quick Shop -->
-                <div class="col-lg-2 col-md-4 mb-5">
-                    <h5>Cửa hàng nhanh</h5>
-                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Trang chủ</a>
-                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Cửa hàng của chúng tôi</a>
-                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Chi tiết cửa hàng</a>
-                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Giỏ hàng</a>
-                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Thanh toán</a>
-                </div>
+        <!-- Recent Products (Top 4) -->
+    <div class="container-fluid pt-5 pb-3">
+        <div class="px-4 mb-3 d-flex align-items-center">
+            <h2 class="fw-bold me-3 mb-0">SẢN PHẨM GẦN ĐÂY</h2>
+            <div class="flex-grow-1 border-bottom"></div>
+        </div>
 
-                <!-- My Account -->
-                <div class="col-lg-2 col-md-4 mb-5">
-                    <h5>Tài khoản của tôi</h5>
-                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Trang chủ</a>
-                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Cửa hàng của chúng tôi</a>
-                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Chi tiết cửa hàng</a>
-                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Giỏ hàng</a>
-                    <a href="#"><i class="fa fa-angle-right mr-2"></i>Thanh toán</a>
-                </div>
+        <div class="row px-4 g-4">
+            @if (ViewBag.Top4Products is List<DATN1API.Models.Product> topProducts && topProducts != null)
+            {
+                foreach (var item in topProducts)
+                {
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <!-- CARD -->
+                        <div class="card h-100 shadow-sm overflow-hidden position-relative"
+                             style="transition:box-shadow .25s ease;"
+                             onmouseenter="
+                           this.style.boxShadow='0 .75rem 1.5rem rgba(0,0,0,.15)';
+                           const img=this.querySelector('.prod-img'); img.style.transform='scale(1.06)';
+                           const dim=this.querySelector('.hover-dim'); dim.classList.remove('opacity-0'); dim.classList.add('opacity-25');
+                           const acts=this.querySelector('.hover-actions'); acts.style.opacity='1'; acts.style.transform='translateY(0)';"
+                             onmouseleave="
+                           this.style.boxShadow='';
+                           const img=this.querySelector('.prod-img'); img.style.transform='scale(1)';
+                           const dim=this.querySelector('.hover-dim'); dim.classList.remove('opacity-25'); dim.classList.add('opacity-0');
+                           const acts=this.querySelector('.hover-actions'); acts.style.opacity='0'; acts.style.transform='translateY(6px)';">
 
-                <!-- Newsletter -->
-                <div class="col-lg-4 col-md-4 mb-5">
-                    <h5>Bản tin</h5>
-                    <p>Hãy tìm hiểu về chúng tôi</p>
-                    <form>
-                        <div class="input-group mb-3">
-                            <input type="text" class="form-control border-0" placeholder="Địa chỉ email của bạn">
-                            <div class="input-group-append">
-                                <button class="btn btn-warning text-dark font-weight-bold">Đăng ký</button>
+                            <!-- ẢNH -->
+                            <div class="position-relative" style="height: 230px;">
+                                <img src="@item.ThumbnailImage"
+                                     alt="@item.ProductName"
+                                     class="prod-img position-absolute top-0 start-0 w-100 h-100"
+                                     style="object-fit:cover; transition:transform .35s ease;" />
+
+                                <!-- Lớp phủ mờ -->
+                                <div class="hover-dim position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-0"
+                                     style="transition:opacity .25s ease;"></div>
+
+                                <!-- Cụm nút ở giữa -->
+                                <div class="hover-actions position-absolute top-50 start-50 translate-middle d-flex gap-2"
+                                     style="opacity:0; transform:translateY(6px); transition:opacity .25s ease, transform .25s ease;">
+                                    <a class="btn btn-light btn-sm"
+                                       href="/User/ChonBienThe/@item.ProductId" title="Mua">
+                                        <i class="bi bi-cart"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-light btn-sm add-to-cart"
+                                            data-id="@item.ProductId"
+                                            data-name="@item.ProductName"
+                                            data-price="@((int)(item.SalePrice ?? 0))"
+                                            data-img="@item.ThumbnailImage"
+                                            title="Thêm vào giỏ">
+                                        <i class="bi bi-bag-plus"></i>
+                                    </button>
+                                    <a class="btn btn-light btn-sm" href="#" title="Yêu thích">
+                                        <i class="bi bi-heart"></i>
+                                    </a>
+                                    <a class="btn btn-light btn-sm" href="#" title="Xem nhanh">
+                                        <i class="bi bi-search"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Nội dung -->
+                            <div class="card-body text-center">
+                                <a href="#" class="text-decoration-none text-dark d-block fw-medium mb-2 text-truncate" title="@item.ProductName">
+                                    @item.ProductName
+                                </a>
+
+                                <div class="mb-2">
+                                    <span class="fw-bold text-danger">
+                                        @((item.SalePrice ?? 0).ToString("N0")) VNĐ
+                                    </span>
+                                    <small class="text-muted">
+                                        <del>@((item.OriginalPrice ?? 0).ToString("N0")) VNĐ</del>
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div class="card-footer bg-white border-0 text-center small text-muted">
+                                ★★★★★ <span class="ms-1">(99)</span>
                             </div>
                         </div>
+                        <!-- /CARD -->
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <p class="text-center text-muted py-5">Không có sản phẩm nổi bật nào được tìm thấy.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer class="text-white mt-5" style="background:#23272b;">
+        <!-- đen nhạt -->
+        <div class="container-fluid">
+            <div class="row px-4 py-5 g-4">
+                <!-- Cột 1 -->
+                <div class="col-lg-4">
+                    <h5 class="text-warning fw-semibold">Liên lạc</h5>
+                    <p>Hãy liên lạc với chúng tôi nếu bạn đang thất mất hoặc muốn chúng tôi tư vấn sản phẩm phù hợp.</p>
+                    <p class="mb-2"><i class="bi bi-geo-alt text-warning me-2"></i>123 Ngô Quyền, P. Thường Thạnh, Q. Cái Răng, TP. Cần Thơ</p>
+                    <p class="mb-2"><i class="bi bi-envelope text-warning me-2"></i>nhomhyvongdatn@gmail.com</p>
+                    <p class="mb-0"><i class="bi bi-telephone text-warning me-2"></i>012 345 67890</p>
+                </div>
+
+                <!-- Cột 2 -->
+                <div class="col-lg-2">
+                    <h5 class="text-warning fw-semibold">Cửa hàng nhanh</h5>
+                    <div class="d-flex flex-column">
+                        <a href="#"
+                           class="text-decoration-none text-light py-1"
+                           onmouseenter="this.classList.replace('text-light','text-warning')"
+                           onmouseleave="this.classList.replace('text-warning','text-light')">Trang chủ</a>
+
+                        <a href="#"
+                           class="text-decoration-none text-light py-1"
+                           onmouseenter="this.classList.replace('text-light','text-warning')"
+                           onmouseleave="this.classList.replace('text-warning','text-light')">Cửa hàng của chúng tôi</a>
+
+                        <a href="#"
+                           class="text-decoration-none text-light py-1"
+                           onmouseenter="this.classList.replace('text-light','text-warning')"
+                           onmouseleave="this.classList.replace('text-warning','text-light')">Chi tiết cửa hàng</a>
+
+                        <a href="#"
+                           class="text-decoration-none text-light py-1"
+                           onmouseenter="this.classList.replace('text-light','text-warning')"
+                           onmouseleave="this.classList.replace('text-warning','text-light')">Giỏ hàng</a>
+
+                        <a href="#"
+                           class="text-decoration-none text-light py-1"
+                           onmouseenter="this.classList.replace('text-light','text-warning')"
+                           onmouseleave="this.classList.replace('text-warning','text-light')">Thanh toán</a>
+                    </div>
+                </div>
+
+                <!-- Cột 3 -->
+                <div class="col-lg-2">
+                    <h5 class="text-warning fw-semibold">Tài khoản của tôi</h5>
+                    <div class="d-flex flex-column">
+                        <a href="#"
+                           class="text-decoration-none text-light py-1"
+                           onmouseenter="this.classList.replace('text-light','text-warning')"
+                           onmouseleave="this.classList.replace('text-warning','text-light')">Trang chủ</a>
+
+                        <a href="#"
+                           class="text-decoration-none text-light py-1"
+                           onmouseenter="this.classList.replace('text-light','text-warning')"
+                           onmouseleave="this.classList.replace('text-warning','text-light')">Cửa hàng của chúng tôi</a>
+
+                        <a href="#"
+                           class="text-decoration-none text-light py-1"
+                           onmouseenter="this.classList.replace('text-light','text-warning')"
+                           onmouseleave="this.classList.replace('text-warning','text-light')">Chi tiết cửa hàng</a>
+
+                        <a href="#"
+                           class="text-decoration-none text-light py-1"
+                           onmouseenter="this.classList.replace('text-light','text-warning')"
+                           onmouseleave="this.classList.replace('text-warning','text-light')">Giỏ hàng</a>
+
+                        <a href="#"
+                           class="text-decoration-none text-light py-1"
+                           onmouseenter="this.classList.replace('text-light','text-warning')"
+                           onmouseleave="this.classList.replace('text-warning','text-light')">Thanh toán</a>
+                    </div>
+                </div>
+
+                <!-- Cột 4 -->
+                <div class="col-lg-4">
+                    <h5 class="text-warning fw-semibold">Bản tin</h5>
+                    <p>Hãy tìm hiểu về chúng tôi</p>
+                    <form class="input-group mb-3">
+                        <input type="email" class="form-control" placeholder="Địa chỉ email của bạn">
+                        <button class="btn btn-warning text-dark fw-semibold">Đăng ký</button>
                     </form>
-                    <h6 class="text-white text-uppercase mt-4 mb-3 font-weight-bold">Theo dõi chúng tôi</h6>
-                    <div class="d-flex">
-                        <a class="social-btn" href="#"><i class="fab fa-twitter"></i></a>
-                        <a class="social-btn" href="#"><i class="fab fa-facebook-f"></i></a>
-                        <a class="social-btn" href="#"><i class="fab fa-linkedin-in"></i></a>
-                        <a class="social-btn" href="#"><i class="fab fa-instagram"></i></a>
+
+                    <h6 class="text-uppercase fw-bold">Theo dõi chúng tôi</h6>
+                    <div class="d-flex gap-2">
+                        <!-- Nút mạng xã hội: viền vàng, hover vàng nền + chữ đen -->
+                        <a class="btn btn-outline-warning border-2"
+                           onmouseenter="this.classList.replace('btn-outline-warning','btn-warning'); this.classList.add('text-dark');"
+                           onmouseleave="this.classList.replace('btn-warning','btn-outline-warning'); this.classList.remove('text-dark');"
+                           href="#"><i class="bi bi-twitter"></i></a>
+
+                        <a class="btn btn-outline-warning border-2"
+                           onmouseenter="this.classList.replace('btn-outline-warning','btn-warning'); this.classList.add('text-dark');"
+                           onmouseleave="this.classList.replace('btn-warning','btn-outline-warning'); this.classList.remove('text-dark');"
+                           href="#"><i class="bi bi-facebook"></i></a>
+
+                        <a class="btn btn-outline-warning border-2"
+                           onmouseenter="this.classList.replace('btn-outline-warning','btn-warning'); this.classList.add('text-dark');"
+                           onmouseleave="this.classList.replace('btn-warning','btn-outline-warning'); this.classList.remove('text-dark');"
+                           href="#"><i class="bi bi-linkedin"></i></a>
+
+                        <a class="btn btn-outline-warning border-2"
+                           onmouseenter="this.classList.replace('btn-outline-warning','btn-warning'); this.classList.add('text-dark');"
+                           onmouseleave="this.classList.replace('btn-warning','btn-outline-warning'); this.classList.remove('text-dark');"
+                           href="#"><i class="bi bi-instagram"></i></a>
                     </div>
                 </div>
             </div>
 
-            <!-- Copyright -->
-            <div class="row border-top pt-3">
-                <div class="col-md-6 text-center text-md-left">
-                    <p class="mb-0 text-muted">
-                        &copy; 2024 <strong>The Bag Studio</strong>. All rights reserved.
-                    </p>
-                </div>
-                <div class="col-md-6 text-center text-md-right">
-                    <p class="mb-0 text-muted">
-                        Designed with <i class="fa fa-heart text-danger"></i> by Nhom Hy Vong
-                    </p>
-                </div>
+            <!-- Dòng bản quyền -->
+            <div class="py-3 px-4 small d-flex flex-column flex-md-row justify-content-between text-secondary"
+                 style="border-top:1px solid rgba(255,255,255,.12);">
+                <div>&copy; 2025 <strong class="text-white">The Bag Studio</strong>. All rights reserved.</div>
+                <div>Designed with <i class="bi bi-heart-fill text-danger"></i> by Nhom Hy Vong</div>
             </div>
         </div>
     </footer>
 
-    <!-- Back to Top -->
-    <a href="#" class="back-to-top">
-        <i class="fa fa-angle-double-up"></i>
-    </a>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
-    <script src="~/lib/easing/easing.min.js"></script>
-    <script src="~/lib/owlcarousel/owl.carousel.min.js"></script>
-    <script src="~/js/main.js"></script>
+    <!-- Back to top -->
+    <button id="backToTop"
+            type="button"
+            class="btn btn-warning btn-lg rounded-circle position-fixed bottom-0 end-0 m-4 shadow-lg d-none
+         d-flex align-items-center justify-content-center"
+            style="width:56px; height:56px; z-index:1080; transition:transform .15s ease;"
+            data-bs-toggle="tooltip" data-bs-placement="left" title="Lên đầu trang"
+            aria-label="Lên đầu trang"
+            onmouseenter="this.style.transform='scale(1.06)'"
+            onmouseleave="this.style.transform='scale(1)'">
+        <i class="bi bi-chevron-double-up fs-4"></i>
+    </button>
 
     <script>
-                document.querySelectorAll(".add-to-cart").forEach(button => {
-            button.addEventListener("click", function (e) {
-                e.preventDefault();
+        // Hiện/ẩn nút khi cuộn
+        (function () {
+          const btn = document.getElementById('backToTop');
 
-                const id = this.dataset.id;
-                const name = this.dataset.name;
-                const price = parseInt(this.dataset.price);
-                const img = this.dataset.img;
+          const toggleBtn = () => {
+            if (window.scrollY > 300) btn.classList.remove('d-none');
+            else btn.classList.add('d-none');
+          };
+          window.addEventListener('scroll', toggleBtn);
+          toggleBtn();
 
-                let cart = JSON.parse(localStorage.getItem("cartItems") || "[]");
-                const found = cart.find(p => p.id === id);
-                if (found) {
-                    found.quantity += 1;
-                    found.total = found.quantity * found.price;
-                } else {
-                    cart.push({ id, name, price, img, quantity: 1, total: price });
-                }
+          // Cuộn mượt lên đầu
+          btn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
 
-                localStorage.setItem("cartItems", JSON.stringify(cart));
-                localStorage.setItem("cartTotal", cart.reduce((acc, p) => acc + p.total, 0));
+          // Kích hoạt tooltip Bootstrap (nếu đã include JS của Bootstrap)
+          if (window.bootstrap) {
+            const tt = new bootstrap.Tooltip(btn);
+          }
+        })();
+    </script>
 
-                alert("Đã thêm sản phẩm vào giỏ hàng!");
-            });
-        });
-                function updateCartBadge() {
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Scripts (vanilla, không jQuery) -->
+    <script>
+        // Add to cart (localStorage)
+        function updateCartBadge() {
             const cart = JSON.parse(localStorage.getItem("cartItems") || "[]");
-            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const count = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
             document.querySelectorAll(".cart-badge").forEach(badge => {
                 badge.textContent = count;
             });
         }
 
-        updateCartBadge(); // gọi lúc load
+        document.addEventListener("click", function (e) {
+            const btn = e.target.closest(".add-to-cart");
+            if (!btn) return;
 
-        document.addEventListener("DOMContentLoaded", function () {
-            // Add to cart functionality
-            document.querySelectorAll(".add-to-cart").forEach(button => {
-                button.addEventListener("click", function (e) {
-                    e.preventDefault();
-                    const name = this.dataset.name;
-                    const price = parseInt(this.dataset.price);
-                    const img = this.dataset.img;
-                    let cart = JSON.parse(localStorage.getItem("cartItems") || "[]");
-                    const found = cart.find(p => p.name === name);
-                    if (found) {
-                        found.quantity += 1;
-                        found.total = found.quantity * found.price;
-                    } else {
-                        cart.push({ name, price, img, quantity: 1, total: price });
-                    }
-                    localStorage.setItem("cartItems", JSON.stringify(cart));
-                    localStorage.setItem("cartTotal", cart.reduce((acc, p) => acc + p.total, 0));
-                    alert("Đã thêm sản phẩm vào giỏ hàng!");
-                });
-            });
+            e.preventDefault();
+            const id = btn.dataset.id;
+            const name = btn.dataset.name;
+            const price = parseInt(btn.dataset.price || "0", 10);
+            const img = btn.dataset.img;
 
-            // Pagination AJAX
-            $(document).on("click", ".page-ajax", function (e) {
-                e.preventDefault();
-                var page = $(this).data("page");
-                if (!page) return;
-                $.get('@Url.Action("Index", "User")', { page: page }, function (data) {
-                    var newContent = $(data).find("#productContainer").html();
-                    $("#productContainer").html(newContent);
-                });
-            });
-
-            // Smooth scroll for hash links
-            if (window.location.hash === "#recentProducts") {
-                const target = document.querySelector(window.location.hash);
-                if (target) {
-                    target.scrollIntoView({ behavior: "smooth" });
-                }
+            let cart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+            const found = cart.find(p => p.id === id);
+            if (found) {
+                found.quantity += 1;
+                found.total = found.quantity * found.price;
+            } else {
+                cart.push({ id, name, price, img, quantity: 1, total: price });
             }
 
-            // Back to top functionality
-            $(window).scroll(function () {
-                if ($(this).scrollTop() > 100) {
-                    $('.back-to-top').fadeIn('slow');
-                } else {
-                    $('.back-to-top').fadeOut('slow');
-                }
-            });
-
-            $('.back-to-top').click(function () {
-                $('html, body').animate({ scrollTop: 0 }, 1500, 'easeInOutExpo');
-                return false;
-            });
+            localStorage.setItem("cartItems", JSON.stringify(cart));
+            localStorage.setItem("cartTotal", cart.reduce((acc, p) => acc + (p.total || 0), 0));
+            updateCartBadge();
+            alert("Đã thêm sản phẩm vào giỏ hàng!");
         });
+
+        // Pagination (AJAX bằng fetch)
+        document.addEventListener("click", async (e) => {
+            const a = e.target.closest(".page-ajax");
+            if (!a) return;
+            e.preventDefault();
+            const page = a.dataset.page;
+            if (!page) return;
+
+            const url = new URL("@Url.Action("Index", "User")", window.location.origin);
+            url.searchParams.set("page", page);
+
+            const html = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } }).then(r => r.text());
+            const dom = new DOMParser().parseFromString(html, "text/html");
+            const newContent = dom.querySelector("#productContainer");
+            if (newContent) document.querySelector("#productContainer").innerHTML = newContent.innerHTML;
+
+            const recent = document.querySelector("#recentProducts");
+            if (recent) recent.scrollIntoView({ behavior: "smooth" });
+            updateCartBadge();
+        });
+
+        // Back to top smooth
+        document.querySelector(".btn.rounded-circle.position-fixed.bottom-0.end-0")?.addEventListener("click", function (e) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        // Initialize badge on load
+        updateCartBadge();
+
+        // Smooth scroll if has #recentProducts
+        if (window.location.hash === "#recentProducts") {
+            const target = document.querySelector(window.location.hash);
+            if (target) target.scrollIntoView({ behavior: "smooth" });
+        }
     </script>
 </body>
 </html>

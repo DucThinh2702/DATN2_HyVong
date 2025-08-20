@@ -1,28 +1,189 @@
 ﻿@model DATN1API.Models.News
 @{
-    ViewData["Title"] = "Create News";
+    ViewData["Title"] = "Tạo tin tức";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Tạo tin tức</h2>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css" rel="stylesheet" />
 
-<form asp-action="Create" method="post" enctype="multipart/form-data">
-    <div class="mb-3">
-        <label asp-for="Title" class="form-label"></label>
-        <input asp-for="Title" class="form-control" />
-        <span asp-validation-for="Title" class="text-danger"></span>
+<div class="content-header">
+    <h1 class="mb-2">Tạo tin tức</h1>
+    <p class="text-muted">Nhập tiêu đề, nội dung định dạng và ảnh đại diện (tuỳ chọn).</p>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Create" method="post" enctype="multipart/form-data" id="newsCreateForm" novalidate>
+            @Html.AntiForgeryToken()
+
+            <!-- Tiêu đề (1 hàng) -->
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label fw-bold">Tiêu đề <span class="text-danger">*</span></label>
+                <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề bài viết (≥ 5 ký tự)" />
+                <span asp-validation-for="Title" class="invalid-feedback d-block"></span>
+            </div>
+
+            <!-- Nội dung (1 hàng) -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Nội dung <span class="text-danger">*</span></label>
+                <textarea asp-for="Content" id="Content" class="form-control"></textarea>
+                <!-- input ẩn để validate plain text -->
+                <input type="hidden" id="ContentPlain" name="ContentPlain" />
+                <div class="invalid-feedback d-block" id="contentErrorHolder"></div>
+            </div>
+
+            <!-- Ảnh đại diện (1 hàng) -->
+            <div class="mb-3">
+                <label for="ThumbnailImageFile" class="form-label fw-bold">Ảnh đại diện (tuỳ chọn)</label>
+                <input type="file" name="ThumbnailImageFile" id="ThumbnailImageFile" class="form-control" accept="image/*" />
+                <div class="form-text">Hỗ trợ JPEG/PNG/WebP, tối đa 2MB. Ảnh sẽ được lưu tại <code>/hinh/...</code></div>
+            </div>
+
+            <!-- Xem trước ảnh (1 hàng, ẩn mặc định) -->
+            <div class="mb-3">
+                <div class="card d-none w-auto d-inline-block" id="previewCard">
+                    <div class="card-header fw-semibold">Xem trước ảnh</div>
+                    <div class="card-body d-flex justify-content-start align-items-start p-3">
+                        <div id="thumbPreview"
+                             class="border rounded-3"
+                             style="width: 180px; height: 180px; background:#fafafa;">
+                            <span class="text-muted">Chưa chọn ảnh</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Nút -->
+            <div class="mt-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Lưu
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left-circle"></i> Quay lại
+                </a>
+            </div>
+        </form>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label asp-for="Content" class="form-label"></label>
-        <textarea asp-for="Content" rows="6" class="form-control"></textarea>
-    </div>
 
-    <div class="mb-3">
-        <label class="form-label">Ảnh đại diện</label>
-        <input type="file" name="ThumbnailImageFile" class="form-control" />
-        <small class="text-muted">Ảnh sẽ được lưu tại /hinh/...</small>
-    </div>
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/localization/messages_vi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
 
-    <button type="submit" class="btn btn-primary">Lưu</button>
-    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
-</form>
+    <script>
+        $(function () {
+            // ===== Summernote =====
+            $('#Content').summernote({
+                height: 260,
+                toolbar: [
+                    ['style', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['insert', ['link', 'picture', 'table']],
+                    ['view', ['fullscreen', 'codeview']]
+                ],
+                callbacks: {
+                    onChange: function (contents) {
+                        // Ghi HTML vào textarea (mặc định) để submit
+                        // Đồng thời tạo plain text cho validate
+                        const plain = $('<div>').html(contents).text().trim();
+                        $('#ContentPlain').val(plain).trigger('keyup');
+                    }
+                }
+            });
+
+            // ===== Custom rules giống các view trước =====
+            $.validator.addMethod('fileSize', function (v, el, bytes) {
+                if (!el.files || !el.files.length) return true;
+                return el.files[0].size <= bytes;
+            }, 'Tệp quá lớn');
+
+            $.validator.addMethod('imageType', function (v, el) {
+                if (!el.files || !el.files.length) return true;
+                return ['image/jpeg', 'image/png', 'image/webp'].includes(el.files[0].type);
+            }, 'Định dạng ảnh không hợp lệ');
+
+            const $form = $('#newsCreateForm');
+
+            // ===== jQuery Validate =====
+            $form.validate({
+                ignore: [],
+                onkeyup: function (el) { $(el).valid(); },
+                onfocusout: function (el) { $(el).valid(); },
+                errorElement: 'div',
+                errorClass: 'invalid-feedback',
+                highlight: function (el) { $(el).addClass('is-invalid'); },
+                unhighlight: function (el) { $(el).removeClass('is-invalid'); },
+                errorPlacement: function (err, el) {
+                    // Đặt lỗi của ContentPlain ngay dưới editor
+                    if ($(el).attr('name') === 'ContentPlain') {
+                        $('#contentErrorHolder').html('').append(err);
+                    } else {
+                        err.insertAfter($(el));
+                    }
+                },
+                rules: {
+                    Title:             { required: true, minlength: 5, maxlength: 150 },
+                    ContentPlain:      { required: true, minlength: 10 }, // validate text thuần
+                    ThumbnailImageFile:{ imageType: true, fileSize: 2 * 1024 * 1024 } // 2MB
+                },
+                messages: {
+                    Title: {
+                        required: 'Vui lòng nhập tiêu đề',
+                        minlength: 'Tiêu đề ít nhất 5 ký tự',
+                        maxlength: 'Tiêu đề tối đa 150 ký tự'
+                    },
+                    ContentPlain: {
+                        required: 'Vui lòng nhập nội dung',
+                        minlength: 'Nội dung ít nhất 10 ký tự'
+                    },
+                    ThumbnailImageFile: {
+                        imageType: 'Chỉ JPEG/PNG/WebP',
+                        fileSize: 'Tối đa 2MB'
+                    }
+                }
+            });
+
+            // Khởi tạo ContentPlain lần đầu (để tránh báo lỗi sớm)
+            const initPlain = $('<div>').html($('#Content').summernote('code')).text().trim();
+            $('#ContentPlain').val(initPlain);
+
+            // ===== Preview ảnh (ẩn/hiện card) =====
+            const $file = $('#ThumbnailImageFile');
+            const $card = $('#previewCard');
+            const $box  = $('#thumbPreview');
+            const original = $box.html();
+
+            $file.on('change', function () {
+                const file = this.files && this.files[0];
+                if (!file) {
+                    $box.html(original);
+                    $card.addClass('d-none');
+                    return;
+                }
+                const okType = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
+                const okSize = file.size <= 2 * 1024 * 1024;
+
+                if (!okType || !okSize) {
+                    this.value = '';
+                    $box.html('<span class="text-danger small">Ảnh không hợp lệ hoặc quá 2MB.</span>');
+                    $card.removeClass('d-none');
+                    if ($file.valid) $file.valid();
+                    return;
+                }
+
+                const url = URL.createObjectURL(file);
+                const $img = $('<img>', { src: url, alt: 'Xem trước' })
+                    .css({ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '0.5rem' });
+                $box.empty().append($img);
+                $card.removeClass('d-none');
+                $img.on('load', function () { URL.revokeObjectURL(url); });
+            });
+        });
+    </script>
+}

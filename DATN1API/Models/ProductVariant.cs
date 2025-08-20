@@ -69,6 +69,8 @@ namespace DATN1API.Models
         [NotMapped]
         public IFormFile? ImageFile { get; set; }
 
+        [NotMapped]                    // KHÔNG tạo cột DB
+        public List<string> GalleryPaths { get; set; } = new();
         //[JsonIgnore]
         //[InverseProperty("ProductVariant")]
         //public virtual ICollection<CartDetail> CartDetails { get; set; } = new List<CartDetail>();
