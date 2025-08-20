@@ -32,15 +32,18 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="customer-name" class="form-label">Tên người nhận</label>
-                            <input id="customer-name" class="form-control" type="text" placeholder="Tên người nhận" />
+                            <!-- Tự động điền thông tin từ user đăng nhập -->
+                            <input id="customer-name" class="form-control" type="text" placeholder="Tên người nhận" value="@ViewBag.UserProfile?.FullName" />
                         </div>
                         <div class="col-md-6">
                             <label for="customer-email" class="form-label">E-mail</label>
-                            <input id="customer-email" class="form-control" type="email" placeholder="email@gmail.com" />
+                            <!-- Tự động điền email từ user đăng nhập -->
+                            <input id="customer-email" class="form-control" type="email" placeholder="email@gmail.com" value="@ViewBag.UserProfile?.Email" />
                         </div>
                         <div class="col-md-6">
                             <label for="customer-phone" class="form-label">Số điện thoại</label>
-                            <input id="customer-phone" class="form-control" type="text" placeholder="0123 456 789" />
+                            <!-- Tự động điền số điện thoại từ user đăng nhập -->
+                            <input id="customer-phone" class="form-control" type="text" placeholder="0123 456 789" value="@ViewBag.UserProfile?.Phone" />
                         </div>
                         <div class="col-md-6">
                             <label for="province" class="form-label">Tỉnh/Thành phố</label>
@@ -57,6 +60,10 @@
                         <div class="col-md-6">
                             <label for="customer-address" class="form-label">Địa chỉ cụ thể</label>
                             <input id="customer-address" class="form-control" type="text" placeholder="Số nhà, tên đường" />
+                        </div>
+                        <div class="col-12">
+                            <label for="order-note" class="form-label">Ghi chú đơn hàng</label>
+                            <textarea id="order-note" class="form-control" rows="3" placeholder="Ghi chú cho đơn hàng (tùy chọn)"></textarea>
                         </div>
                     </div>
                 </div>
@@ -87,21 +94,25 @@
                         <input type="radio" class="form-check-input" name="payment" id="cod" />
                         <label class="form-check-label" for="cod">Thanh toán khi nhận hàng</label>
                     </div>
+
                     <div class="form-check mb-3">
                         <input type="radio" class="form-check-input" name="payment" id="vnpay" />
-                        <label class="form-check-label" for="vnpay">Thanh toán qua VnPay</label>
+                        <label class="form-check-label" for="vnpay">Thanh toán qua VNPay</label>
                     </div>
+
                     <div class="form-check mb-3">
                         <input type="radio" class="form-check-input" name="payment" id="bank" />
                         <label class="form-check-label" for="bank">Chuyển khoản ngân hàng</label>
                     </div>
+
+                    <!-- Cập nhật button để xử lý thanh toán VNPay từ view thanh toán -->
                     <button id="btn-order" class="btn btn-danger w-100 fw-bold py-2">Đặt hàng</button>
-                    <form asp-controller="User" asp-action="ThanhToanQuaPayOS" method="post">
-                        <button type="submit" class="btn btn-success w-100 mt-3">Thanh toán với PayOS</button>
-                    </form>
-                    <form asp-controller="Payment" asp-action="CreatePaymentUrlVnpay" method="post" id="vnpayForm" style="display: none;">
-                        <button type="submit" class="btn btn-primary w-100 mt-3" id="vnpayBtn">Thanh toán với VnPay</button>
-                    </form>
+                    <button id="vnpay-payment-btn" class="btn btn-primary w-100 fw-bold py-2 mt-2" style="display:none;">Thanh toán VNPay</button>
+
+                    @if (TempData["PayOSError"] != null)
+                    {
+                        <div class="alert alert-danger mt-3">@TempData["PayOSError"]</div>
+                    }
                 </div>
             </div>
         </div>
@@ -111,17 +122,24 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
           // ====== Elements ======
-          const btnOrder     = document.getElementById("btn-order");
-          const vnpayForm    = document.getElementById("vnpayForm");
-          const provinceSel  = document.getElementById("province");
-          const wardSel      = document.getElementById("ward");
+          const btnOrder = document.getElementById("btn-order");
+          const vnpayBtn = document.getElementById("vnpay-payment-btn");
+          const provinceSel = document.getElementById("province");
+          const wardSel = document.getElementById("ward");
           const checkoutItems = document.getElementById("checkoutItems");
           const checkoutTotal = document.getElementById("checkoutTotal");
 
-          // ====== Toggle VNPAY button ======
+          // ====== Toggle payment buttons ======
           document.querySelectorAll('input[name="payment"]').forEach((r) => {
             r.addEventListener("change", (e) => {
-              vnpayForm.style.display = (e.target.id === "vnpay") ? "block" : "none";
+              const id = e.target.id;
+              if (id === "vnpay") {
+                btnOrder.style.display = "none";
+                vnpayBtn.style.display = "block";
+              } else {
+                btnOrder.style.display = "block";
+                vnpayBtn.style.display = "none";
+              }
             });
           });
 
@@ -185,86 +203,103 @@
             checkoutTotal.textContent = Number(total).toLocaleString("vi-VN") + " VNĐ";
           })();
 
-          // ====== Place order ======
-          btnOrder.addEventListener("click", async () => {
-            const items = JSON.parse(localStorage.getItem("selectedCartItems") || "[]");
-            if (items.length === 0) { alert("Giỏ hàng rỗng!"); return; }
+          // ====== VNPay payment handler ======
+          vnpayBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
 
-            const name    = (document.getElementById("customer-name").value || "").trim();
-            const phone   = (document.getElementById("customer-phone").value || "").trim();
-            const address = (document.getElementById("customer-address").value || "").trim();
+            // Lấy dữ liệu từ form
+            const customerName = document.getElementById("customer-name").value.trim();
+            const customerPhone = document.getElementById("customer-phone").value.trim();
+            const customerAddress = document.getElementById("customer-address").value.trim();
+            const orderNote = document.getElementById("order-note").value || "";
 
-            const provinceCode = provinceSel.value;
-            const wardCode     = wardSel.value;
-            const provinceName = provinceSel.options[provinceSel.selectedIndex]?.text?.trim() || "";
-            const wardName     = wardSel.options[wardSel.selectedIndex]?.text?.trim() || "";
-
-            if (!name || !phone || !address || !provinceCode || !wardCode) {
-              alert("Vui lòng nhập đủ Tên, SĐT, Địa chỉ, Tỉnh/Thành và Phường/Xã!");
+            // Validate form
+            if (!customerName || !customerPhone || !customerAddress || !provinceSel.value || !wardSel.value) {
+              alert("Vui lòng nhập đầy đủ thông tin giao hàng!");
               return;
             }
 
-            // Ghép địa chỉ đầy đủ: "Số nhà, đường, Phường/Xã, Tỉnh/Thành"
-            const fullAddress = [address, wardName, provinceName].filter(Boolean).join(", ");
+            // Lấy dữ liệu sản phẩm từ localStorage
+            const selectedItems = JSON.parse(localStorage.getItem("selectedCartItems") || "[]");
+            if (selectedItems.length === 0) {
+              alert("Không có sản phẩm được chọn!");
+              return;
+            }
 
-            let paymentMethod = null;
-            if (document.getElementById("cod").checked)   paymentMethod = 1; // COD
-            if (document.getElementById("bank").checked)  paymentMethod = 2; // Bank
-            if (document.getElementById("vnpay").checked) paymentMethod = 3; // VNPAY
-            if (!paymentMethod) { alert("Vui lòng chọn phương thức thanh toán!"); return; }
+            // Tạo địa chỉ đầy đủ
+            const provinceName = provinceSel.options[provinceSel.selectedIndex].text;
+            const wardName = wardSel.options[wardSel.selectedIndex].text;
+            const fullAddress = `${customerAddress}, ${wardName}, ${provinceName}`;
 
-            // TODO: thay bằng userId thật từ server nếu có
-            const userId = "bcd4cce4-5ad1-467d-8999-18a267a1633c";
-
-            const order = {
-              userId,
-              recipientName:  name,
-              recipientPhone: phone,
-              deliveryAddress: fullAddress,     // <--- lưu địa chỉ đầy đủ
-              // gửi kèm meta nếu API có cột để lưu
-              provinceCode, provinceName, wardCode, wardName,
-              note: "",
-              promoCode: null,
-              shippingFee: 45000,
-              items: items.map(i => ({
-                productVariantId: parseInt(i.ProductVariantId),
-                quantity: i.quantity,
-                unitPrice: i.price
+            // Chuẩn bị dữ liệu gửi lên server
+            const paymentData = {
+              customerName: customerName,
+              customerPhone: customerPhone,
+              fullAddress: fullAddress,
+              orderNote: orderNote,
+              items: selectedItems.map((item) => ({
+                variantId: item.variantId || item.ProductVariantId,
+                quantity: item.quantity,
+                price: item.price
               }))
             };
 
             try {
-              btnOrder.disabled = true;
-              btnOrder.innerText = "Đang xử lý...";
+              vnpayBtn.disabled = true;
+              vnpayBtn.innerText = "Đang xử lý...";
 
-              const response = await fetch("/api/order", {
+              // Gửi request tạo thanh toán VNPay
+              const response = await fetch("/VNPay/CreatePaymentFromCheckout", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(order)
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify(paymentData)
               });
+
               const result = await response.json();
 
-              if (response.ok) {
-                alert("Đặt hàng thành công! Mã đơn: " + (result.orderId || "Không rõ"));
-                if (paymentMethod === 3) {
-                  // VNPAY
-                  vnpayForm.submit();
-                } else {
-                  localStorage.removeItem("selectedCartItems");
-                  window.location.href = "/";
-                }
+              if (result.success) {
+                // Redirect đến VNPay
+                window.location.href = result.paymentUrl;
               } else {
-                alert("Đặt hàng thất bại: " + (result.message || "Lỗi không xác định"));
+                alert(result.message || "Có lỗi xảy ra khi tạo thanh toán!");
               }
-            } catch (err) {
-              console.error(err);
-              alert("Đã có lỗi khi gửi đơn hàng.");
+            } catch (error) {
+              console.error("Error:", error);
+              alert("Có lỗi xảy ra khi kết nối server!");
             } finally {
-              btnOrder.disabled = false;
-              btnOrder.innerText = "Đặt hàng";
+              vnpayBtn.disabled = false;
+              vnpayBtn.innerText = "Thanh toán VNPay";
             }
+          });
+
+          // ====== Regular order handler (COD, Bank) ======
+          btnOrder.addEventListener("click", async () => {
+            const items = JSON.parse(localStorage.getItem("selectedCartItems") || "[]");
+            if (items.length === 0) { alert("Giỏ hàng rỗng!"); return; }
+
+            const name = document.getElementById("customer-name").value.trim();
+            const phone = document.getElementById("customer-phone").value.trim();
+            const address = document.getElementById("customer-address").value.trim();
+
+            if (!name || !phone || !address || !provinceSel.value || !wardSel.value) {
+              alert("Vui lòng nhập đủ thông tin giao hàng!");
+              return;
+            }
+
+            const provinceName = provinceSel.options[provinceSel.selectedIndex].text;
+            const wardName = wardSel.options[wardSel.selectedIndex].text;
+            const fullAddress = `${address}, ${wardName}, ${provinceName}`;
+
+            let paymentMethod = null;
+            if (document.getElementById("cod").checked) paymentMethod = 1;
+            if (document.getElementById("bank").checked) paymentMethod = 2;
+            if (!paymentMethod) { alert("Vui lòng chọn phương thức thanh toán!"); return; }
+
+            // TODO: Implement regular order creation logic here
+            alert("Chức năng đặt hàng COD/Bank đang được phát triển!");
           });
         });
     </script>
-
 }

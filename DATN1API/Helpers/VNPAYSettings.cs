@@ -1,4 +1,4 @@
-﻿namespace DATN1API.Helpers
+﻿namespace DATN1API.Pay
 {
     public class VNPAYSettings
     {

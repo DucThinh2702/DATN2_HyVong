@@ -1,6 +1,7 @@
 ﻿
 using DATN1API.Data;
-using DATN1API.Helpers;
+using DATN1API.Models.Pay;
+using DATN1API.Pay;
 using DATN1API.Services;
 using DATN1WEB.Models;
 using Microsoft.AspNetCore.Identity;
@@ -29,7 +30,21 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 .AddEntityFrameworkStores<DatnContext>()
 .AddDefaultTokenProviders();
 builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
-builder.Services.AddScoped<PayOSService>();
+
+builder.Services.AddHttpClient<PayOSService>(client =>
+{
+    var opt = builder.Configuration.GetSection("PayOS").Get<PayOSOptions>();
+    if (!string.IsNullOrWhiteSpace(opt?.BaseUrl))
+        client.BaseAddress = new Uri(opt.BaseUrl.Trim());  // ← nhớ Trim
+
+    if (!string.IsNullOrEmpty(opt?.ClientId))
+        client.DefaultRequestHeaders.Add("X-Client-Id", opt.ClientId);
+    if (!string.IsNullOrEmpty(opt?.ApiKey))
+        client.DefaultRequestHeaders.Add("X-Api-Key", opt.ApiKey);
+});
+
+// ❌ XÓA dòng AddScoped<PayOSService>();
+
 builder.Services.Configure<VNPAYSettings>(builder.Configuration.GetSection("VNPAY"));
 builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddScoped<VnPayService>(); // Đăng ký VnPayService

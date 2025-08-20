@@ -1,4 +1,6 @@
-﻿namespace DATN1API.Helpers
+﻿using DATN1API.Models.Pay;
+
+namespace DATN1API.Pay
 {
 
     public class PaymentRequest

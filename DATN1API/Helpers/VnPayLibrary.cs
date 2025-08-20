@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using System.Net;
 using System.Globalization;
 using System.Collections.Specialized;
-using DATN1API.Helpers;
+using DATN1API.Pay;
 
 public class VnPayLibrary
 {

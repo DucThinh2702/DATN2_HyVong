@@ -1,4 +1,4 @@
-﻿using DATN1API.Helpers;
+﻿using DATN1API.Pay;
 using DATN1API.Services;
 
 public class VnPayService : IVnPayService

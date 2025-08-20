@@ -6,7 +6,11 @@ using Newtonsoft.Json;
 using System.Security.Claims;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
-using DATN1API.Helpers;
+using DATN1API.Pay;
+using Microsoft.AspNetCore.Authorization;
+using DATN1API.Models.Pay;
+using DATNAPI1.Controllers;
+using System.Linq;
 
 public class UserController : Controller
 {
@@ -24,8 +28,6 @@ public class UserController : Controller
         _vnpayService = vnpayService;
 
     }
-
-
 
     public async Task<IActionResult> Index(int? categoryId, int page = 1)
     {
@@ -89,7 +91,7 @@ public class UserController : Controller
         return View(product);
     }
 
-    [HttpPost]
+    [HttpPost, Authorize]
     public IActionResult ThemVaoGio(int variantId, int quantity)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -127,7 +129,7 @@ public class UserController : Controller
         return RedirectToAction("Index", "User");
     }
 
-    [HttpPost]
+    [HttpPost, Authorize]
     public IActionResult MuaNgay(int variantId, int quantity)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -169,7 +171,7 @@ public class UserController : Controller
         return RedirectToAction("GioHang", "User", new { id = cart.CartId });
     }
 
-    [HttpPost]
+    [HttpPost, Authorize]
     public IActionResult XoaKhoiGio(int cartDetailId)
     {
         var detail = _context.CartDetails.FirstOrDefault(x => x.CartDetailId == cartDetailId);
@@ -181,6 +183,7 @@ public class UserController : Controller
         return RedirectToAction("GioHang");
     }
 
+    [Authorize]
     public IActionResult GioHang()
     {
         if (User.Identity.IsAuthenticated)
@@ -215,16 +218,26 @@ public class UserController : Controller
             _context.SaveChanges();
         }
 
+        // 👇 Lấy thông tin user để tự fill UI checkout (tuỳ field của ApplicationUser nhà bạn)
+        var appUser = _context.Users.FirstOrDefault(u => u.Id == userId);
+        ViewBag.UserProfile = new
+        {
+            FullName = appUser?.FullName ?? appUser?.UserName,
+            Email = appUser?.Email,
+            Phone = appUser?.PhoneNumber,
+            Address = appUser?.Address // nếu có
+        };
+
         return View(cart);
     }
 
-    [HttpPost]
+    // ========== 1) KHỞI TẠO THANH TOÁN → REDIRECT PAYOS ==========
+    [HttpPost, Authorize]
     public async Task<IActionResult> ThanhToanQuaPayOS()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return RedirectToAction("DangNhap");
 
-        // Lấy giỏ hàng của user
+        // Lấy giỏ hàng
         var cart = _context.Carts
             .Include(c => c.CartDetails)
                 .ThenInclude(cd => cd.ProductVariant)
@@ -237,158 +250,259 @@ public class UserController : Controller
             return RedirectToAction("GioHang");
         }
 
-        // Tính tổng tiền của giỏ hàng
-        decimal total = cart.CartDetails.Sum(cd => (cd.ProductVariant.SalePrice.HasValue ? cd.ProductVariant.SalePrice.Value : 0) * (cd.Quantity.HasValue ? cd.Quantity.Value : 1));
+        // Tính tổng
+        decimal total = cart.CartDetails.Sum(cd =>
+            (cd.ProductVariant.SalePrice ?? 0m) * (cd.Quantity ?? 1));
+
+        // Mã đơn tạm (duy nhất) – bạn có thể lưu trước nếu muốn idempotent chuẩn chỉnh
         long orderCode = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        string description = "Thanh toán đơn hàng túi xách";
-        string returnUrl = "https://4e38f8661e44.ngrok-free.app/User/ThanhToanThanhCong";
-        string cancelUrl = "https://4e38f8661e44.ngrok-free.app/User/GioHang";
 
-        // Mã hóa description để đảm bảo không có ký tự lạ
-        description = Uri.EscapeDataString(description);
+        // Mô tả đơn
+        string description = "Thanh toán đơn hàng";
 
-        // Chuẩn bị danh sách items gửi cho PayOS
+        // Return/Cancel URL động
+        string returnUrl = Url.Action("ThanhToanThanhCong", "User", new { orderCode }, Request.Scheme!);
+        string cancelUrl = Url.Action("ThanhToanHuy", "User", new { orderCode }, Request.Scheme!);
+
+        // Items
         var items = cart.CartDetails.Select(cd => new PayOSItem
         {
-            name = Uri.EscapeDataString(cd.ProductVariant.Product?.ProductName ?? "Sản phẩm"),  // Đảm bảo tên sản phẩm là string
-            quantity = cd.Quantity.HasValue ? cd.Quantity.Value : 1,  // Ép kiểu từ int? sang int
-            price = cd.ProductVariant.SalePrice.HasValue ? Convert.ToInt32(cd.ProductVariant.SalePrice.Value) : 0 // Ép kiểu từ decimal? sang int
+            name = cd.ProductVariant.Product?.ProductName ?? "Sản phẩm",
+            quantity = cd.Quantity ?? 1,                              // int? -> int
+            price = (int)(cd.ProductVariant.SalePrice ?? 0m)         // decimal? -> int
         }).ToList();
 
-        // Gửi yêu cầu tới PayOS để tạo QR
-        var qrCodeUrl = await _payOSService.CreatePaymentRequestAsync(total, orderCode, description, returnUrl, cancelUrl, items);
 
-        // Hiển thị kết quả lên view
-        ViewBag.TotalAmount = total;
-        ViewBag.OrderCode = orderCode;
-        ViewBag.QrCodeUrl = qrCodeUrl;
+        // Gọi PayOS → nhận checkoutUrl
+        var checkoutUrl = await _payOSService.CreatePaymentRequestAsync(
+            total, orderCode, description, returnUrl!, cancelUrl!, items);
 
-        if (qrCodeUrl == null)
+        if (string.IsNullOrEmpty(checkoutUrl))
         {
-            if (!string.IsNullOrEmpty(_payOSService.LastError))
-            {
-                try
-                {
-                    var raw = _payOSService.LastError.Trim();
-                    if (raw.StartsWith("{"))
-                    {
-                        var errorObj = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(raw);
-
-                        if (errorObj is JObject)
-                        {
-                            ViewBag.PayOSErrorMessage = errorObj?.desc ?? "Không rõ lỗi từ PayOS";
-                            ViewBag.PayOSErrorDetails = errorObj?.data?.ToString() ?? "";
-                        }
-                    }
-                    else
-                    {
-                        ViewBag.PayOSErrorMessage = "Phản hồi không phải JSON từ PayOS.";
-                        ViewBag.PayOSErrorDetails = raw;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ViewBag.PayOSErrorMessage = "Lỗi JSON: " + ex.Message;
-                    ViewBag.PayOSErrorDetails = _payOSService.LastError;
-                }
-
-                ViewBag.RawError = _payOSService.LastError;
-            }
-            else
-            {
-                ViewBag.PayOSErrorMessage = "Không thể tạo mã QR. Lỗi không xác định.";
-                ViewBag.PayOSErrorDetails = "";
-            }
+            TempData["PayOSError"] = _payOSService.LastError ?? "Không thể tạo yêu cầu thanh toán.";
+            return RedirectToAction("GioHang");
         }
 
-        return View("HienThiQR");
+        // Sang trang thanh toán PayOS
+        return Redirect(checkoutUrl);
     }
+
+    // ========== 2) PAYOS REDIRECT: THANH TOÁN THÀNH CÔNG ==========
+    // Có thể để [AllowAnonymous] nếu muốn cho phép xem kết quả dù session login hết hạn.
+    [Authorize]
     public async Task<IActionResult> ThanhToanThanhCong(long orderCode)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return RedirectToAction("DangNhap");
 
-        var result = await _payOSService.KiemTraTrangThaiThanhToan(orderCode);
+        // ĐỔI DÒNG NÀY
+        var result = await _payOSService.GetPaymentStatusAsync(orderCode);
 
         if (result == null)
         {
-            ViewBag.Message = "Không thể kiểm tra trạng thái thanh toán.";
-            ViewBag.Error = _payOSService.LastError;
-            return View("KetQuaThanhToan");
+            TempData["Message"] = "Không thể kiểm tra trạng thái thanh toán.";
+            TempData["Error"] = _payOSService.LastError;
+            return RedirectToAction("GioHang");
         }
 
         var status = result["data"]?["status"]?.ToString();
-
-        if (status == "PAID")
+        if (!string.Equals(status, "PAID", StringComparison.OrdinalIgnoreCase))
         {
-            // Lấy giỏ hàng
-            var cart = _context.Carts
-                .Include(c => c.CartDetails)
+            TempData["Message"] = $"Giao dịch chưa hoàn tất. Trạng thái: {status}";
+            return RedirectToAction("GioHang");
+        }
+
+        var cart = _context.Carts
+            .Include(c => c.CartDetails)
                 .ThenInclude(cd => cd.ProductVariant)
-                .FirstOrDefault(c => c.UserId == userId);
+            .FirstOrDefault(c => c.UserId == userId);
 
-            if (cart == null || !cart.CartDetails.Any())
-            {
-                ViewBag.Message = "Không tìm thấy giỏ hàng để tạo đơn.";
-                return View("KetQuaThanhToan");
-            }
-
-            // Tính tổng tiền & số lượng
-            var totalAmount = cart.CartDetails.Sum(cd => (cd.ProductVariant.SalePrice ?? 0) * cd.Quantity);
-            var totalQuantity = cart.CartDetails.Sum(cd => cd.Quantity);
-
-            // Tạo đơn hàng mới
-            var order = new Order
-            {
-                UserId = userId,
-                OrderDate = DateTime.Now,
-                TotalAmount = totalAmount,
-                Quantity = totalQuantity,
-                OrderStatus = "Chờ xác nhận",
-                PaymentStatus = "PAID",
-                OrderDetails = new List<OrderDetail>(),
-                // Bạn có thể gán thêm các trường này nếu có UI:
-                // RecipientName = "...",
-                // RecipientPhone = "...",
-                // DeliveryAddress = "...",
-                // Note = "...",
-                // PromoCode = "...",
-                // ShippingFee = 0
-            };
-
-            foreach (var item in cart.CartDetails)
-            {
-                var detail = new OrderDetail
-                {
-                    ProductVariantId = item.ProductVariantId,
-                    Quantity = item.Quantity,
-                    UnitPrice = item.ProductVariant.SalePrice ?? 0,
-                    TotalPrice = (item.ProductVariant.SalePrice ?? 0) * item.Quantity
-                };
-
-                order.OrderDetails.Add(detail);
-            }
-
-            _context.Orders.Add(order);
-
-            // Xóa giỏ hàng sau khi đã chuyển thành đơn
-            _context.CartDetails.RemoveRange(cart.CartDetails);
-            _context.SaveChanges();
-
-            ViewBag.Message = "🎉 Thanh toán thành công và đơn hàng đã được ghi nhận!";
-        }
-        else
+        if (cart == null || !cart.CartDetails.Any())
         {
-            ViewBag.Message = $"⚠️ Giao dịch chưa hoàn tất. Trạng thái hiện tại: {status}";
+            TempData["Message"] = "Không tìm thấy giỏ hàng để tạo đơn.";
+            return RedirectToAction("GioHang");
         }
 
-        return View("KetQuaThanhToan");
+        // SỬA NULLABLE CHO CHẮC
+        var totalAmount = cart.CartDetails.Sum(cd => (cd.ProductVariant.SalePrice ?? 0m) * (cd.Quantity ?? 1));
+        var totalQuantity = cart.CartDetails.Sum(cd => cd.Quantity ?? 0);
+
+        var order = new Order
+        {
+            UserId = userId!,
+            OrderDate = DateTime.Now,
+            TotalAmount = totalAmount,
+            Quantity = totalQuantity,
+            OrderStatus = "Chờ xác nhận",
+            PaymentStatus = "PAID",
+            OrderDetails = new List<OrderDetail>()
+        };
+
+        foreach (var item in cart.CartDetails)
+        {
+            order.OrderDetails.Add(new OrderDetail
+            {
+                ProductVariantId = item.ProductVariantId,
+                Quantity = item.Quantity ?? 1,
+                UnitPrice = item.ProductVariant.SalePrice ?? 0m,
+                TotalPrice = (item.ProductVariant.SalePrice ?? 0m) * (item.Quantity ?? 1)
+            });
+        }
+
+        _context.Orders.Add(order);
+        _context.CartDetails.RemoveRange(cart.CartDetails);
+        _context.SaveChanges();
+
+        TempData["Message"] = "🎉 Thanh toán thành công và đơn hàng đã được ghi nhận!";
+        return RedirectToAction("Index");
     }
-    
-    public IActionResult ThanhToan() => View();
+
+    // ========== 3) PAYOS REDIRECT: NGƯỜI DÙNG HỦY hoặc FAIL ==========
+    [Authorize]
+    public IActionResult ThanhToanHuy(long orderCode)
+    {
+        TempData["Message"] = "Bạn đã huỷ giao dịch hoặc giao dịch không thành công.";
+        return RedirectToAction("GioHang");
+    }
+
+    [Authorize]
+    public IActionResult ThanhToan()
+    {
+        if (User.Identity.IsAuthenticated)
+        {
+            ViewBag.UserName = User.Identity.Name;
+        }
+
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return RedirectToAction("DangNhap");
+
+        // Lấy thông tin user để tự fill UI checkout
+        var appUser = _context.Users.FirstOrDefault(u => u.Id == userId);
+        ViewBag.UserProfile = new
+        {
+            FullName = appUser?.FullName ?? appUser?.UserName,
+            Email = appUser?.Email,
+            Phone = appUser?.PhoneNumber,
+            Address = appUser?.Address // nếu có
+        };
+
+        return View();
+    }
+
     public IActionResult LienHe() => View();
     public IActionResult QuenMatKhau() => View();
-    public IActionResult DangNhap() => View();
-    public IActionResult DangKy() => View();
     public IActionResult ChiTiet() => View();
+
+    // ========== 4) THÊM METHOD XỬ LÝ THANH TOÁN TIỀN MẶT ==========
+    [HttpPost, Authorize]
+    public async Task<IActionResult> CreateCashOrder([FromBody] CheckoutPaymentRequest request)
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Json(new { success = false, message = "Vui lòng đăng nhập để tiếp tục." });
+            }
+
+            var appUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (appUser == null)
+            {
+                return Json(new { success = false, message = "Không tìm thấy thông tin người dùng." });
+            }
+
+            if (request.Items == null || !request.Items.Any())
+            {
+                return Json(new { success = false, message = "Không có sản phẩm được chọn." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CustomerName) ||
+                string.IsNullOrWhiteSpace(request.CustomerPhone) ||
+                string.IsNullOrWhiteSpace(request.FullAddress))
+            {
+                return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin giao hàng." });
+            }
+
+            var total = request.Items.Sum(item => item.Price * item.Quantity);
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Tạo đơn hàng
+                var order = new Order
+                {
+                    UserId = userId,
+                    RecipientName = request.CustomerName,
+                    RecipientPhone = request.CustomerPhone,
+                    DeliveryAddress = request.FullAddress,
+                    OrderDate = DateTime.Now,
+                    TotalAmount = total,
+                    OrderStatus = "Chờ xác nhận",
+                    PaymentStatus = "Chưa thanh toán",
+                    Note = request.OrderNote
+                };
+
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                // Tạo chi tiết đơn hàng
+                foreach (var item in request.Items)
+                {
+                    var orderDetail = new OrderDetail
+                    {
+                        OrderId = order.OrderId,
+                        ProductVariantId = item.VariantId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.Price,
+                        TotalPrice = item.Price * item.Quantity
+                    };
+                    _context.OrderDetails.Add(orderDetail);
+                }
+
+                // Tạo bản ghi thanh toán
+                var payment = new Payment
+                {
+                    OrderId = order.OrderId,
+                    MethodName = "Tiền mặt",
+                    PaymentDate = DateTime.Now,
+                    Amount = total,
+                    PaymentStatus = "Chờ thanh toán",
+                    PaymentContent = "Thanh toán khi nhận hàng",
+                    IsActive = true
+                };
+
+                _context.Payments.Add(payment);
+                await _context.SaveChangesAsync();
+
+                // Xóa sản phẩm khỏi giỏ hàng
+                var cart = await _context.Carts
+                    .Include(c => c.CartDetails)
+                    .FirstOrDefaultAsync(c => c.UserId == userId);
+
+                if (cart != null)
+                {
+                    var orderVariantIds = request.Items.Select(item => item.VariantId).ToList();
+                    var cartItemsToRemove = cart.CartDetails
+                        .Where(cd => orderVariantIds.Contains((int)cd.ProductVariantId))
+                        .ToList();
+
+                    _context.CartDetails.RemoveRange(cartItemsToRemove);
+                    await _context.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+
+                return Json(new { success = true, message = "Đặt hàng thành công! Đơn hàng sẽ được giao trong thời gian sớm nhất." });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại." });
+        }
+    }
+
 }
