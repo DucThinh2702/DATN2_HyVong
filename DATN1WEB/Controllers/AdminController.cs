@@ -2,6 +2,7 @@
 using DATN1API.Models;
 using DATN1API.Models.ViewModels;
 using DATN1WEB.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace DATN1API.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly DatnContext _context;
@@ -41,9 +43,6 @@ namespace DATN1API.Controllers
                 SoKhachHangMoi = await _userManager.Users
                     .Where(u => u.UserName != null) // Tìm tất cả người dùng
                     .CountAsync(),
-
-
-
 
                 DonHangGanDay = await _context.Orders
                     .Include(o => o.User)
@@ -110,12 +109,12 @@ namespace DATN1API.Controllers
             return View();
         }
 
-        public async Task<IActionResult> MaGiamGia(string status = "Tất cả", string search = "")
+        public async Task<IActionResult> MaGiamGia(string status = "Tất cả", string search = "", int page = 1, int pageSize = 3)
         {
             var today = DateTime.Today;
 
             // Lấy danh sách mã giảm giá và xử lý null tại đây
-            var danhSach = await _context.Promotions
+            var query = _context.Promotions
                 .Select(p => new Promotion
                 {
                     PromoCode = p.PromoCode,
@@ -131,8 +130,9 @@ namespace DATN1API.Controllers
                     Description = p.Description ?? "",
                     ShippingProviderName = p.ShippingProviderName ?? ""
                 })
-                .AsNoTracking()
-                .ToListAsync();
+                .AsNoTracking();
+
+            var danhSach = await query.OrderByDescending(p => p.PromoCode).ToListAsync();
 
             // Trạng thái theo thời gian và số lượng
             foreach (var promo in danhSach)
@@ -172,6 +172,10 @@ namespace DATN1API.Controllers
                 ).ToList();
             }
 
+            var totalItems = danhSach.Count;
+            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            var pagedList = danhSach.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
             // Thống kê
             var tongMa = danhSach.Count;
             var daSuDung = danhSach.Sum(p => p.UsedQuantity ?? 0);
@@ -187,49 +191,117 @@ namespace DATN1API.Controllers
             ViewBag.Search = search;
             ViewBag.CurrentStatus = status;
 
-            return View(danhSach);
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalItems = totalItems;
+
+            return View(pagedList);
         }
 
         public async Task<IActionResult> KhachHang()
         {
-            var users = (await _userManager.Users.ToListAsync())
-                .Where(u => !_userManager.IsInRoleAsync(u, "Admin").Result)
-                .Select(u => new CustomerViewModel
+            // Loại bỏ Admin
+            var adminIds = (await _userManager.GetUsersInRoleAsync("Admin"))
+                .Select(a => a.Id)
+                .ToHashSet();
+
+            // Lấy danh sách user (ẩn Admin), chỉ lấy trường cần thiết
+            var users = await _userManager.Users
+                .AsNoTracking()
+                .Where(u => !adminIds.Contains(u.Id))
+                .Select(u => new
                 {
-                    Id = u.Id,
-                    FullName = u.FullName ?? u.UserName,
+                    u.Id,
+                    u.FullName,
                     Email = u.Email,
                     Phone = u.PhoneNumber,
-                    Address = u.Address,
-                    Gender = u.Gender,
+                    u.Address,
+                    u.Gender,
                     DateOfBirth = u.BirthDate,
-                    Status = u.Status // bool
+                    u.Status
                 })
-                .ToList();
+                .ToListAsync();
 
-            var totalCustomers = users.Count;
-            var verifiedCustomers = users.Count(u => u.Status == true);   // Đã xác thực
-            var unverifiedCustomers = users.Count(u => u.Status == false); // Chưa xác thực
-            var activeCustomers = users.Count(u => !string.IsNullOrEmpty(u.Email));
+            // 1) Đếm số đơn (KHÔNG tính đơn Cancelled) để hiển thị cột "Đơn hàng"
+            var ordersCountByUser = await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.UserId != null && o.OrderStatus != "Cancelled")
+                .GroupBy(o => o.UserId!)
+                .Select(g => new { UserId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.UserId, x => x.Count);
 
-            ViewBag.TotalCustomers = totalCustomers;
-            ViewBag.VerifiedCustomers = verifiedCustomers;
-            ViewBag.UnverifiedCustomers = unverifiedCustomers;
-            ViewBag.ActiveCustomers = activeCustomers;
+            // 2) Tổng chi tiêu: CHỈ các đơn đã thanh toán (Paid / Đã thanh toán), cũng không tính đơn Cancelled
+            var spentByUser = await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.UserId != null
+                    && o.OrderStatus != "Cancelled"
+                    && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Đã thanh toán"))
+                .GroupBy(o => o.UserId!)
+                .Select(g => new
+                {
+                    UserId = g.Key,
+                    Total = g.Sum(o => (o.TotalAmount ?? 0m) + (o.ShippingFee ?? 0m))
+                })
+                .ToDictionaryAsync(x => x.UserId, x => x.Total);
 
-            return View(users);
+            // 3) Số đơn đã huỷ
+            var cancelledByUser = await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.UserId != null && o.OrderStatus == "Cancelled")
+                .GroupBy(o => o.UserId!)
+                .Select(g => new { UserId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.UserId, x => x.Count);
+
+            // 4) Số đơn chưa thanh toán (không tính Cancelled)
+            var unpaidByUser = await _context.Orders
+                .AsNoTracking()
+                .Where(o => o.UserId != null
+                    && o.OrderStatus != "Cancelled"
+                    && !(o.PaymentStatus == "Paid" || o.PaymentStatus == "Đã thanh toán"))
+                .GroupBy(o => o.UserId!)
+                .Select(g => new { UserId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.UserId, x => x.Count);
+
+            // Map ra ViewModel
+            var model = users.Select(u => new CustomerViewModel
+            {
+                Id = u.Id,
+                FullName = string.IsNullOrWhiteSpace(u.FullName) ? u.Email : u.FullName,
+                Email = u.Email,
+                Phone = u.Phone,
+                Address = u.Address,
+                Gender = u.Gender,
+                DateOfBirth = u.DateOfBirth,
+                Status = u.Status,
+
+                OrdersCount = ordersCountByUser.TryGetValue(u.Id, out var oc) ? oc : 0,
+                TotalSpent = spentByUser.TryGetValue(u.Id, out var ts) ? ts : 0m,
+                CancelledCount = cancelledByUser.TryGetValue(u.Id, out var cc) ? cc : 0,
+                UnpaidCount = unpaidByUser.TryGetValue(u.Id, out var up) ? up : 0
+            })
+            .OrderByDescending(x => x.TotalSpent) // tuỳ ý sắp xếp
+            .ToList();
+
+            // Thống kê tổng quan
+            ViewBag.TotalCustomers = model.Count;
+            ViewBag.VerifiedCustomers = model.Count(u => u.Status);
+            ViewBag.UnverifiedCustomers = model.Count(u => !u.Status);
+            ViewBag.ActiveCustomers = model.Count(u => !string.IsNullOrEmpty(u.Email));
+
+            return View(model);
         }
-
-
 
         public IActionResult DonHang()
         {
             return View();
         }
+
         public IActionResult SanPham()
         {
             return View();
         }
+
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
@@ -253,7 +325,6 @@ namespace DATN1API.Controllers
 
             return View(model);
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -283,7 +354,5 @@ namespace DATN1API.Controllers
 
             return RedirectToAction(nameof(Profile));
         }
-
-
     }
 }

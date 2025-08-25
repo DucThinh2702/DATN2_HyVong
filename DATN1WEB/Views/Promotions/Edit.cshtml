@@ -238,15 +238,26 @@
                 <span asp-validation-for="MinOrderAmount" class="text-danger"></span>
             </div>
             <div class="col-md-6">
-                <label asp-for="Status" class="form-label fw-semibold">Đối tượng áp dụng</label>
+                <label asp-for="Status" class="form-label fw-semibold">Sản phẩm áp dụng</label>
                 <select asp-for="Status" class="form-select">
-                    <option value="Tất cả khách hàng" selected=@(Model.Status == "Tất cả khách hàng")>Tất cả khách hàng</option>
-                    <option value="Khách hàng mới" selected=@(Model.Status == "Khách hàng mới")>Khách hàng mới</option>
-                    <option value="Khách hàng VIP" selected=@(Model.Status == "Khách hàng VIP")>Khách hàng VIP</option>
-                    <option value="Sinh viên" selected=@(Model.Status == "Sinh viên")>Sinh viên</option>
+                    @{
+                        var categories = ViewBag.Categories as List<SelectListItem>;
+                    }
+                    @if (categories != null && categories.Any())
+                    {
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.Value" selected="@category.Selected">@category.Text</option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="Tất cả sản phẩm" selected="@(Model.Status == "Tất cả sản phẩm")">Tất cả sản phẩm</option>
+                    }
                 </select>
                 <span asp-validation-for="Status" class="text-danger"></span>
             </div>
+
             <div class="col-md-12">
                 <label asp-for="Description" class="form-label fw-semibold">Mô tả</label>
                 <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả chi tiết về mã giảm giá..."></textarea>

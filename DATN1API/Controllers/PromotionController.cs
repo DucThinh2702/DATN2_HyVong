@@ -17,6 +17,27 @@ namespace DATN1API.Controllers
             _context = context;
         }
 
+        // GET: api/Promotions/categories
+        [HttpGet("categories")]
+        public async Task<ActionResult<IEnumerable<object>>> GetCategories()
+        {
+            var categories = await _context.Categories
+                .Select(c => new {
+                    value = c.CategoryId.ToString(),
+                    text = c.CategoryName
+                })
+                .ToListAsync();
+
+            // Add "Tất cả sản phẩm" option at the beginning
+            var allCategories = new List<object>
+            {
+                new { value = "0", text = "Tất cả sản phẩm" }
+            };
+            allCategories.AddRange(categories);
+
+            return Ok(allCategories);
+        }
+
         // GET: api/Promotions
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Promotion>>> GetPromotions()
@@ -58,6 +79,18 @@ namespace DATN1API.Controllers
                 return BadRequest("Tên mã giảm giá đã tồn tại.");
             }
 
+            if (!string.IsNullOrEmpty(promotion.Status) && promotion.Status != "0")
+            {
+                if (int.TryParse(promotion.Status, out int categoryId))
+                {
+                    var categoryExists = await _context.Categories.AnyAsync(c => c.CategoryId == categoryId);
+                    if (!categoryExists)
+                    {
+                        return BadRequest("Danh mục không tồn tại.");
+                    }
+                }
+            }
+
             _context.Promotions.Add(promotion);
             await _context.SaveChangesAsync();
 
@@ -80,6 +113,18 @@ namespace DATN1API.Controllers
             if (existingPromotion == null)
             {
                 return NotFound();
+            }
+
+            if (!string.IsNullOrEmpty(promotion.Status) && promotion.Status != "0")
+            {
+                if (int.TryParse(promotion.Status, out int categoryId))
+                {
+                    var categoryExists = await _context.Categories.AnyAsync(c => c.CategoryId == categoryId);
+                    if (!categoryExists)
+                    {
+                        return BadRequest("Danh mục không tồn tại.");
+                    }
+                }
             }
 
             // Cập nhật các thuộc tính của promotion

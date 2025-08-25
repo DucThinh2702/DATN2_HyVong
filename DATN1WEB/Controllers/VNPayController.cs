@@ -11,6 +11,7 @@ using System.Text.Json;
 using DATN1API.Models;
 using DATN1API.Data; // DbContext của bạn
 using Microsoft.AspNetCore.Http;
+using DATN1API.Models.Pay;
 
 namespace DATNAPI1.Controllers
 {
@@ -48,7 +49,7 @@ namespace DATNAPI1.Controllers
 
         // 👉 Tính tổng server-side + redirect VNPAY
         [HttpPost, Authorize]
-        public async Task<IActionResult> CreatePaymentFromCart(string? orderNote = null, string? orderType = "other")
+        public async Task<IActionResult> CreatePaymentFromCart(string? orderNote = null, string? orderType = "other", string? promoCode = null)
         {
             try
             {
@@ -66,12 +67,95 @@ namespace DATNAPI1.Controllers
                     return RedirectToAction("GioHang", "User");
                 }
 
-                var total = cart.CartDetails.Sum(cd => (cd.ProductVariant.SalePrice ?? 0m) * (cd.Quantity ?? 1));
-                var amountVnd = (int)decimal.Round(total, 0, MidpointRounding.AwayFromZero);
+                var itemsSubtotal = cart.CartDetails.Sum(cd => (cd.ProductVariant.SalePrice ?? 0m) * (cd.Quantity ?? 1));
+                var discountAmount = 0m;
+                var shippingFee = 0m;
+                string? validatedPromoCode = null;
+                string? promotionType = null;
+
+                if (!string.IsNullOrWhiteSpace(promoCode))
+                {
+                    var now = DateTime.Now;
+                    var promo = await _db.Promotions
+                        .FirstOrDefaultAsync(p => p.PromoNameCode == promoCode || p.PromoName == promoCode);
+
+                    if (promo != null)
+                    {
+                        var validDate = promo.StartDate <= now && (promo.EndDate == null || promo.EndDate >= now);
+                        var notExceeded = !promo.Quantity.HasValue || (promo.UsedQuantity ?? 0) < promo.Quantity.Value;
+
+                        if (validDate && notExceeded)
+                        {
+                            validatedPromoCode = promoCode;
+
+                            if (promo.PromoType?.ToLowerInvariant() == "phần trăm")
+                            {
+                                promotionType = "percentage";
+                                var pct = (decimal)(promo.DiscountValue ?? 0m);
+                                discountAmount = Math.Min(itemsSubtotal * pct / 100m, itemsSubtotal);
+                            }
+                            else if (promo.PromoType?.ToLowerInvariant() == "số tiền cố định")
+                            {
+                                promotionType = "amount";
+                                discountAmount = Math.Min((decimal)(promo.DiscountValue ?? 0m), itemsSubtotal);
+                            }
+                            else if (promo.PromoType?.ToLowerInvariant() == "miễn phí vận chuyển")
+                            {
+                                promotionType = "free_shipping";
+                                shippingFee = 0m;
+                                discountAmount = 0m;
+                            }
+
+                            _logger.LogInformation("Applied promotion: {promoCode}, type: {type}, discount: {discount}",
+                                promoCode, promotionType, discountAmount);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Invalid promotion: {promoCode}, validDate: {validDate}, notExceeded: {notExceeded}",
+                                promoCode, validDate, notExceeded);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Promotion not found: {promoCode}", promoCode);
+                    }
+                }
+
+                var finalTotal = itemsSubtotal - discountAmount + shippingFee;
+                if (finalTotal < 0m) finalTotal = 0m;
+
+                var amountVnd = (int)decimal.Round(finalTotal, 0, MidpointRounding.AwayFromZero);
                 var orderId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-                _logger.LogInformation("CreatePaymentFromCart: userId={userId}, items={count}, total={totalVnd}, orderId={orderId}",
-                    userId, cart.CartDetails.Count, amountVnd, orderId);
+                var appUser = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                var cartItems = cart.CartDetails.Select(cd => new
+                {
+                    VariantId = cd.ProductVariantId,
+                    Quantity = cd.Quantity ?? 1,
+                    Price = cd.ProductVariant.SalePrice ?? 0m
+                }).ToList();
+
+                var orderData = new
+                {
+                    UserId = userId,
+                    CustomerName = appUser?.FullName ?? "Khách hàng",
+                    CustomerPhone = appUser?.PhoneNumber ?? "",
+                    FullAddress = appUser?.Address ?? "",
+                    Items = cartItems,
+                    ItemsSubtotal = itemsSubtotal,
+                    DiscountAmount = discountAmount,
+                    ShippingFee = shippingFee,
+                    Total = finalTotal,
+                    OrderNote = orderNote,
+                    OrderId = orderId,
+                    PromoCode = validatedPromoCode,
+                    PromotionType = promotionType
+                };
+
+                HttpContext.Session.SetString($"PendingOrder_{orderId}", JsonSerializer.Serialize(orderData));
+
+                _logger.LogInformation("CreatePaymentFromCart: userId={userId}, items={count}, subtotal={subtotal}, discount={discount}, shipping={shipping}, total={totalVnd}, orderId={orderId}, promoCode={promoCode}",
+                    userId, cart.CartDetails.Count, itemsSubtotal, discountAmount, shippingFee, amountVnd, orderId, validatedPromoCode);
 
                 var vnp = new VnPayLibrary();
 
@@ -79,7 +163,7 @@ namespace DATNAPI1.Controllers
                 vnp.AddRequestData("vnp_Version", VnPayLibrary.VERSION);
                 vnp.AddRequestData("vnp_Command", "pay");
                 vnp.AddRequestData("vnp_TmnCode", _vnp_TmnCode);
-                vnp.AddRequestData("vnp_Amount", (amountVnd * 100).ToString(CultureInfo.InvariantCulture)); // invariant
+                vnp.AddRequestData("vnp_Amount", (amountVnd * 100).ToString(CultureInfo.InvariantCulture));
                 vnp.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
                 vnp.AddRequestData("vnp_CurrCode", "VND");
                 vnp.AddRequestData("vnp_IpAddr", GetClientIp(HttpContext));
@@ -90,10 +174,6 @@ namespace DATNAPI1.Controllers
                 vnp.AddRequestData("vnp_TxnRef", orderId.ToString());
                 vnp.AddRequestData("vnp_ExpireDate", DateTime.Now.AddMinutes(15).ToString("yyyyMMddHHmmss"));
 
-                // Optional: BankCode...
-                // vnp.AddRequestData("vnp_BankCode", "VNBANK");
-
-                // Tạo URL + lấy hashData/hmac để đối chiếu
                 var paymentUrl = vnp.CreateRequestUrlAndGetDebug(_vnp_Url, _vnp_HashSecret, out var hashData, out var myHashUpper);
 
                 _logger.LogInformation("VNPay hashData: {hashData}", hashData);
@@ -120,26 +200,77 @@ namespace DATNAPI1.Controllers
 
                 var appUser = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
                 if (appUser == null)
-                {
                     return Json(new { success = false, message = "Không tìm thấy thông tin người dùng." });
-                }
 
                 if (request.Items == null || !request.Items.Any())
-                {
                     return Json(new { success = false, message = "Không có sản phẩm được chọn." });
-                }
 
                 if (string.IsNullOrWhiteSpace(request.CustomerName) ||
                     string.IsNullOrWhiteSpace(request.CustomerPhone) ||
                     string.IsNullOrWhiteSpace(request.FullAddress))
-                {
                     return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin giao hàng." });
+
+                // ===== TÍNH TIỀN CƠ BẢN =====
+                var itemsSubtotal = request.Items.Sum(item => item.Price * item.Quantity);
+
+                decimal discountAmount = Math.Max(0m, request.DiscountAmount ?? 0m);
+                if (discountAmount > itemsSubtotal) discountAmount = itemsSubtotal;
+
+                decimal shippingFee = Math.Max(0m, request.ShippingFee ?? 0m);
+
+                // ===== ÁP KHUYẾN MÃI THEO ID (int?) =====
+                Promotion? promotion = null;
+                if (request.PromoCode.HasValue)
+                {
+                    int promoId = request.PromoCode.Value;
+                    promotion = await _db.Promotions.FirstOrDefaultAsync(p => p.PromoCode == promoId);
+
+                    if (promotion != null)
+                    {
+                        var now = DateTime.Now;
+                        bool validDate = promotion.StartDate <= now && (promotion.EndDate == null || promotion.EndDate >= now);
+                        bool notExceeded = !promotion.Quantity.HasValue || (promotion.UsedQuantity ?? 0) < promotion.Quantity.Value;
+                        bool minOk = (promotion.MinOrderAmount ?? 0m) <= itemsSubtotal;
+
+                        if (!validDate || !notExceeded || !minOk)
+                        {
+                            // Không đạt điều kiện → bỏ mã
+                            promotion = null;
+                            discountAmount = 0m; // reset phần giảm từ client
+                        }
+                        else
+                        {
+                            var dbType = (promotion.PromoType ?? string.Empty).Trim().ToLowerInvariant();
+                            if (dbType == "phần trăm")
+                            {
+                                var pct = (decimal)(promotion.DiscountValue ?? 0m);
+                                discountAmount = Math.Clamp(itemsSubtotal * pct / 100m, 0m, itemsSubtotal);
+                            }
+                            else if (dbType == "số tiền cố định")
+                            {
+                                var val = Math.Max(0m, promotion.DiscountValue ?? 0m);
+                                discountAmount = Math.Min(val, itemsSubtotal);
+                            }
+                            else if (dbType == "miễn phí vận chuyển")
+                            {
+                                // Freeship: không trừ vào hàng, set ship = 0
+                                discountAmount = 0m;
+                                shippingFee = 0m;
+                            }
+                        }
+                    }
                 }
 
-                var total = request.Items.Sum(item => item.Price * item.Quantity);
-                var amountVnd = (int)decimal.Round(total, 0, MidpointRounding.AwayFromZero);
+                // ===== TỔNG CUỐI =====
+                var finalTotal = itemsSubtotal - discountAmount + shippingFee;
+                if (finalTotal < 0m) finalTotal = 0m;
+
+                // Làm tròn về VND và đổi sang đơn vị VNPay (×100, dạng số nguyên)
+                long amountVnd = (long)decimal.Round(finalTotal, 0, MidpointRounding.AwayFromZero);
+
                 var orderId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
+                // Lưu vào session: PromoCode là int? (FK) + PromoDisplay (mã hiển thị)
                 var orderData = new
                 {
                     UserId = userId,
@@ -147,23 +278,32 @@ namespace DATNAPI1.Controllers
                     CustomerPhone = request.CustomerPhone,
                     FullAddress = request.FullAddress,
                     Items = request.Items,
-                    Total = total,
+                    ItemsSubtotal = itemsSubtotal,
+                    DiscountAmount = discountAmount,
+                    ShippingFee = shippingFee,
+                    Total = finalTotal,
                     OrderNote = request.OrderNote,
-                    OrderId = orderId
+                    OrderId = orderId,
+
+                    // Lưu ID khuyến mại để ghi Order.PromoCode (int?) về sau
+                    PromoCode = promotion?.PromoCode,                               // int?
+                    PromoDisplay = promotion?.PromoNameCode ?? promotion?.PromoName // chỉ để log/hiển thị
                 };
 
                 HttpContext.Session.SetString($"PendingOrder_{orderId}", JsonSerializer.Serialize(orderData));
 
-                _logger.LogInformation("CreatePaymentFromCheckout: userId={userId}, items={count}, total={totalVnd}, orderId={orderId}",
-                    userId, request.Items.Count, amountVnd, orderId);
+                _logger.LogInformation(
+                    "CreatePaymentFromCheckout(int promo): userId={userId}, items={count}, subtotal={subtotal}, discount={discount}, shipping={shipping}, total={total}, orderId={orderId}, promoId={promoId}, promoCodeStr={promoStr}",
+                    userId, request.Items.Count, itemsSubtotal, discountAmount, shippingFee, finalTotal, orderId,
+                    promotion?.PromoCode, promotion?.PromoNameCode ?? promotion?.PromoName
+                );
 
+                // ===== TẠO URL VNPAY (vnp_Amount phải là số nguyên ×100, KHÔNG có . hoặc ,) =====
                 var vnp = new VnPayLibrary();
-
-                // Tham số bắt buộc
                 vnp.AddRequestData("vnp_Version", VnPayLibrary.VERSION);
                 vnp.AddRequestData("vnp_Command", "pay");
                 vnp.AddRequestData("vnp_TmnCode", _vnp_TmnCode);
-                vnp.AddRequestData("vnp_Amount", (amountVnd * 100).ToString(CultureInfo.InvariantCulture));
+                vnp.AddRequestData("vnp_Amount", (amountVnd * 100).ToString()); // ví dụ: 186500000
                 vnp.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
                 vnp.AddRequestData("vnp_CurrCode", "VND");
                 vnp.AddRequestData("vnp_IpAddr", GetClientIp(HttpContext));
@@ -180,7 +320,7 @@ namespace DATNAPI1.Controllers
                 _logger.LogInformation("VNPay myHMAC (UpperHex): {myHashUpper}", myHashUpper);
                 _logger.LogInformation("VNPAY URL: {url}", paymentUrl);
 
-                return Json(new { success = true, paymentUrl = paymentUrl });
+                return Json(new { success = true, paymentUrl });
             }
             catch (Exception ex)
             {
@@ -189,66 +329,7 @@ namespace DATNAPI1.Controllers
             }
         }
 
-        // VNPay callback
-        [HttpGet]
-        public IActionResult PaymentReturn()
-        {
-            try
-            {
-                var rawQuery = HttpContext.Request.QueryString.Value ?? string.Empty;
-                var vnp_SecureHash = Request.Query["vnp_SecureHash"].ToString();
 
-                if (string.IsNullOrEmpty(vnp_SecureHash))
-                {
-                    _logger.LogWarning("PaymentReturn: Missing vnp_SecureHash. rawQuery={raw}", rawQuery);
-                    ViewBag.Message = "Thiếu chữ ký bảo mật";
-                    return View();
-                }
-
-                var valid = VnPayLibrary.ValidateSignatureFromRaw(rawQuery, vnp_SecureHash, _vnp_HashSecret,
-                                                                  out var rawForHash, out var myHashUpper);
-
-                _logger.LogInformation("VNPay callback rawForHash: {rawForHash}", rawForHash);
-                _logger.LogInformation("VNPay callback myHMAC(UpperHex): {myHashUpper}", myHashUpper);
-                _logger.LogInformation("VNPay callback their vnp_SecureHash: {their}", vnp_SecureHash);
-
-                if (!valid)
-                {
-                    _logger.LogWarning("VNPay signature invalid.");
-                    ViewBag.Message = "⚠ Sai chữ ký bảo mật!";
-                    return View();
-                }
-
-                // Đến đây: chữ ký OK
-                var responseCode = Request.Query["vnp_ResponseCode"].ToString();
-                var txnRef = Request.Query["vnp_TxnRef"].ToString();
-                var amount = Request.Query["vnp_Amount"].ToString();
-                var bankTranNo = Request.Query["vnp_BankTranNo"].ToString();
-                var payDate = Request.Query["vnp_PayDate"].ToString();
-                var transactionStatus = Request.Query["vnp_TransactionStatus"].ToString();
-
-                _logger.LogInformation("VNPay callback params: resp={resp}, txnRef={ref}, amount={amt}, bankTranNo={bank}, payDate={pay}, txnStatus={st}",
-                    responseCode, txnRef, amount, bankTranNo, payDate, transactionStatus);
-
-                if (responseCode == "00")
-                {
-                    ViewBag.Message = "✅ Thanh toán thành công!";
-                    // TODO: cập nhật Order theo txnRef (idempotent), clear cart...
-                }
-                else
-                {
-                    ViewBag.Message = $"❌ Thanh toán thất bại. Mã lỗi: {responseCode}";
-                }
-
-                return View();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "PaymentReturn failed.");
-                ViewBag.Message = "Có lỗi khi xử lý kết quả thanh toán.";
-                return View();
-            }
-        }
 
         [HttpGet]
         public async Task<IActionResult> VnPayReturn()
@@ -278,8 +359,8 @@ namespace DATNAPI1.Controllers
                 bool checkSignature = vnp.ValidateSignature(vnp_SecureHash, _vnp_HashSecret);
                 if (!checkSignature)
                 {
-                    ViewBag.Message = "Chữ ký không hợp lệ";
-                    return View();
+                    _logger.LogWarning("VNPay signature validation failed for order {orderId}", orderId);
+                    return Redirect("https://sandbox.vnpayment.vn/paymentv2/Transaction/PaymentResult?vnp_ResponseCode=97");
                 }
 
                 if (vnp_ResponseCode == "00" && vnp_TransactionStatus == "00")
@@ -290,27 +371,222 @@ namespace DATNAPI1.Controllers
                     if (!string.IsNullOrEmpty(orderDataJson))
                     {
                         var orderData = JsonSerializer.Deserialize<JsonElement>(orderDataJson);
-                        await SaveOrderAndPayment(orderData, vnpayTranId, amount);
-                        HttpContext.Session.Remove(sessionKey); // Xóa session sau khi lưu thành công
+                        await SaveOrderAndPaymentWithPromotion(orderData, vnpayTranId, amount);
+                        HttpContext.Session.Remove(sessionKey);
                     }
 
-                    ViewBag.Message = "Giao dịch được thực hiện thành công. Cảm ơn quý khách đã sử dụng dịch vụ";
+                    _logger.LogInformation("VNPay payment successful for order {orderId}", orderId);
+                    return Redirect($"https://sandbox.vnpayment.vn/paymentv2/Transaction/PaymentResult?vnp_ResponseCode=00&vnp_TxnRef={orderId}&vnp_Amount={amount * 100}");
                 }
                 else
                 {
-                    ViewBag.Message = "Có lỗi xảy ra trong quá trình xử lý. Mã lỗi: " + vnp_ResponseCode;
+                    _logger.LogWarning("VNPay payment failed for order {orderId}, response code: {responseCode}", orderId, vnp_ResponseCode);
+                    return Redirect($"https://sandbox.vnpayment.vn/paymentv2/Transaction/PaymentResult?vnp_ResponseCode={vnp_ResponseCode}&vnp_TxnRef={orderId}");
                 }
-
-                ViewBag.ThanhToanThanhCong = (vnp_ResponseCode == "00" && vnp_TransactionStatus == "00");
-                return View();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "VnPayReturn failed.");
-                ViewBag.Message = "Có lỗi xảy ra trong quá trình xử lý";
-                return View();
+                return Redirect("https://sandbox.vnpayment.vn/paymentv2/Transaction/PaymentResult?vnp_ResponseCode=99");
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> PaymentReturn()
+        {
+            try
+            {
+                var vnp = new VnPayLibrary();
+                foreach (var (key, value) in Request.Query)
+                {
+                    if (key.StartsWith("vnp_") && !string.IsNullOrEmpty(value))
+                        vnp.AddResponseData(key, value!);
+                }
+
+                var rawQuery = HttpContext.Request.QueryString.Value ?? string.Empty;
+                var vnp_SecureHash = Request.Query["vnp_SecureHash"].ToString();
+
+                if (string.IsNullOrEmpty(vnp_SecureHash))
+                {
+                    TempData["ErrorMessage"] = "Thiếu chữ ký xác thực từ VNPay.";
+                    return RedirectToAction("Index", "User");
+                }
+
+                var valid = VnPayLibrary.ValidateSignatureFromRaw(
+                    rawQuery, vnp_SecureHash, _vnp_HashSecret,
+                    out var rawForHash, out var myHashUpper);
+
+                _logger.LogInformation("VNPay callback rawForHash: {rawForHash}", rawForHash);
+                _logger.LogInformation("VNPay callback myHMAC(UpperHex): {myHashUpper}", myHashUpper);
+                _logger.LogInformation("VNPay callback their vnp_SecureHash: {their}", vnp_SecureHash);
+
+                if (!valid)
+                {
+                    TempData["ErrorMessage"] = "Chữ ký VNPay không hợp lệ.";
+                    return RedirectToAction("Index", "User");
+                }
+
+                var orderId = Convert.ToInt64(vnp.GetResponseData("vnp_TxnRef"));
+                var vnpayTranId = Convert.ToInt64(vnp.GetResponseData("vnp_TransactionNo"));
+                var responseCode = vnp.GetResponseData("vnp_ResponseCode");       // "00" = ok
+                var txnStatus = vnp.GetResponseData("vnp_TransactionStatus");   // "00" = ok
+                var amount = Convert.ToInt64(vnp.GetResponseData("vnp_Amount")) / 100;
+
+                if (responseCode == "00" && txnStatus == "00")
+                {
+                    var sessionKey = $"PendingOrder_{orderId}";
+                    var orderDataJson = HttpContext.Session.GetString(sessionKey);
+
+                    if (!string.IsNullOrEmpty(orderDataJson))
+                    {
+                        var orderData = JsonSerializer.Deserialize<JsonElement>(orderDataJson);
+                        await SaveOrderAndPaymentWithPromotion(orderData, vnpayTranId, amount);
+                        HttpContext.Session.Remove(sessionKey);
+                    }
+
+                    TempData["SuccessMessage"] = $"Thanh toán VNPay thành công. Mã GD: {vnpayTranId}.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = $"Thanh toán không thành công (mã: {responseCode}).";
+                }
+
+                return RedirectToAction("Index", "User");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "PaymentReturn failed.");
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi xử lý kết quả thanh toán.";
+                return RedirectToAction("Index", "User");
+            }
+        }
+
+        private async Task SaveOrderAndPaymentWithPromotion(JsonElement orderData, long vnpayTranId, long amount)
+        {
+            using var transaction = await _db.Database.BeginTransactionAsync();
+            try
+            {
+                var userId = orderData.GetProperty("UserId").GetString();
+
+                var itemsSubtotal = orderData.TryGetProperty("ItemsSubtotal", out var subtotalProp) ? subtotalProp.GetDecimal() : 0m;
+                var discountAmount = orderData.TryGetProperty("DiscountAmount", out var discountProp) ? discountProp.GetDecimal() : 0m;
+                var shippingFee = orderData.TryGetProperty("ShippingFee", out var shippingProp) ? shippingProp.GetDecimal() : 0m;
+
+                // ĐỌC PromoCode (int?)
+                int? promoId = null;
+                if (orderData.TryGetProperty("PromoCode", out var promoIdProp))
+                {
+                    if (promoIdProp.ValueKind == JsonValueKind.Number && promoIdProp.TryGetInt32(out var tmp))
+                        promoId = tmp;
+                }
+
+                // Nạp promotion nếu có
+                Promotion? promoEntity = null;
+                if (promoId.HasValue)
+                {
+                    promoEntity = await _db.Promotions.FirstOrDefaultAsync(p => p.PromoCode == promoId.Value);
+                }
+
+                // Tạo Order — LƯU ID vào Order.PromoCode
+                var order = new Order
+                {
+                    UserId = userId,
+                    RecipientName = orderData.GetProperty("CustomerName").GetString(),
+                    RecipientPhone = orderData.GetProperty("CustomerPhone").GetString(),
+                    DeliveryAddress = orderData.GetProperty("FullAddress").GetString(),
+                    OrderDate = DateTime.Now,
+                    TotalAmount = orderData.GetProperty("Total").GetDecimal(),
+                    OrderStatus = "Chờ xác nhận",
+                    PaymentStatus = "Đã thanh toán",
+                    Note = orderData.TryGetProperty("OrderNote", out var noteProperty) ? noteProperty.GetString() : null,
+
+                    PromoCode = promoEntity?.PromoCode,        // <-- FK int?
+                    PromotionPromoCode = promoEntity?.PromoCode,
+                    ShippingFee = shippingFee,
+                };
+
+                _db.Orders.Add(order);
+                await _db.SaveChangesAsync();
+
+                // OrderDetails
+                var items = orderData.GetProperty("Items").EnumerateArray();
+                foreach (var item in items)
+                {
+                    var orderDetail = new OrderDetail
+                    {
+                        OrderId = order.OrderId,
+                        ProductVariantId = item.GetProperty("VariantId").GetInt32(),
+                        Quantity = item.GetProperty("Quantity").GetInt32(),
+                        UnitPrice = item.GetProperty("Price").GetDecimal(),
+                        TotalPrice = item.GetProperty("Price").GetDecimal() * item.GetProperty("Quantity").GetInt32()
+                    };
+                    _db.OrderDetails.Add(orderDetail);
+                }
+
+                // Payment content (hiển thị mã người dùng quen)
+                var paymentContent = $"Thanh toán VNPay thành công. Mã giao dịch: {vnpayTranId}";
+                if (promoEntity != null)
+                {
+                    var promoDisplay = promoEntity.PromoNameCode ?? promoEntity.PromoName;
+                    paymentContent += $". Mã khuyến mại: {promoDisplay}, Giảm giá: {discountAmount:N0} VNĐ";
+                }
+                if (shippingFee > 0)
+                {
+                    paymentContent += $". Phí vận chuyển: {shippingFee:N0} VNĐ";
+                }
+
+                var payment = new Payment
+                {
+                    OrderId = order.OrderId,
+                    MethodName = "VNPay",
+                    PaymentDate = DateTime.Now,
+                    Amount = amount,
+                    PaymentStatus = "Thành công",
+                    BankTransactionCode = vnpayTranId.ToString(),
+                    PaymentContent = paymentContent,
+                    IsActive = true
+                };
+                _db.Payments.Add(payment);
+
+                // Tăng UsedQuantity nếu có mã
+                if (promoEntity != null)
+                {
+                    promoEntity.UsedQuantity = (promoEntity.UsedQuantity ?? 0) + 1;
+                    _db.Promotions.Update(promoEntity);
+
+                    HttpContext.Session.SetString("LastUsedPromotion", JsonSerializer.Serialize(new
+                    {
+                        PromoId = promoEntity.PromoCode,
+                        PromoCode = promoEntity.PromoNameCode ?? promoEntity.PromoName,
+                        NewUsedCount = promoEntity.UsedQuantity,
+                        TotalCount = promoEntity.Quantity
+                    }));
+                }
+
+                await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                // Xoá cart items
+                var cart = await _db.Carts.Include(c => c.CartDetails).FirstOrDefaultAsync(c => c.UserId == userId);
+                if (cart != null)
+                {
+                    var variantIds = items.Select(x => x.GetProperty("VariantId").GetInt32()).ToList();
+                    var toRemove = cart.CartDetails.Where(cd => variantIds.Contains((int)cd.ProductVariantId)).ToList();
+                    _db.CartDetails.RemoveRange(toRemove);
+                    await _db.SaveChangesAsync();
+                }
+
+                _logger.LogInformation("Order + Payment saved. OrderId={orderId}, PaymentId={paymentId}, PromoCode={promoId}, Discount={discount}, Shipping={shipping}",
+                    order.OrderId, payment.PaymentId, promoId, discountAmount, shippingFee);
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Failed to save order and payment with promotion data");
+                throw;
+            }
+        }
+
 
         private async Task SaveOrderAndPayment(JsonElement orderData, long vnpayTranId, long amount)
         {
@@ -319,7 +595,6 @@ namespace DATNAPI1.Controllers
             {
                 var userId = orderData.GetProperty("UserId").GetString();
 
-                // Tạo đơn hàng
                 var order = new Order
                 {
                     UserId = userId,
@@ -336,7 +611,6 @@ namespace DATNAPI1.Controllers
                 _db.Orders.Add(order);
                 await _db.SaveChangesAsync(); // Lưu để có OrderId
 
-                // Tạo chi tiết đơn hàng
                 var items = orderData.GetProperty("Items").EnumerateArray();
                 foreach (var item in items)
                 {
@@ -351,7 +625,6 @@ namespace DATNAPI1.Controllers
                     _db.OrderDetails.Add(orderDetail);
                 }
 
-                // Tạo bản ghi thanh toán
                 var payment = new Payment
                 {
                     OrderId = order.OrderId,
@@ -374,10 +647,7 @@ namespace DATNAPI1.Controllers
 
                 if (cart != null)
                 {
-                    // Lấy danh sách variantId từ đơn hàng
                     var orderVariantIds = items.Select(item => item.GetProperty("VariantId").GetInt32()).ToList();
-
-                    // Xóa các item tương ứng khỏi giỏ hàng
                     var cartItemsToRemove = cart.CartDetails
                         .Where(cd => orderVariantIds.Contains((int)cd.ProductVariantId))
                         .ToList();
@@ -397,7 +667,6 @@ namespace DATNAPI1.Controllers
             }
         }
 
-        // IP client (có xét X-Forwarded-For nếu deploy reverse proxy)
         private static string GetClientIp(HttpContext context)
         {
             var ip = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
@@ -413,21 +682,5 @@ namespace DATNAPI1.Controllers
             }
             return rip.ToString();
         }
-    }
-
-    public class CheckoutPaymentRequest
-    {
-        public string CustomerName { get; set; }
-        public string CustomerPhone { get; set; }
-        public string FullAddress { get; set; }
-        public string OrderNote { get; set; }
-        public List<CheckoutItem> Items { get; set; }
-    }
-
-    public class CheckoutItem
-    {
-        public int VariantId { get; set; }
-        public int Quantity { get; set; }
-        public decimal Price { get; set; }
     }
 }

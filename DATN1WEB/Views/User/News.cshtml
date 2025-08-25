@@ -1,0 +1,135 @@
+﻿@model IEnumerable<DATN1API.Models.News>
+@{
+    ViewData["Title"] = "Tin tức";
+    Layout = "_LayoutUser";   // hoặc null nếu bạn muốn tự dán header/footer
+}
+
+@functions {
+    // Rút gọn mô tả từ Content (loại bỏ tag HTML)
+    public static string Excerpt(string? html, int len = 160)
+    {
+        if (string.IsNullOrWhiteSpace(html)) return "";
+        var noTag = System.Text.RegularExpressions.Regex.Replace(html, "<.*?>", string.Empty);
+        if (noTag.Length <= len) return noTag.Trim();
+        return noTag.Substring(0, len).Trim() + "...";
+    }
+    // Chuẩn hoá đường dẫn ảnh (nhận URL tuyệt đối hoặc file trong /hinh)
+    public static string FixImg(string? path)
+    {
+        path = (path ?? "").Replace("\\", "/").Trim();
+        if (string.IsNullOrEmpty(path)) return "/images/placeholder-news.jpg";
+        if (Uri.IsWellFormedUriString(path, UriKind.Absolute)) return path;
+        var file = System.IO.Path.GetFileName(path.TrimStart('/'));
+        return string.IsNullOrEmpty(file) ? "/images/placeholder-news.jpg" : $"/hinh/{file}";
+    }
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-3 px-2">
+        <h2 class="fw-bold me-3 mb-0">TIN TỨC</h2>
+        <div class="flex-grow-1 border-bottom"></div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row g-4">
+            @{
+                var i = 0;
+            }
+            @foreach (var n in Model)
+            {
+                var modalId = $"newsModal_{i++}";
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="ratio ratio-16x9">
+                            <img class="w-100 h-100" alt="@n.Title" style="object-fit:cover"
+                                 src="@FixImg(n.ThumbnailImage)" />
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title fw-semibold text-truncate" title="@n.Title">@n.Title</h5>
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-calendar3 me-1"></i>
+                                @(n.PostedDate?.ToString("dd/MM/yyyy HH:mm") ?? "")
+                            </div>
+                            <p class="card-text small text-secondary">@Excerpt(n.Content, 150)</p>
+                            <button class="btn btn-warning text-dark fw-semibold"
+                                    data-bs-toggle="modal" data-bs-target="#@modalId">
+                                Đọc bài viết
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Modal đọc bài -->
+                    <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@($"{modalId}_label")" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="@($"{modalId}_label")">@n.Title</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <img src="@FixImg(n.ThumbnailImage)" class="img-fluid rounded w-100"
+                                             style="object-fit:cover" alt="@n.Title" />
+                                    </div>
+                                    <div class="text-muted small mb-3">
+                                        <i class="bi bi-calendar3 me-1"></i>
+                                        @(n.PostedDate?.ToString("dd/MM/yyyy HH:mm") ?? "")
+                                    </div>
+                                    <div class="news-content">
+                                        @Html.Raw(n.Content)  <!-- cho phép nội dung có HTML từ admin -->
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Đóng</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /Modal -->
+                </div>
+            }
+        </div>
+
+        <!-- Phân trang (nếu controller set ViewBag.TotalPages & ViewBag.Page) -->
+        @if (ViewBag.TotalPages != null && ViewBag.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(ViewBag.Page == 1 ? "disabled" : "")">
+                        <a class="page-link" href="?page=@(ViewBag.Page - 1)">&laquo;</a>
+                    </li>
+                    @for (int p = 1; p <= (int)ViewBag.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == (int)ViewBag.Page ? "active" : "")">
+                            <a class="page-link" href="?page=@p">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(ViewBag.Page == ViewBag.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="?page=@(ViewBag.Page + 1)">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+    else
+    {
+        <div class="alert alert-light border text-center">
+            Chưa có bài viết nào.
+        </div>
+    }
+</div>
+
+<style>
+    /* Giới hạn hình trong modal nếu content có ảnh lớn */
+    .news-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: .5rem;
+        margin: .5rem 0;
+    }
+
+    .news-content h1, .news-content h2, .news-content h3 {
+        margin-top: 1rem;
+    }
+</style>

@@ -9,7 +9,7 @@ namespace DATN1API.Models.ViewModels
     public string? RecipientPhone { get; set; }
     public string? DeliveryAddress { get; set; }
     public string? Note { get; set; }
-    public string? PromoCode { get; set; }
+    public int? PromoCode { get; set; }
     public decimal? ShippingFee { get; set; }
 
     public List<CheckoutItem> Items { get; set; } = new();

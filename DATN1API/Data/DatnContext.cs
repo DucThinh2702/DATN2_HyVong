@@ -46,6 +46,7 @@ namespace DATN1API.Data
         //        .WithMany(p => p.ShippingProviders)
         //        .UsingEntity(j => j.ToTable("ShippingProviderPromotions")); // Bảng nối giữa ShippingProvider và Promotion
         //}
+
     }
 
 }

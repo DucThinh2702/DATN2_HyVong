@@ -9,12 +9,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - The Bag Studio Admin</title>
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
     <style>
         :root {
             --primary-color: #ffc107;
@@ -27,6 +29,7 @@
             --border-color: rgba(255,255,255,0.1);
             --shadow: 0 4px 20px rgba(0,0,0,0.1);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --sidebar-offset: 300px;
         }
 
         * {
@@ -61,10 +64,6 @@
                 width: 6px;
             }
 
-            .sidebar::-webkit-scrollbar-track {
-                background: transparent;
-            }
-
             .sidebar::-webkit-scrollbar-thumb {
                 background: var(--border-color);
                 border-radius: 3px;
@@ -80,7 +79,6 @@
                 margin-left: var(--sidebar-collapsed);
             }
 
-        /* Sidebar Header */
         .sidebar-header {
             padding: 1.5rem;
             border-bottom: 1px solid var(--border-color);
@@ -148,12 +146,6 @@
             font-size: 0.85rem;
         }
 
-        .sidebar.collapsed .user-info h6,
-        .sidebar.collapsed .user-info small {
-            display: none;
-        }
-
-        /* Navigation */
         .sidebar-nav {
             padding: 1.5rem 1rem;
         }
@@ -173,13 +165,6 @@
             transition: var(--transition);
         }
 
-        .sidebar.collapsed .nav-section-title {
-            opacity: 0;
-            height: 0;
-            margin: 0;
-            overflow: hidden;
-        }
-
         .nav-link {
             color: var(--text-muted) !important;
             border-radius: 12px;
@@ -191,6 +176,7 @@
             text-decoration: none;
             position: relative;
             overflow: hidden;
+            animation: slideIn 0.3s ease-out;
         }
 
             .nav-link::before {
@@ -205,43 +191,29 @@
                 z-index: -1;
             }
 
-            .nav-link:hover::before,
-            .nav-link.active::before {
+            .nav-link:hover::before, .nav-link.active::before {
                 width: 100%;
             }
 
-            .nav-link:hover,
-            .nav-link.active {
+            .nav-link:hover, .nav-link.active {
                 color: var(--bg-dark) !important;
                 transform: translateX(8px);
                 box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
             }
 
-        .sidebar.collapsed .nav-link:hover,
-        .sidebar.collapsed .nav-link.active {
-            transform: none;
-        }
-
-        .nav-link i {
-            width: 20px;
-            text-align: center;
-            margin-right: 0.75rem;
-            font-size: 1.1rem;
-        }
+            .nav-link i {
+                width: 20px;
+                text-align: center;
+                margin-right: 0.75rem;
+                font-size: 1.1rem;
+            }
 
         .nav-text {
             transition: var(--transition);
             font-weight: 500;
         }
 
-        .sidebar.collapsed .nav-text {
-            opacity: 0;
-            width: 0;
-            overflow: hidden;
-        }
-
-        .nav-link.text-danger:hover,
-        .nav-link.text-danger.active {
+        .nav-link.text-danger:hover, .nav-link.text-danger.active {
             color: white !important;
         }
 
@@ -249,7 +221,6 @@
             background: linear-gradient(90deg, #dc3545, #c82333);
         }
 
-        /* Toggle Button */
         .sidebar-toggle {
             position: fixed;
             top: 1rem;
@@ -271,7 +242,6 @@
                 box-shadow: 0 6px 25px rgba(0,0,0,0.15);
             }
 
-        /* Main Content Header */
         .content-header {
             background: white;
             padding: 1.5rem 2rem;
@@ -287,22 +257,6 @@
                 font-weight: 700;
             }
 
-        .breadcrumb {
-            background: none;
-            padding: 0;
-            margin: 0.5rem 0 0;
-        }
-
-        .breadcrumb-item a {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .breadcrumb-item.active {
-            color: #6c757d;
-        }
-
-        /* Cards and Components */
         .card {
             border: none;
             border-radius: 16px;
@@ -331,7 +285,6 @@
                 box-shadow: 0 6px 20px rgba(255, 193, 7, 0.3);
             }
 
-        /* Responsive */
         @@media (max-width: 768px) {
             .sidebar
 
@@ -352,8 +305,11 @@
             display: block;
         }
 
+        :root {
+            --sidebar-offset: 0px;
         }
 
+        }
         @@media (min-width: 769px) {
             .sidebar-toggle
 
@@ -363,7 +319,6 @@
 
         }
 
-        /* Profile Badge */
         .profile-badge {
             position: absolute;
             top: -5px;
@@ -383,7 +338,6 @@
                 color: var(--bg-dark);
             }
 
-        /* Notification Badge */
         .notification-badge {
             position: absolute;
             top: -8px;
@@ -400,8 +354,7 @@
             font-weight: 600;
         }
 
-        /* Animation */
-        @@keyframes slideIn {
+       @@keyframes slideIn {
             from
 
         {
@@ -416,44 +369,13 @@
 
         }
 
-        .nav-link {
-            animation: slideIn 0.3s ease-out;
-        }
-
-            .nav-link:nth-child(1) {
-                animation-delay: 0.1s;
-            }
-
-            .nav-link:nth-child(2) {
-                animation-delay: 0.2s;
-            }
-
-            .nav-link:nth-child(3) {
-                animation-delay: 0.3s;
-            }
-
-            .nav-link:nth-child(4) {
-                animation-delay: 0.4s;
-            }
-
-            .nav-link:nth-child(5) {
-                animation-delay: 0.5s;
-            }
-
-
-
-
-        :root {
-            --sidebar-offset: 300px;
-        }
-        /* đúng với width Sidebar desktop của bạn */
         .flash-container {
             position: fixed;
             top: 16px;
-            left: var(--sidebar-offset); /* bắt đầu sau sidebar */
-            right: 16px; /* chừa mép phải */
+            left: var(--sidebar-offset);
+            right: 16px;
             display: flex;
-            justify-content: center; /* căn giữa phần nội dung */
+            justify-content: center;
             z-index: 1100;
             pointer-events: none;
         }
@@ -464,29 +386,9 @@
                 box-shadow: 0 10px 30px rgba(0,0,0,.12);
                 margin: 0;
             }
-        /* Mobile: sidebar overlay -> offset = 0 */
-            @@media (max-width: 768px) {
-            : root
-
-        {
-            --sidebar-offset: 0px;
-        }
-
-        }
-
-
     </style>
 </head>
 <body>
-    @if (!SignInManager.IsSignedIn(User))
-    {
-        <script>
-            // Nếu chưa đăng nhập, redirect về trang Login
-            localStorage.removeItem('userLoggedIn');
-            window.location.href = '/Account/Login';
-        </script>
-        return; // Dừng luôn render layout
-    }
 
     <!-- Sidebar Toggle Button -->
     <button class="sidebar-toggle d-md-none" id="sidebarToggle">
@@ -506,21 +408,25 @@
             <div class="user-profile">
                 <div class="position-relative d-inline-block">
                     <img src="~/hinh/logo.jpg" alt="Avatar" class="user-avatar" onclick="goToProfile()" />
-                    <div class="profile-badge">
-                        <i class="fas fa-crown"></i>
-                    </div>
+                    <div class="profile-badge"><i class="fas fa-crown"></i></div>
                 </div>
                 <div class="user-info">
-                    @if (SignInManager.IsSignedIn(User))
+                    @{
+                        ApplicationUser currentUser = null;
+                        if (SignInManager.IsSignedIn(User))
+                        {
+                            currentUser = await UserManager.GetUserAsync(User);
+                        }
+                    }
+                    @if (currentUser != null)
                     {
-                        var currentUser = await UserManager.GetUserAsync(User);
                         <h6>@currentUser.FullName</h6>
                         <small>@currentUser.Email</small>
                     }
                     else
                     {
-                        <h6>Admin User</h6>
-                        <small>Quản trị viên</small>
+                        <h6>Khách</h6>
+                        <small>Chưa đăng nhập</small>
                     }
                 </div>
             </div>
@@ -532,8 +438,7 @@
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link active" asp-controller="Admin" asp-action="Index">
-                            <i class="fas fa-chart-pie"></i>
-                            <span class="nav-text">Thống kê</span>
+                            <i class="fas fa-chart-pie"></i> <span class="nav-text">Thống kê</span>
                         </a>
                     </li>
                 </ul>
@@ -544,45 +449,38 @@
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="SanPham" asp-action="Index">
-                            <i class="fas fa-shopping-bag"></i>
-                            <span class="nav-text">Sản phẩm</span>
+                            <i class="fas fa-shopping-bag"></i> <span class="nav-text">Sản phẩm</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="Colors" asp-action="Index">
-                            <i class="fas fa-palette"></i>
-                            <span class="nav-text">Size và Màu</span>
+                            <i class="fas fa-palette"></i> <span class="nav-text">Size và Màu</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link position-relative" asp-controller="Orders" asp-action="Index">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="nav-text">Đơn hàng</span>
-                            <span class="notification-badge">5</span>
+                            <i class="fas fa-shopping-cart"></i> <span class="nav-text">Đơn hàng</span>
+                         
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="Admin" asp-action="KhachHang">
-                            <i class="fas fa-users"></i>
-                            <span class="nav-text">Khách hàng</span>
+                            <i class="fas fa-users"></i> <span class="nav-text">Khách hàng</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="Categories" asp-action="Index">
-                            <i class="fas fa-tags"></i>
-                            <span class="nav-text">Danh mục</span>
+                            <i class="fas fa-tags"></i> <span class="nav-text">Danh mục</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="Admin" asp-action="MaGiamGia">
-                            <i class="fas fa-ticket-alt"></i>
-                            <span class="nav-text">Mã giảm giá</span>
+                            <i class="fas fa-ticket-alt"></i> <span class="nav-text">Mã giảm giá</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="News" asp-action="Index">
-                            <i class="fas fa-ticket-alt"></i>
-                            <span class="nav-text">Bài viết</span>
+                            <i class="fas fa-newspaper"></i> <span class="nav-text">Bài viết</span>
                         </a>
                     </li>
                 </ul>
@@ -593,14 +491,12 @@
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="Admin" asp-action="Profile">
-                            <i class="fas fa-user-circle"></i>
-                            <span class="nav-text">Hồ sơ cá nhân</span>
+                            <i class="fas fa-user-circle"></i> <span class="nav-text">Hồ sơ cá nhân</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-danger" href="#" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span class="nav-text">Đăng xuất</span>
+                        <a class="nav-link text-danger" href="#" id="logoutLink">
+                            <i class="fas fa-sign-out-alt"></i> <span class="nav-text">Đăng xuất</span>
                         </a>
                     </li>
                 </ul>
@@ -615,140 +511,21 @@
         </main>
     </div>
 
-    <!-- Scripts -->
-    
-
-    <script>
-                // Ngăn quay lại sau khi logout bằng cách xóa lịch sử
-        if (performance.navigation.type === performance.navigation.TYPE_BACK_FORWARD) {
-            location.href = '/Account/Login';
-        }
-
-        // Hoặc dùng history.replaceState để xóa stack lịch sử
-        window.addEventListener("pageshow", function (event) {
-            if (event.persisted || (window.performance && performance.getEntriesByType("navigation")[0].type === "back_forward")) {
-                window.location.href = '/Account/Login';
-            }
-        });
-        // Khi đăng xuất, lưu trạng thái vào localStorage
-           function logout() {
-               localStorage.removeItem('userLoggedIn'); // Xóa dữ liệu khi đăng xuất
-               window.location.href = '/Account/Login';  // Chuyển hướng về trang đăng nhập
-           }
-
-        // Sidebar functionality
-        document.addEventListener("DOMContentLoaded", function () {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const navLinks = document.querySelectorAll(".sidebar .nav-link");
-            const currentPath = window.location.pathname.toLowerCase();
-
-            // Navigation active state
-            navLinks.forEach(link => {
-                const href = link.getAttribute("href");
-                if (href) {
-                    const linkPath = new URL(href, window.location.origin).pathname.toLowerCase();
-                    if (currentPath === linkPath) {
-                        link.classList.add("active");
-                    } else {
-                        link.classList.remove("active");
-                    }
-                }
-
-                link.addEventListener("click", function () {
-                    navLinks.forEach(l => l.classList.remove("active"));
-                    this.classList.add("active");
-                });
-            });
-
-            // Mobile sidebar toggle
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('show');
-                });
-            }
-
-            // Close sidebar when clicking outside on mobile
-            document.addEventListener('click', function(e) {
-                if (window.innerWidth <= 768) {
-                    if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
-                        sidebar.classList.remove('show');
-                    }
-                }
-            });
-
-            // Desktop sidebar collapse (optional)
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey && e.key === 'b') {
-                    e.preventDefault();
-                    sidebar.classList.toggle('collapsed');
-                    mainContent.classList.toggle('expanded');
-                }
-            });
-        });
-
-        // Profile navigation
-        function goToProfile() {
-            window.location.href = '@Url.Action("Profile", "Admin")';
-        }
-
-        function logout() {
-                if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-                    // Sử dụng fetch để gửi yêu cầu POST
-                    fetch('@Url.Action("Logout", "Account")', {
-                        method: 'POST', // Phương thức POST
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({})  // Có thể để body trống nếu không cần dữ liệu
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            window.location.href = '/Account/Login'; // Chuyển hướng về trang đăng nhập
-                        } else {
-                            alert("Đăng xuất thất bại. Vui lòng thử lại!");
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
-                }
-            }
-
-        // Smooth scrolling for sidebar
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                // Add loading state
-                const icon = this.querySelector('i');
-                const originalClass = icon.className;
-                icon.className = 'fas fa-spinner fa-spin';
-
-                setTimeout(() => {
-                    icon.className = originalClass;
-                }, 1000);
-            });
-        });
-    </script>
     <!-- JQUERY LUÔN ĐẶT TRƯỚC -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <!-- Validate -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
-
-    <!-- Localization phải đặt SAU khi validate đã load -->
+    <!-- Localization -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/localization/messages_vi.min.js"></script>
 
-    <!-- Các script khác -->
     @RenderSection("Scripts", required: false)
-    @* Đặt ngay trong body, 1 lần duy nhất *@
+
+    <!-- Flash message -->
     <div class="flash-container">
         @{
-            // Hỗ trợ cả key cũ lẫn mới
             var successMsg = (TempData["Success"] ?? TempData["SuccessMessage"]) as string;
             var errorMsg = (TempData["Error"] ?? TempData["ErrorMessage"]) as string;
         }
@@ -768,43 +545,81 @@
         }
     </div>
 
-
-
-
-    @* @section Scripts { *@
-    @*     <script> *@
-    @*         // Tự ẩn sau 3 giây (tuỳ chọn) *@
-    @*         setTimeout(() => { *@
-    @*           document.querySelectorAll('.alert').forEach(a => { *@
-    @*             const inst = bootstrap.Alert.getOrCreateInstance(a); *@
-    @*             inst.close(); *@
-    @*           }); *@
-    @*         }, 3000); *@
-    @*     </script> *@
-    @* } *@
-
     <script>
+        // Cập nhật offset để toast canh theo sidebar
         function updateSidebarOffset() {
-          const isMobile = window.innerWidth <= 768;
-          const isCollapsed = document.getElementById('mainContent')?.classList.contains('expanded');
-          const px = isMobile ? 0 : (isCollapsed ? 80 : 300);
-          document.documentElement.style.setProperty('--sidebar-offset', px + 'px');
+            const isMobile = window.innerWidth <= 768;
+            const isCollapsed = document.getElementById('mainContent')?.classList.contains('expanded');
+            const px = isMobile ? 0 : (isCollapsed ? 80 : 300);
+            document.documentElement.style.setProperty('--sidebar-offset', px + 'px');
         }
         document.addEventListener('DOMContentLoaded', updateSidebarOffset);
         window.addEventListener('resize', updateSidebarOffset);
         document.addEventListener('keydown', e => { if (e.ctrlKey && e.key === 'b') setTimeout(updateSidebarOffset, 0); });
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        if (sidebarToggle) sidebarToggle.addEventListener('click', () => setTimeout(updateSidebarOffset, 300));
 
-        // Auto close sau 3s
+        // Sidebar interactions
+        document.addEventListener("DOMContentLoaded", function () {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const navLinks = document.querySelectorAll(".sidebar .nav-link");
+            const currentPath = window.location.pathname.toLowerCase();
+
+            navLinks.forEach(link => {
+                const href = link.getAttribute("href");
+                if (href) {
+                    const linkPath = new URL(href, window.location.origin).pathname.toLowerCase();
+                    link.classList.toggle("active", currentPath === linkPath);
+                }
+                link.addEventListener("click", function () {
+                    navLinks.forEach(l => l.classList.remove("active"));
+                    this.classList.add("active");
+                });
+            });
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('show');
+                    setTimeout(updateSidebarOffset, 300);
+                });
+            }
+
+            document.addEventListener('click', function (e) {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                        sidebar.classList.remove('show');
+                    }
+                }
+            });
+
+            // Ctrl+B collapse
+            document.addEventListener('keydown', function (e) {
+                if (e.ctrlKey && e.key === 'b') {
+                    e.preventDefault();
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                }
+            });
+        });
+
+        // Điều hướng tới profile
+        function goToProfile() {
+            window.location.href = '@Url.Action("Profile", "Admin")';
+        }
+
+        // Logout (chuẩn, 1 bản duy nhất)
+        document.getElementById('logoutLink')?.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (!confirm('Bạn có chắc chắn muốn đăng xuất?')) return;
+            fetch('@Url.Action("Logout", "Account")', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+                .then(r => r.ok ? (window.location.href = '/Account/Login') : alert('Đăng xuất thất bại. Vui lòng thử lại!'))
+                .catch(err => console.error(err));
+        });
+
+        // Auto close flash sau 3s
         setTimeout(() => {
-          document.querySelectorAll('.flash-container .alert').forEach(a => {
-            bootstrap.Alert.getOrCreateInstance(a).close();
-          });
+            document.querySelectorAll('.flash-container .alert').forEach(a => bootstrap.Alert.getOrCreateInstance(a).close());
         }, 3000);
     </script>
-
 </body>
 </html>
-
-

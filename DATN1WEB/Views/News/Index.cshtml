@@ -1,62 +1,152 @@
 ﻿@model List<DATN1API.Models.News>
+@using System.Linq
+
 @{
     ViewData["Title"] = "Bài viết";
-    string Img(string? p) => string.IsNullOrWhiteSpace(p) ? "" : (p!.StartsWith("~/") ? p : "~" + (p.StartsWith("/") ? p : "/" + p));
+
+    // lấy query filter
+    string q = Context.Request.Query["search"];
+    string hasImage = Context.Request.Query["hasImage"];
+    string authorId = Context.Request.Query["authorId"];
+    string Img(string? p) => string.IsNullOrWhiteSpace(p)
+        ? ""
+        : (p!.StartsWith("~/") ? p : "~" + (p.StartsWith("/") ? p : "/" + p));
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Danh sách bài viết</h2>
-    <a asp-controller="News" asp-action="Create" class="btn btn-warning">+ Tạo bài viết</a>
+<div class="content-header">
+    <div>
+        <h1 class="mb-2"><i class="fas fa-newspaper me-3 text-success"></i>Bài viết</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index","Admin")">Dashboard</a></li>
+                <li class="breadcrumb-item active">Quản lý bài viết</li>
+            </ol>
+        </nav>
+    </div>
+
+    <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+        <!-- Tìm theo tiêu đề -->
+        <div class="input-group" style="width: 300px;">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input name="search" value="@q" class="form-control" placeholder="Tìm theo tiêu đề..." />
+        </div>
+
+        <!-- Lọc có ảnh/không ảnh -->
+        <select name="hasImage" class="form-select" style="width:170px">
+            <option value="">-- Tất cả ảnh --</option>
+            <option value="yes" selected="@(string.Equals(hasImage,"yes",StringComparison.OrdinalIgnoreCase))">Có ảnh</option>
+            <option value="no" selected="@(string.Equals(hasImage,"no", StringComparison.OrdinalIgnoreCase))">Không ảnh</option>
+        </select>
+
+        <!-- (tuỳ chọn) lọc theo AuthorId đơn giản -->
+        <input name="authorId" value="@authorId"
+               class="form-control" style="width:140px" placeholder="Tác giả (ID)" />
+
+        <button class="btn btn-outline-primary"><i class="fas fa-filter me-1"></i>Lọc</button>
+
+        <a asp-controller="News" asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Tạo bài viết
+        </a>
+    </form>
 </div>
 
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success">@TempData["Success"]</div>
+    <div class="alert alert-success mt-3">@Html.Raw(TempData["Success"])</div>
 }
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger">@TempData["Error"]</div>
+    <div class="alert alert-danger mt-3">@Html.Raw(TempData["Error"])</div>
 }
 
-<div class="table-responsive">
-    <table class="table table-striped align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Ảnh</th>
-                <th>Tiêu đề</th>
-                <th>Ngày đăng</th>
-                <th>Tác giả (ID)</th>
-                <th class="text-end">Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model != null && Model.Any())
-            {
-                foreach (var n in Model)
-                {
+<!-- News table -->
+<div class="card mt-3">
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Danh sách bài viết</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-modern mb-0">
+                <thead>
                     <tr>
-                        <td style="width:80px">
-                            @if (!string.IsNullOrEmpty(n.ThumbnailImage))
-                            {
-                                <img src="@Url.Content(Img(n.ThumbnailImage))" alt="thumb"
-                                     class="img-fluid rounded" style="width:70px;height:70px;object-fit:cover" />
-                            }
-                        </td>
-                        <td>@n.Title</td>
-                        <td>@(n.PostedDate?.ToString("dd/MM/yyyy HH:mm"))</td>
-                        <td>@(n.AuthorId?.ToString() ?? "-")</td>
-                        <td class="text-end">
-                            <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-route-id="@n.NewsId">Xem</a>
-                            <a class="btn btn-sm btn-outline-warning" asp-action="Edit" asp-route-id="@n.NewsId">Sửa</a>
-                            <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@n.NewsId">Xoá</a>
-                        </td>
+                        <th>Ảnh</th>
+                        <th>Tiêu đề</th>
+                        <th>Ngày đăng</th>
+                        <th>Tác giả (ID)</th>
+                        <th class="text-center">Hành động</th>
                     </tr>
-                }
-            }
-            else
-            {
-                <tr><td colspan="5" class="text-center text-muted">Chưa có bài viết</td></tr>
-            }
-        </tbody>
-    </table>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var n in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(n.ThumbnailImage))
+                                    {
+                                        <div class="news-thumb">
+                                            <img src="@Url.Content(Img(n.ThumbnailImage))" alt="@n.Title" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="news-thumb placeholder d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    }
+                                </td>
+                                <td class="fw-semibold">@n.Title</td>
+                                <td>@(n.PostedDate?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                                <td>@(n.AuthorId?.ToString() ?? "-")</td>
+                                <td class="text-center">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a asp-action="Details" asp-route-id="@n.NewsId" class="btn btn-action btn-outline-info" title="Xem"><i class="fas fa-eye"></i></a>
+                                        <a asp-action="Edit" asp-route-id="@n.NewsId" class="btn btn-action btn-outline-warning" title="Sửa"><i class="fas fa-edit"></i></a>
+                                        <a asp-action="Delete" asp-route-id="@n.NewsId" class="btn btn-action btn-outline-danger" title="Xoá"><i class="fas fa-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">Chưa có bài viết</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<style>
+    .table-modern th {
+        white-space: nowrap;
+    }
+
+    .btn-action {
+        padding: .25rem .5rem;
+    }
+
+    .news-thumb {
+        width: 56px;
+        height: 56px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+
+        .news-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+
+        .news-thumb.placeholder {
+            background: #f1f3f5;
+        }
+</style>

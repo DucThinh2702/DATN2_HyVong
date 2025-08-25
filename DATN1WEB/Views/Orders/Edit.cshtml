@@ -4,19 +4,32 @@
     ViewData["Title"] = $"Sửa đơn hàng #{Model.OrderId}";
     var vi = CultureInfo.GetCultureInfo("vi-VN");
 
-    string VNPayment(string? s) => (s ?? "").ToLowerInvariant() switch
+    // Thanh toán -> VI
+    string VNPayment(string? s) => (s ?? "").Trim().ToLowerInvariant() switch
     {
         "paid" => "Đã thanh toán",
         "unpaid" => "Chưa thanh toán",
+        "pending" or "chờ thanh toán" => "Chờ thanh toán",
         _ => "Không rõ"
     };
 
-    string VNOrder(string? s) => (s ?? "").ToLowerInvariant() switch
+    // Trạng thái đơn -> VI (đầy đủ, nhận cả EN/VI; rỗng = Chờ xác nhận)
+    string VNOrder(string? s) => (s ?? "").Trim().ToLowerInvariant() switch
     {
-        "pending" => "Đang chuẩn bị",
-        "processing" => "Đang giao",
-        "completed" => "Hoàn tất",
-        "cancelled" or "canceled" => "Đã hủy",
+        "" => "Chờ xác nhận",
+        "pending" or "chờ xác nhận" => "Chờ xác nhận",
+
+        "processing" or "đang chuẩn bị" or "đang xử lý" or "chờ xử lý"
+                                      => "Đang chuẩn bị",
+
+        "shipping" or "đang giao" => "Đang giao",
+
+        "completed" or "delivered" or "hoàn tất" or "hoàn thành"
+                                      => "Hoàn tất",
+
+        "cancelled" or "canceled" or "đã huỷ" or "đã hủy"
+                                      => "Đã hủy",
+
         _ => "Không rõ"
     };
 }
@@ -33,7 +46,9 @@
     <div class="row g-3 mb-4">
         <div class="col-lg-6">
             <div class="card h-100">
-                <div class="card-header bg-transparent fw-bold"><i class="fas fa-user me-2 text-primary"></i>Thông tin người nhận</div>
+                <div class="card-header bg-transparent fw-bold">
+                    <i class="fas fa-user me-2 text-primary"></i>Thông tin người nhận
+                </div>
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label">Người nhận</label>
@@ -61,7 +76,9 @@
 
         <div class="col-lg-6">
             <div class="card h-100">
-                <div class="card-header bg-transparent fw-bold"><i class="fas fa-cogs me-2 text-primary"></i>Trạng thái & phí</div>
+                <div class="card-header bg-transparent fw-bold">
+                    <i class="fas fa-cogs me-2 text-primary"></i>Trạng thái & phí
+                </div>
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label">Trạng thái thanh toán</label>
@@ -69,16 +86,37 @@
                             <option value="Paid" selected="@(string.Equals(Model.PaymentStatus,"Paid",StringComparison.OrdinalIgnoreCase))">Đã thanh toán</option>
                             <option value="Unpaid" selected="@(string.Equals(Model.PaymentStatus,"Unpaid",StringComparison.OrdinalIgnoreCase))">Chưa thanh toán</option>
                         </select>
+                        <small class="text-muted">Hiện tại: @VNPayment(Model.PaymentStatus)</small>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Trạng thái đơn</label>
                         <select name="OrderStatus" class="form-select">
-                            <option value="Pending" selected="@(string.Equals(Model.OrderStatus,"Pending",StringComparison.OrdinalIgnoreCase))">Đang chuẩn bị</option>
-                            <option value="Processing" selected="@(string.Equals(Model.OrderStatus,"Processing",StringComparison.OrdinalIgnoreCase))">Đang giao</option>
-                            <option value="Completed" selected="@(string.Equals(Model.OrderStatus,"Completed",StringComparison.OrdinalIgnoreCase))">Hoàn tất</option>
-                            <option value="Cancelled" selected="@(string.Equals(Model.OrderStatus,"Cancelled",StringComparison.OrdinalIgnoreCase))">Đã hủy</option>
+                            <!-- Mặc định chọn Pending nếu rỗng -->
+                            <option value="Pending"
+                                    selected="@(string.IsNullOrWhiteSpace(Model.OrderStatus) || string.Equals(Model.OrderStatus,"Pending",StringComparison.OrdinalIgnoreCase))">
+                                Chờ xác nhận
+                            </option>
+                            <option value="Processing"
+                                    selected="@(string.Equals(Model.OrderStatus,"Processing",StringComparison.OrdinalIgnoreCase))">
+                                Đang chuẩn bị
+                            </option>
+                            <option value="Shipping"
+                                    selected="@(string.Equals(Model.OrderStatus,"Shipping",StringComparison.OrdinalIgnoreCase))">
+                                Đang giao
+                            </option>
+                            <option value="Completed"
+                                    selected="@(string.Equals(Model.OrderStatus,"Completed",StringComparison.OrdinalIgnoreCase))">
+                                Hoàn tất
+                            </option>
+                            <option value="Cancelled"
+                                    selected="@(string.Equals(Model.OrderStatus,"Cancelled",StringComparison.OrdinalIgnoreCase))">
+                                Đã hủy
+                            </option>
                         </select>
+                        <small class="text-muted">Hiện tại: @VNOrder(Model.OrderStatus)</small>
                     </div>
+
                     <div class="mb-1">
                         <label class="form-label">Phí vận chuyển</label>
                         <!-- Gửi theo InvariantCulture: dấu chấm -->
@@ -93,7 +131,9 @@
 
     <!-- Bảng chi tiết -->
     <div class="card mb-3">
-        <div class="card-header bg-transparent fw-bold"><i class="fas fa-box-open me-2 text-primary"></i>Sản phẩm trong đơn</div>
+        <div class="card-header bg-transparent fw-bold">
+            <i class="fas fa-box-open me-2 text-primary"></i>Sản phẩm trong đơn
+        </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-modern mb-0 align-middle">
@@ -119,7 +159,6 @@
                                 var size = pv?.Size?.SizeName;
 
                                 <tr>
-                                    <!-- Khóa dòng: Lines[idx].OrderDetailId -->
                                     <input type="hidden" name="Lines[@idx].OrderDetailId" value="@d.OrderDetailId" />
 
                                     <td>@pv?.Sku</td>
@@ -175,3 +214,26 @@
         white-space: nowrap;
     }
 </style>
+<script>
+    (function () {
+      const paySel   = document.querySelector('select[name="PaymentStatus"]');
+      const statSel  = document.querySelector('select[name="OrderStatus"]');
+
+      function enforce() {
+        const isPaid = (paySel.value || '').toLowerCase() === 'paid';
+        // tìm option Completed
+        [...statSel.options].forEach(opt => {
+          if (opt.value === 'Completed') {
+            opt.disabled = !isPaid;
+            if (!isPaid && statSel.value === 'Completed') {
+              // nếu đang chọn Completed mà đổi sang chưa paid -> đẩy về Shipping hoặc giữ nguyên
+              const fallback = [...statSel.options].find(o => o.value === 'Shipping') ? 'Shipping' : 'Processing';
+              statSel.value = fallback;
+            }
+          }
+        });
+      }
+      paySel.addEventListener('change', enforce);
+      enforce(); // áp dụng khi load
+    })();
+</script>

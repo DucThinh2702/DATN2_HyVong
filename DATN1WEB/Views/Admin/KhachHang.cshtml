@@ -1,18 +1,37 @@
 ﻿@using DATN1API.Models.ViewModels
+@model List<CustomerViewModel>
+
 @{
     ViewData["Title"] = "Khách hàng";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
-@model List<CustomerViewModel>
+
+@functions {
+    // Lấy 1-2 ký tự đầu của tên cuối cùng, an toàn tuyệt đối
+    public static string GetInitials(string fullName, int count = 2)
+    {
+        if (string.IsNullOrWhiteSpace(fullName)) return "--";
+        var parts = fullName.Trim()
+                            .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "--";
+        var last = parts[^1];
+        var take = Math.Min(count, last.Length);
+        return last.Substring(0, take).ToUpperInvariant();
+    }
+
+    // Trả fallback nếu chuỗi null/empty
+    public static string Safe(string s, string fallback = "—")
+        => string.IsNullOrWhiteSpace(s) ? fallback : s;
+}
 
 <style>
     .stat-card {
         border: none;
         border-radius: 16px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all .3s cubic-bezier(.4,0,.2,1);
         overflow: hidden;
-        position: relative;
+        position: relative
     }
 
         .stat-card::before {
@@ -22,12 +41,12 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+            background: linear-gradient(90deg,var(--primary-color),var(--primary-dark))
         }
 
         .stat-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            box-shadow: 0 8px 30px rgba(0,0,0,.12)
         }
 
     .stat-icon {
@@ -37,24 +56,24 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.5rem
     }
 
     .customer-avatar {
         width: 45px;
         height: 45px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        background: linear-gradient(135deg,var(--primary-color),var(--primary-dark));
         color: var(--bg-dark);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: .9rem
     }
 
     .table-modern {
-        border: none;
+        border: none
     }
 
         .table-modern th {
@@ -63,23 +82,23 @@
             font-weight: 600;
             color: #495057;
             padding: 1rem;
-            font-size: 0.875rem;
+            font-size: .875rem
         }
 
         .table-modern td {
             border: none;
             padding: 1rem;
-            vertical-align: middle;
+            vertical-align: middle
         }
 
         .table-modern tbody tr {
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(0,0,0,.05);
+            transition: all .3s ease
         }
 
             .table-modern tbody tr:hover {
-                background: rgba(255,193,7,0.05);
-                transform: scale(1.01);
+                background: rgba(255,193,7,.05);
+                transform: scale(1.01)
             }
 
     .btn-action {
@@ -89,42 +108,42 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border: 1px solid rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,.1);
+        transition: all .3s ease
     }
 
         .btn-action:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,.15)
         }
 
     .search-box {
         border-radius: 12px;
         border: 2px solid #e9ecef;
-        transition: all 0.3s ease;
+        transition: all .3s ease
     }
 
         .search-box:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+            box-shadow: 0 0 0 .2rem rgba(255,193,7,.25)
         }
 
     .modal-content {
         border-radius: 16px;
         border: none;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        box-shadow: 0 10px 40px rgba(0,0,0,.15)
     }
 
     .form-control, .form-select {
         border: 2px solid #e9ecef;
         border-radius: 12px;
-        padding: 0.75rem 1rem;
-        transition: all 0.3s ease;
+        padding: .75rem 1rem;
+        transition: all .3s ease
     }
 
         .form-control:focus, .form-select:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+            box-shadow: 0 0 0 .2rem rgba(255,193,7,.25)
         }
 </style>
 
@@ -153,7 +172,6 @@
 
 <!-- Stats Cards -->
 <div class="row g-3 mb-4">
-    <!-- Tổng khách hàng -->
     <div class="col-xl-3 col-md-6">
         <div class="card stat-card">
             <div class="card-body">
@@ -170,7 +188,6 @@
         </div>
     </div>
 
-    <!-- Chưa xác thực -->
     <div class="col-xl-3 col-md-6">
         <div class="card stat-card">
             <div class="card-body">
@@ -187,7 +204,6 @@
         </div>
     </div>
 
-    <!-- Đã xác thực -->
     <div class="col-xl-3 col-md-6">
         <div class="card stat-card">
             <div class="card-body">
@@ -204,7 +220,6 @@
         </div>
     </div>
 
-    <!-- Đang hoạt động -->
     <div class="col-xl-3 col-md-6">
         <div class="card stat-card">
             <div class="card-body">
@@ -246,8 +261,10 @@
                         <th>Email</th>
                         <th>Đơn hàng</th>
                         <th>Tổng chi tiêu</th>
-                        <th>Trạng thái</th>
-                        <th class="text-center">Thao tác</th>
+                        <th>Đã hủy</th>            <!-- << thêm -->
+                        <th>Chưa thanh toán</th>   <!-- << thêm -->
+@*                         <th>Trạng thái</th>
+ *@                        <th class="text-center">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -257,23 +274,35 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <div class="customer-avatar me-3">
-                                        @(user.FullName.Split(" ").LastOrDefault()?.Substring(0, 2).ToUpper())
+                                        @GetInitials(user.FullName, 2)
                                     </div>
                                     <div>
-                                        <div class="fw-bold">@user.FullName</div>
+                                        <div class="fw-bold">@Safe(user.FullName, "Không tên")</div>
                                         <small class="text-muted">ID: @user.Id</small>
                                     </div>
                                 </div>
                             </td>
                             <td>
                                 <div>
-                                    <div class="fw-semibold">@user.Email</div>
-                                    <small class="text-muted">@user.Phone</small>
+                                    <div class="fw-semibold">@Safe(user.Email)</div>
+                                    <small class="text-muted">@Safe(user.Phone)</small>
                                 </div>
                             </td>
-                            <td><span class="badge bg-primary">—</span></td> <!-- Đơn hàng sẽ update sau -->
-                            <td><strong class="text-success">—</strong></td> <!-- Chi tiêu -->
-                            <td><span class="badge bg-success">Đang hoạt động</span></td>
+                            <td><span class="badge bg-primary">@user.OrdersCount</span></td>
+                            <td><strong class="text-success">@user.TotalSpent.ToString("N0") VNĐ</strong></td>
+                            <td><span class="badge bg-secondary">@user.CancelledCount</span></td>
+                            <td><span class="badge bg-warning text-dark">@user.UnpaidCount</span></td>
+
+@*                             <td>
+                                @if (user.Status)
+                                {
+                                    <span class="badge bg-success">Đã xác thực</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Chưa xác thực</span>
+                                }
+                            </td> *@
                             <td class="text-center">
                                 <div class="d-flex gap-1 justify-content-center">
                                     <a class="btn btn-action btn-outline-primary"
@@ -292,7 +321,6 @@
                             </td>
                         </tr>
                     }
-
                 </tbody>
             </table>
         </div>
@@ -323,126 +351,73 @@
 </div>
 
 <script>
-    // View customer details
+    // View customer details (demo data)
     function viewCustomer(customerId) {
         const customerDetails = {
-            'CUST-001': {
-                id: 'CUST-001',
-                name: 'Nguyễn Văn A',
-                email: 'nguyenvana@email.com',
-                phone: '0901234567',
-                address: '123 Nguyễn Huệ, Quận 1, TP.HCM',
-                birthday: '15/05/1985',
-                gender: 'Nam',
-                joinDate: '15/06/2023',
-                status: 'VIP',
-                orders: 12,
-                totalSpent: '₫15,250,000',
-                lastOrder: '15/01/2024',
-                notes: 'Khách hàng VIP, thường mua túi xách cao cấp'
-            },
-            'CUST-002': {
-                id: 'CUST-002',
-                name: 'Trần Thị B',
-                email: 'tranthib@email.com',
-                phone: '0912345678',
-                address: '456 Lê Lợi, Quận 3, TP.HCM',
-                birthday: '22/08/1990',
-                gender: 'Nữ',
-                joinDate: '20/08/2023',
-                status: 'Thường xuyên',
-                orders: 8,
-                totalSpent: '₫8,500,000',
-                lastOrder: '10/01/2024',
-                notes: 'Khách hàng thân thiết'
-            }
+            'CUST-001': { id:'CUST-001', name:'Nguyễn Văn A', email:'nguyenvana@email.com',
+                phone:'0901234567', address:'123 Nguyễn Huệ, Quận 1, TP.HCM', birthday:'15/05/1985',
+                gender:'Nam', joinDate:'15/06/2023', status:'VIP', orders:12, totalSpent:'₫15,250,000',
+                lastOrder:'15/01/2024', notes:'Khách hàng VIP, thường mua túi xách cao cấp' },
+            'CUST-002': { id:'CUST-002', name:'Trần Thị B', email:'tranthib@email.com',
+                phone:'0912345678', address:'456 Lê Lợi, Quận 3, TP.HCM', birthday:'22/08/1990',
+                gender:'Nữ', joinDate:'20/08/2023', status:'Thường xuyên', orders:8, totalSpent:'₫8,500,000',
+                lastOrder:'10/01/2024', notes:'Khách hàng thân thiết' }
         };
-
-        const customer = customerDetails[customerId];
-        if (!customer) return;
-
+        const c = customerDetails[customerId];
+        if (!c) return;
         const content = `
             <div class="row">
                 <div class="col-md-6">
-                    <h6 class="fw-bold text-primary mb-3">
-                        <i class="fas fa-user me-2"></i>Thông tin cá nhân
-                    </h6>
-                    <p><strong>Mã KH:</strong> ${customer.id}</p>
-                    <p><strong>Họ tên:</strong> ${customer.name}</p>
-                    <p><strong>Email:</strong> ${customer.email}</p>
-                    <p><strong>SĐT:</strong> ${customer.phone}</p>
-                    <p><strong>Địa chỉ:</strong> ${customer.address}</p>
-                    <p><strong>Ngày sinh:</strong> ${customer.birthday}</p>
-                    <p><strong>Giới tính:</strong> ${customer.gender}</p>
+                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user me-2"></i>Thông tin cá nhân</h6>
+                    <p><strong>Mã KH:</strong> ${c.id}</p>
+                    <p><strong>Họ tên:</strong> ${c.name}</p>
+                    <p><strong>Email:</strong> ${c.email}</p>
+                    <p><strong>SĐT:</strong> ${c.phone}</p>
+                    <p><strong>Địa chỉ:</strong> ${c.address}</p>
+                    <p><strong>Ngày sinh:</strong> ${c.birthday}</p>
+                    <p><strong>Giới tính:</strong> ${c.gender}</p>
                 </div>
                 <div class="col-md-6">
-                    <h6 class="fw-bold text-success mb-3">
-                        <i class="fas fa-shopping-cart me-2"></i>Thông tin mua hàng
-                    </h6>
-                    <p><strong>Ngày tham gia:</strong> ${customer.joinDate}</p>
-                    <p><strong>Trạng thái:</strong> <span class="badge bg-warning">${customer.status}</span></p>
-                    <p><strong>Số đơn hàng:</strong> ${customer.orders}</p>
-                    <p><strong>Tổng chi tiêu:</strong> <span class="text-success fw-bold">${customer.totalSpent}</span></p>
-                    <p><strong>Đơn gần nhất:</strong> ${customer.lastOrder}</p>
+                    <h6 class="fw-bold text-success mb-3"><i class="fas fa-shopping-cart me-2"></i>Thông tin mua hàng</h6>
+                    <p><strong>Ngày tham gia:</strong> ${c.joinDate}</p>
+                    <p><strong>Trạng thái:</strong> <span class="badge bg-warning">${c.status}</span></p>
+                    <p><strong>Số đơn hàng:</strong> ${c.orders}</p>
+                    <p><strong>Tổng chi tiêu:</strong> <span class="text-success fw-bold">${c.totalSpent}</span></p>
+                    <p><strong>Đơn gần nhất:</strong> ${c.lastOrder}</p>
                 </div>
             </div>
             <hr>
-            <h6 class="fw-bold text-info mb-3">
-                <i class="fas fa-sticky-note me-2"></i>Ghi chú
-            </h6>
-            <p class="bg-light p-3 rounded">${customer.notes}</p>
+            <h6 class="fw-bold text-info mb-3"><i class="fas fa-sticky-note me-2"></i>Ghi chú</h6>
+            <p class="bg-light p-3 rounded">${c.notes}</p>
             <hr>
-            <h6 class="fw-bold text-warning mb-3">
-                <i class="fas fa-history me-2"></i>Lịch sử đơn hàng gần đây
-            </h6>
+            <h6 class="fw-bold text-warning mb-3"><i class="fas fa-history me-2"></i>Lịch sử đơn hàng gần đây</h6>
             <div class="table-responsive">
                 <table class="table table-sm">
                     <thead class="table-light">
-                        <tr>
-                            <th>Mã đơn</th>
-                            <th>Ngày</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
-                        </tr>
+                        <tr><th>Mã đơn</th><th>Ngày</th><th>Tổng tiền</th><th>Trạng thái</th></tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><span class="order-id">#ORD-1247</span></td>
-                            <td>15/01/2024</td>
-                            <td><strong class="text-success">₫1,250,000</strong></td>
-                            <td><span class="badge bg-success">Hoàn thành</span></td>
-                        </tr>
-                        <tr>
-                            <td><span class="order-id">#ORD-1235</span></td>
-                            <td>28/12/2023</td>
-                            <td><strong class="text-success">₫850,000</strong></td>
-                            <td><span class="badge bg-success">Hoàn thành</span></td>
-                        </tr>
+                        <tr><td><span class="order-id">#ORD-1247</span></td><td>15/01/2024</td><td><strong class="text-success">₫1,250,000</strong></td><td><span class="badge bg-success">Hoàn thành</span></td></tr>
+                        <tr><td><span class="order-id">#ORD-1235</span></td><td>28/12/2023</td><td><strong class="text-success">₫850,000</strong></td><td><span class="badge bg-success">Hoàn thành</span></td></tr>
                     </tbody>
                 </table>
-            </div>
-        `;
-
+            </div>`;
         document.getElementById('customerDetailContent').innerHTML = content;
-        const modal = new bootstrap.Modal(document.getElementById('customerDetailModal'));
-        modal.show();
+        new bootstrap.Modal(document.getElementById('customerDetailModal')).show();
     }
 
-    // Search functionality
-    document.querySelector('input[placeholder="Tìm kiếm khách hàng..."]').addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll('#customersTable tbody tr');
-
-        rows.forEach(row => {
-            const customerName = row.querySelector('.fw-bold').textContent.toLowerCase();
-            const email = row.querySelector('.fw-semibold').textContent.toLowerCase();
-            const customerId = row.querySelector('small').textContent.toLowerCase();
-
-            if (customerName.includes(searchTerm) || email.includes(searchTerm) || customerId.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+    // Search
+    document.querySelector('input[placeholder="Tìm kiếm khách hàng..."]')
+        .addEventListener('input', function (e) {
+            const searchTerm = e.target.value.toLowerCase();
+            document.querySelectorAll('#customersTable tbody tr').forEach(row => {
+                const nameEl = row.querySelector('.fw-bold');
+                const emailEl = row.querySelector('.fw-semibold');
+                const idEl = row.querySelector('small');
+                const name = (nameEl?.textContent || '').toLowerCase();
+                const email = (emailEl?.textContent || '').toLowerCase();
+                const cid = (idEl?.textContent || '').toLowerCase();
+                row.style.display = (name.includes(searchTerm) || email.includes(searchTerm) || cid.includes(searchTerm)) ? '' : 'none';
+            });
         });
-    });
 </script>

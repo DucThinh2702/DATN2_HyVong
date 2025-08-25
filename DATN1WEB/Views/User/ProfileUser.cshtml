@@ -1,6 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Thông tin cá nhân";
-    Layout = null;
+    Layout = "~/Views/Shared/_LayoutUser.cshtml"; // ✅ Gọi layout chung
 }
 @model DATN1WEB.Models.ApplicationUser
 
@@ -358,7 +358,7 @@
 <body>
     <div class="container-fluid border-bottom">
         <!-- Top Header -->
-        <div class="top-header">
+@*         <div class="top-header">
             <div class="row px-4">
                 <div class="col-lg-6 d-none d-lg-block">
                     <div class="d-flex align-items-center h-100">
@@ -421,9 +421,9 @@
                     <h5>012 345 6789</h5>
                 </div>
             </div>
-        </div>
+        </div> *@
 
-        <!-- Navigation Menu -->
+@*         <!-- Navigation Menu -->
         <div class="main-nav">
             <div class="d-flex">
                 <!-- Category Button -->
@@ -457,7 +457,7 @@
                     </div>
                 </nav>
             </div>
-        </div>
+        </div> *@
 
         <!-- Profile Form Section -->
         <div class="container">

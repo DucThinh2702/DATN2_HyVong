@@ -236,15 +236,26 @@
                 <span asp-validation-for="MinOrderAmount" class="text-danger"></span>
             </div>
             <div class="col-md-6">
-                <label asp-for="Status" class="form-label fw-semibold">Đối tượng áp dụng</label>
+                <label asp-for="Status" class="form-label fw-semibold">Sản phẩm áp dụng</label>
                 <select asp-for="Status" class="form-select">
-                    <option>Tất cả khách hàng</option>
-                    <option>Khách hàng mới</option>
-                    <option>Khách hàng VIP</option>
-                    <option>Sinh viên</option>
+                    @{
+                        var categories = ViewBag.Categories as List<SelectListItem>;
+                    }
+                    @if (categories != null && categories.Any())
+                    {
+                        @foreach (var category in categories)
+                        {
+                            <option value="@category.Value">@category.Text</option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="Tất cả sản phẩm">Tất cả sản phẩm</option>
+                    }
                 </select>
                 <span asp-validation-for="Status" class="text-danger"></span>
             </div>
+
             <div class="col-md-12">
                 <label asp-for="Description" class="form-label fw-semibold">Mô tả</label>
                 <textarea asp-for="Description" class="form-control" rows="3" placeholder="Nhập mô tả chi tiết về mã giảm giá..."></textarea>

@@ -316,6 +316,7 @@
 
                 <form method="post" id="loginForm">
                     @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@(ViewData["ReturnUrl"] as string ?? "")" />
 
                     <div class="form-group">
                         <label class="form-label" for="Username">

@@ -1,0 +1,139 @@
+﻿@model IEnumerable<DATN1API.Models.Promotion>
+@{
+    ViewData["Title"] = "Khuyến mãi";
+    Layout = "_LayoutUser";   // hoặc null nếu bạn muốn tự dán header/footer
+}
+
+@functions {
+    bool IsActive(DATN1API.Models.Promotion p)
+    {
+        var now = DateTime.Now;
+        var inDate = (!p.StartDate.HasValue || p.StartDate <= now)
+                     && (!p.EndDate.HasValue || p.EndDate >= now);
+        var remainOk = !p.Quantity.HasValue || !p.UsedQuantity.HasValue || p.UsedQuantity < p.Quantity;
+        return inDate && remainOk;
+    }
+    string DiscountText(DATN1API.Models.Promotion p)
+    {
+        var value = (decimal)(p.DiscountValue ?? 0);
+        if ((p.PromoType ?? "").Trim().Equals("Phần trăm", StringComparison.OrdinalIgnoreCase))
+            return $"{value:0.#}%";
+        // Mặc định coi là số tiền
+        return $"{value:0,0} đ";
+    }
+    string MinOrderText(DATN1API.Models.Promotion p)
+    {
+        var min = (decimal)(p.MinOrderAmount ?? 0);
+        if (min <= 0) return "Không yêu cầu đơn tối thiểu";
+        return $"Áp dụng cho đơn từ {min:0,0} đ";
+    }
+    string DateRange(DATN1API.Models.Promotion p)
+    {
+        var s = p.StartDate?.ToString("dd/MM/yyyy") ?? "";
+        var e = p.EndDate?.ToString("dd/MM/yyyy") ?? "";
+        if (!string.IsNullOrEmpty(s) && !string.IsNullOrEmpty(e)) return $"{s} – {e}";
+        if (!string.IsNullOrEmpty(s) && string.IsNullOrEmpty(e)) return $"Từ {s}";
+        if (string.IsNullOrEmpty(s) && !string.IsNullOrEmpty(e)) return $"Đến {e}";
+        return "Không giới hạn thời gian";
+    }
+    string LeftQty(DATN1API.Models.Promotion p)
+    {
+        if (!p.Quantity.HasValue) return "Không giới hạn lượt dùng";
+        var used = (int)(p.UsedQuantity ?? 0);
+        var left = Math.Max(0, p.Quantity.Value - used);
+        return $"Còn {left} / {p.Quantity.Value} lượt";
+    }
+}
+
+<div class="container py-4">
+    <div class="d-flex align-items-center mb-3 px-2">
+        <h2 class="fw-bold me-3 mb-0">KHUYẾN MÃI</h2>
+        <div class="flex-grow-1 border-bottom"></div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="row g-4">
+            @foreach (var p in Model)
+            {
+                var active = IsActive(p);
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-start justify-content-between">
+                                <h5 class="fw-semibold mb-2 me-2">@p.PromoName</h5>
+                                <span class="badge @(active ? "bg-success" : "bg-secondary")">
+                                    @(active ? "Đang diễn ra" : "Hết hạn/đã đủ lượt")
+                                </span>
+                            </div>
+
+                            <div class="mb-2">
+                                <div class="small text-muted">
+                                    <i class="bi bi-calendar3 me-1"></i> @DateRange(p)
+                                </div>
+                                <div class="small text-muted">
+                                    <i class="bi bi-truck me-1"></i> @(p.ShippingProviderName ?? "Mọi đơn vị vận chuyển")
+                                </div>
+                            </div>
+
+                            <div class="border rounded p-3 mb-3 bg-light">
+                                <div class="mb-1">
+                                    <span class="text-muted">Hình thức:</span>
+                                    <span class="fw-semibold">@((p.PromoType ?? "—"))</span>
+                                </div>
+                                <div class="mb-1">
+                                    <span class="text-muted">Giá trị KM:</span>
+                                    <span class="fw-bold text-danger">@DiscountText(p)</span>
+                                </div>
+                                <div class="mb-1">
+                                    <span class="text-muted">Mã áp dụng:</span>
+                                    <span class="fw-semibold">@((p.PromoNameCode ?? "—"))</span>
+                                    @if (!string.IsNullOrWhiteSpace(p.PromoNameCode))
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2 copy-btn"
+                                                data-code="@p.PromoNameCode">
+                                            Sao chép
+                                        </button>
+                                    }
+                                </div>
+                                <div class="small text-muted">@MinOrderText(p)</div>
+                                <div class="small text-muted">@LeftQty(p)</div>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(p.Description))
+                            {
+                                <div class="small text-secondary mb-3">
+                                    @p.Description
+                                </div>
+                            }
+
+                            <div class="mt-auto d-flex gap-2">
+                                <a href="@Url.Action("Shop","Products")" class="btn btn-warning text-dark fw-semibold">Mua ngay</a>
+                                <a href="@Url.Action("Index","User")#recentProducts" class="btn btn-light">Xem sản phẩm</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-light border text-center">
+            Hiện chưa có khuyến mãi nào.
+        </div>
+    }
+</div>
+
+<script>
+    document.addEventListener('click', function(e){
+      const btn = e.target.closest('.copy-btn');
+      if(!btn) return;
+      const code = btn.dataset.code || '';
+      if(!code) return;
+      navigator.clipboard.writeText(code).then(()=>{
+        btn.textContent = 'Đã sao chép';
+        setTimeout(()=>btn.textContent='Sao chép', 1200);
+      });
+    });
+</script>

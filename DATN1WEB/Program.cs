@@ -1,110 +1,122 @@
-﻿
-using DATN1API.Data;
+﻿using DATN1API.Data;
+using DATN1API.Models.Pay;
 using DATN1API.Pay;
 using DATN1API.Services;
-using DATN1API.Models.ViewModels;
 using DATN1WEB.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using DATN1API.Models.Pay;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Cấu hình DbContext cho ứng dụng và Identity
+// ===== DB + Identity =====
 builder.Services.AddDbContext<DatnContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .EnableSensitiveDataLogging()); // Kích hoạt Sensitive Data Logging nếu cần
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.LoginPath = "/Account/Login";          // nơi redirect khi chưa đăng nhập
-    options.AccessDeniedPath = "/Account/AccessDenied";
-    options.ReturnUrlParameter = "returnUrl";
-});
+           .EnableSensitiveDataLogging());
 
-// Cấu hình Identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {
-    // Các tùy chọn cấu hình cho Identity
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequireUppercase = true;
     options.Password.RequiredLength = 6;
     options.Password.RequiredUniqueChars = 1;
-    options.SignIn.RequireConfirmedEmail = true; // Bật xác nhận email nếu cần
-    options.SignIn.RequireConfirmedPhoneNumber = false;
+    options.SignIn.RequireConfirmedEmail = true;
 })
 .AddEntityFrameworkStores<DatnContext>()
 .AddDefaultTokenProviders();
-builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
 
+// ⚠️ KHÔNG AddCookie lại cho IdentityConstants.ApplicationScheme
+// Hãy cấu hình cookie USER mặc định qua ConfigureApplicationCookie:
+builder.Services.ConfigureApplicationCookie(o =>
+{
+    o.Cookie.Name = "UserAuthCookie";             // cookie cho USER
+    o.LoginPath = "/Account/Login";
+    o.AccessDeniedPath = "/Account/Login";
+});
+
+// ===== AUTH tổng: PolicyScheme điều hướng theo ngữ cảnh =====
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "AppAuth";
+    options.DefaultChallengeScheme = "AppAuth";
+})
+.AddPolicyScheme("AppAuth", "Combined Scheme", o =>
+{
+    o.ForwardDefaultSelector = ctx =>
+    {
+        // CHỈ theo path /Admin. Đừng auto chuyển theo sự tồn tại của cookie Admin.
+        return ctx.Request.Path.StartsWithSegments("/Admin")
+            ? "AdminScheme"
+            : IdentityConstants.ApplicationScheme; // cookie user
+    };
+})
+
+// Cookie riêng cho ADMIN
+.AddCookie("AdminScheme", o =>
+{
+    o.Cookie.Name = "AdminAuthCookie";
+    o.LoginPath = "/Account/Login";        // dùng chung form login
+    o.AccessDeniedPath = "/Account/Login"; // có thể đổi sang trang báo lỗi riêng
+});
+
+// ===== Authorization: policy Admin bắt buộc cookie AdminScheme + role Admin =====
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("IsAdmin", p =>
+    {
+        p.AddAuthenticationSchemes("AdminScheme");
+        p.RequireRole("Admin");
+    });
+});
+
+// ===== Các service khác của bạn =====
+builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
 builder.Services.AddHttpClient<PayOSService>(client =>
 {
     var opt = builder.Configuration.GetSection("PayOS").Get<PayOSOptions>();
     if (!string.IsNullOrWhiteSpace(opt?.BaseUrl))
-        client.BaseAddress = new Uri(opt.BaseUrl.Trim());  // ← nhớ Trim
-
+        client.BaseAddress = new Uri(opt.BaseUrl.Trim());
     if (!string.IsNullOrEmpty(opt?.ClientId))
         client.DefaultRequestHeaders.Add("X-Client-Id", opt.ClientId);
     if (!string.IsNullOrEmpty(opt?.ApiKey))
         client.DefaultRequestHeaders.Add("X-Api-Key", opt.ApiKey);
 });
 
-// ❌ XÓA dòng AddScoped<PayOSService>();
-
-builder.Services.Configure<PayOSOptions>(builder.Configuration.GetSection("PayOS"));
 builder.Services.Configure<VNPAYSettings>(builder.Configuration.GetSection("VNPAY"));
 builder.Services.AddScoped<IVnPayService, VnPayService>();
-builder.Services.AddScoped<VnPayService>(); // Đăng ký VnPayService
+builder.Services.AddScoped<VnPayService>();
 
-// Cấu hình session nếu bạn dùng OTP hoặc giữ thông tin tạm
-builder.Services.AddSession(options =>
+builder.Services.AddSession(o =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(10); // Thời gian hết hạn của session
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
+    o.IdleTimeout = TimeSpan.FromMinutes(10);
+    o.Cookie.HttpOnly = true;
+    o.Cookie.IsEssential = true;
 });
 
-// Cấu hình dịch vụ MVC
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
-
-// Cấu hình các dịch vụ khác
-builder.Services.AddRazorPages().AddViewOptions(options =>
-{
-    options.HtmlHelperOptions.ClientValidationEnabled = true;
-});
 builder.Services.AddHttpClient("api", client =>
 {
-    // Đặt URL API cho HttpClient (đúng port dự án API)
     client.BaseAddress = new Uri("https://localhost:7138/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
-// Cấu hình các dịch vụ middleware
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // Cấu hình HSTS cho môi trường production
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
-// Đảm bảo sử dụng session để lưu OTP
 app.UseSession();
-
-// Sử dụng Routing và Middleware cho Authentication và Authorization
 app.UseRouting();
 
-// ======= Thêm middleware chống cache cho toàn site =======
+// chống cache (tuỳ chọn)
 app.Use(async (ctx, next) =>
 {
     ctx.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
@@ -112,14 +124,20 @@ app.Use(async (ctx, next) =>
     ctx.Response.Headers["Expires"] = "0";
     await next();
 });
-// Thêm xác thực và phân quyền
-app.UseAuthentication();  // Thêm middleware cho xác thực
-app.UseAuthorization();   // Thêm middleware cho phân quyền
 
-// Cấu hình các route cho Controller
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Khu ADMIN: bắt buộc chính sách IsAdmin (cookie Admin + role Admin)
+app.MapControllerRoute(
+    name: "admin",
+    pattern: "Admin/{action=Index}/{id?}",
+    defaults: new { controller = "Admin" }
+).RequireAuthorization("IsAdmin");
+
+// Khu USER (mặc định)
 app.MapControllerRoute(
     name: "default",
-//pattern: "{controller=SanPham}/{action=Index}/{id?}");
-pattern: "{controller=User}/{action=Index}/{id?}");
+    pattern: "{controller=User}/{action=Index}/{id?}");
 
 app.Run();

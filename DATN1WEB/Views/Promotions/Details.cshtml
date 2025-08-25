@@ -163,7 +163,7 @@
         </dd>
 
         <dt class="col-sm-4">
-            <i class="fas fa-clock text-warning me-2"></i>HSD:
+            <i class="fas fa-clock text-warning me-2"></i>Hạn sử dụng:
         </dt>
         <dd class="col-sm-8">
             <span class="badge bg-warning text-dark">@Model.EndDate?.ToString("dd.MM.yyyy")</span>
@@ -179,7 +179,7 @@
         </dd>
 
         <dt class="col-sm-4">
-            <i class="fas fa-users text-info me-2"></i>Đối tượng áp dụng:
+            <i class="fas fa-users text-info me-2"></i>Sản phẩm áp dụng:
         </dt>
         <dd class="col-sm-8">
             <span class="badge bg-light text-dark">@Model.Status</span>
@@ -223,19 +223,18 @@
 @functions {
     string FormatCurrency(decimal? value)
     {
-        if (value == null) return "0";
+        if (value == null) return "0VND";
         var amount = value.Value;
-        if (amount >= 1000)
-            return $"{amount / 1000:#.##} triệu";
-        else
-            return $"{amount:#.##}K";
+        if (amount == 0) return "0VND";
+        return $"{amount:N0}VND";
     }
 
     string FormatDiscount(decimal? value, string type)
     {
-        if (value == null) return "0";
+        if (value == null) return "0VND";
         if (type == "Phần trăm" || type.Contains("%"))
             return $"{Math.Round(value.Value, 0)}%";
-        return FormatCurrency(value);
+        if (value.Value == 0) return "0VND";
+        return $"{value.Value:N0}VND";
     }
 }

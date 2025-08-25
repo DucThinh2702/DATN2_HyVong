@@ -13,6 +13,9 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border: none;
         background: white;
+        height: 280px;
+        display: flex;
+        flex-direction: row;
     }
 
         .coupon-style:hover {
@@ -24,6 +27,11 @@
         background: linear-gradient(135deg, #dc3545, #c82333);
         min-width: 120px;
         position: relative;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
 
         .coupon-left::after {
@@ -41,6 +49,11 @@
     .coupon-right {
         background: white;
         position: relative;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1rem;
     }
 
         .coupon-right::before {
@@ -54,6 +67,14 @@
             background: #f8f9fa;
             border-radius: 50%;
         }
+
+    .coupon-content-top {
+        flex-grow: 1;
+    }
+
+    .coupon-content-bottom {
+        margin-top: auto;
+    }
 
     .custom-filter-group {
         border-radius: 12px;
@@ -147,26 +168,77 @@
         border-radius: 3px;
     }
 
-    @@media (max-width: 768px) {
-        .coupon-left
-
-    {
-        min-width: 100px;
+    .pagination {
+        margin-bottom: 0;
     }
 
-    .custom-filter-group {
-        flex-direction: column;
+    .page-link {
+        border: none;
+        color: #6c757d;
+        font-weight: 500;
+        padding: 0.75rem 1rem;
+        margin: 0 0.125rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
-    .custom-filter-btn {
-        border-right: none;
-        border-bottom: 1px solid #e9ecef;
-    }
-
-        .custom-filter-btn:last-child {
-            border-bottom: none;
+        .page-link:hover {
+            color: #495057;
+            background: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
+    .page-item.active .page-link {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        border-color: #dc3545;
+        color: white;
+        font-weight: 600;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+
+    .page-item.disabled .page-link {
+        color: #adb5bd;
+        background: #f8f9fa;
+        box-shadow: none;
+        cursor: not-allowed;
+    }
+
+    .pagination-info {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        margin-top: 1rem;
+        border: 1px solid #dee2e6;
+        font-weight: 500;
+        color: #495057;
+    }
+
+    @@media (max-width: 768px) {
+        .coupon-left {
+            min-width: 100px;
+        }
+
+        .custom-filter-group {
+            flex-direction: column;
+        }
+
+        .custom-filter-btn {
+            border-right: none;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+            .custom-filter-btn:last-child {
+                border-bottom: none;
+            }
+
+        .page-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+        }
     }
 </style>
 
@@ -202,7 +274,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase text-muted small mb-1">Tổng mã giảm giá</h6>
-                        <h4 class="fw-bold text-dark mb-0">@ViewBag.TongMa</h4>
+                        <h4 class="fw-bold text-dark mb-0" id="totalPromotions">@ViewBag.TongMa</h4>
                     </div>
                     <div class="bg-warning bg-opacity-10 rounded-circle p-3">
                         <i class="fas fa-ticket-alt fa-2x text-warning"></i>
@@ -218,7 +290,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-uppercase text-muted small mb-1">Đã sử dụng</h6>
-                        <h4 class="fw-bold text-success mb-0">@ViewBag.DaSuDung.ToString("N0")</h4>
+                        <h4 class="fw-bold text-success mb-0" id="totalUsed">@ViewBag.DaSuDung.ToString("N0")</h4>
                     </div>
                     <div class="bg-success bg-opacity-10 rounded-circle p-3">
                         <i class="fas fa-check-circle fa-2x text-success"></i>
@@ -294,11 +366,10 @@
 @functions {
     public string FormatCurrency(decimal? amount)
     {
-        if (!amount.HasValue) return "0";
-        if (amount < 1000)
-            return $"{amount:N0}K";
-        else
-            return $"{(amount / 1000):N1} triệu";
+        if (!amount.HasValue) return "0VND";
+        var value = amount.Value;
+        if (value == 0) return "0VND";
+        return $"{value:N0}VND";
     }
 
     public string FormatDiscount(Promotion item)
@@ -308,14 +379,12 @@
             return $"{item.DiscountValue?.ToString("N0")}%";
         }
         var value = item.DiscountValue ?? 0;
-        if (value >= 1000)
-            return $"{Math.Round(value / 1000, 1)} triệu";
-        else
-            return $"{value:N0}K";
+        if (value == 0) return "0VND";
+        return $"{value:N0}VND";
     }
 }
 
-<div class="row">
+<div class="row" id="promotionCards">
     @foreach (var item in Model)
     {
         var percentUsed = item.Quantity > 0 && item.UsedQuantity.HasValue
@@ -325,10 +394,10 @@
         ? item.Quantity.Value - item.UsedQuantity.Value
         : 0;
 
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="d-flex coupon-style">
+        <div class="col-md-6 col-lg-4 mb-4" data-promo-id="@item.PromoCode">
+            <div class="coupon-style">
                 <!-- Dải đỏ bên trái -->
-                <div class="coupon-left text-white d-flex flex-column justify-content-center align-items-center p-3">
+                <div class="coupon-left text-white p-3">
                     <h6 class="fw-bold mb-2 text-center">@item.PromoName</h6>
                     @foreach (var code in item.PromoNameCode?.Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? new string[0])
                     {
@@ -337,44 +406,54 @@
                 </div>
 
                 <!-- Phần nội dung chính -->
-                <div class="coupon-right p-3 position-relative w-100">
+                <div class="coupon-right position-relative">
                     @if (remaining > 1)
                     {
-                        <span class="badge bg-danger text-white position-absolute top-0 end-0 me-2 mt-2">
+                        <span class="badge bg-danger text-white position-absolute top-0 end-0 me-2 mt-2 remaining-count">
                             @($"x{remaining}")
                         </span>
                     }
 
-                    <h5 class="fw-bold text-danger mb-2">Giảm @FormatDiscount(item)</h5>
+                    <div class="coupon-content-top">
+                        <h5 class="fw-bold text-danger mb-2">Giảm @FormatDiscount(item)</h5>
 
-                    <p class="mb-2 text-muted small">
-                        <i class="fas fa-shopping-cart me-1"></i>
-                        Áp dụng đơn tối thiểu: <strong>@FormatCurrency(item.MinOrderAmount)</strong>
-                    </p>
+                        <p class="mb-2 text-muted small">
+                            <i class="fas fa-shopping-cart me-1"></i>
+                            Áp dụng đơn tối thiểu: <strong>@FormatCurrency(item.MinOrderAmount)</strong>
+                        </p>
 
-                    <div class="progress mb-2">
-                        <div class="progress-bar bg-success progress-bar-striped" style="width: @percentUsed%"></div>
+                        <!-- Cập nhật progress bar với data attributes để dễ update -->
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success progress-bar-striped usage-progress"
+                                 style="width: @percentUsed%"
+                                 data-used="@(item.UsedQuantity ?? 0)"
+                                 data-total="@(item.Quantity ?? 0)"></div>
+                        </div>
+                        <p class="text-muted small mb-2 usage-text">
+                            Đã dùng: <span class="used-count">@(item.UsedQuantity ?? 0)</span>/@(item.Quantity ?? 0) (@percentUsed%)
+                        </p>
+
+                        <div class="d-flex justify-content-between small text-muted mb-3">
+                            <span><i class="fas fa-calendar-alt me-1"></i> @item.StartDate?.ToString("dd/MM/yyyy")</span>
+                            <span><i class="fas fa-clock me-1"></i> @item.EndDate?.ToString("dd/MM/yyyy")</span>
+                        </div>
                     </div>
-                    <p class="text-muted small mb-2">Đã dùng: @percentUsed%</p>
 
-                    <div class="d-flex justify-content-between small text-muted mb-3">
-                        <span><i class="fas fa-calendar-alt me-1"></i> @item.StartDate?.ToString("dd/MM/yyyy")</span>
-                        <span><i class="fas fa-clock me-1"></i> @item.EndDate?.ToString("dd/MM/yyyy")</span>
-                    </div>
-
-                    <div class="d-flex justify-content-end gap-1">
-                        <a asp-controller="Promotions" asp-action="Details" asp-route-id="@item.PromoCode"
-                           class="btn btn-action btn-outline-info" title="Chi tiết">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a asp-controller="Promotions" asp-action="Edit" asp-route-id="@item.PromoCode"
-                           class="btn btn-action btn-outline-warning" title="Sửa">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <a asp-controller="Promotions" asp-action="Delete" asp-route-id="@item.PromoCode"
-                           class="btn btn-action btn-outline-danger" title="Xóa">
-                            <i class="fas fa-trash-alt"></i>
-                        </a>
+                    <div class="coupon-content-bottom">
+                        <div class="d-flex justify-content-end gap-1">
+                            <a asp-controller="Promotions" asp-action="Details" asp-route-id="@item.PromoCode"
+                               class="btn btn-action btn-outline-info" title="Chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a asp-controller="Promotions" asp-action="Edit" asp-route-id="@item.PromoCode"
+                               class="btn btn-action btn-outline-warning" title="Sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a asp-controller="Promotions" asp-action="Delete" asp-route-id="@item.PromoCode"
+                               class="btn btn-action btn-outline-danger" title="Xóa">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -382,45 +461,108 @@
     }
 </div>
 
+<!-- Add Pagination -->
+@if (ViewBag.TotalPages > 1)
+{
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Pagination">
+                <ul class="pagination justify-content-center">
+                    <!-- Previous Button -->
+                    <li class="page-item @(ViewBag.CurrentPage <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("MaGiamGia", new { page = ViewBag.CurrentPage - 1, status = ViewBag.CurrentStatus, search = ViewBag.Search })" aria-label="Previous">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    <!-- Page Numbers -->
+                    @{
+                        int currentPage = ViewBag.CurrentPage;
+                        int totalPages = ViewBag.TotalPages;
+                        int startPage = Math.Max(1, currentPage - 2);
+                        int endPage = Math.Min(totalPages, currentPage + 2);
+                    }
+
+                    @if (startPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("MaGiamGia", new { page = 1, status = ViewBag.CurrentStatus, search = ViewBag.Search })">1</a>
+                        </li>
+                        @if (startPage > 2)
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link">⋯</span>
+                            </li>
+                        }
+                    }
+
+                    @for (int i = startPage; i <= endPage; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("MaGiamGia", new { page = i, status = ViewBag.CurrentStatus, search = ViewBag.Search })">@i</a>
+                        </li>
+                    }
+
+                    @if (endPage < totalPages)
+                    {
+                        @if (endPage < totalPages - 1)
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link">⋯</span>
+                            </li>
+                        }
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("MaGiamGia", new { page = totalPages, status = ViewBag.CurrentStatus, search = ViewBag.Search })">@totalPages</a>
+                        </li>
+                    }
+
+                    <!-- Next Button -->
+                    <li class="page-item @(ViewBag.CurrentPage >= ViewBag.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("MaGiamGia", new { page = ViewBag.CurrentPage + 1, status = ViewBag.CurrentStatus, search = ViewBag.Search })" aria-label="Next">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Pagination Info -->
+            <div class="text-center pagination-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Hiển thị <strong>@((ViewBag.CurrentPage - 1) * ViewBag.PageSize + 1)</strong> - <strong>@(Math.Min(ViewBag.CurrentPage * ViewBag.PageSize, ViewBag.TotalItems))</strong>
+                trong tổng số <strong>@ViewBag.TotalItems</strong> mã giảm giá
+            </div>
+        </div>
+    </div>
+}
+
 <script>
-    // Search functionality
     document.getElementById("searchInput").addEventListener("input", function () {
         clearTimeout(this.searchTimer);
         this.searchTimer = setTimeout(() => {
-            document.getElementById("filterForm").submit();
+            const form = document.getElementById("filterForm");
+            const pageInput = document.createElement("input");
+            pageInput.type = "hidden";
+            pageInput.name = "page";
+            pageInput.value = "1";
+            form.appendChild(pageInput);
+            form.submit();
         }, 300);
     });
 
     function setStatus(status) {
         document.getElementById("statusInput").value = status;
-        document.getElementById("filterForm").submit();
+        const form = document.getElementById("filterForm");
+        const pageInput = document.createElement("input");
+        pageInput.type = "hidden";
+        pageInput.name = "page";
+        pageInput.value = "1";
+        form.appendChild(pageInput);
+        form.submit();
     }
 
-    // Format currency and discount on page load
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".discount-value").forEach(function (el) {
-            const rawValue = parseFloat(el.textContent);
-            const type = el.dataset.type?.trim();
-            if (!isNaN(rawValue)) {
-                el.textContent = formatDiscount(rawValue, type);
-            }
-        });
-
-        document.querySelectorAll(".min-order").forEach(function (el) {
-            const rawValue = parseFloat(el.textContent);
-            if (!isNaN(rawValue)) {
-                el.textContent = formatCurrency(rawValue);
-            }
-        });
-    });
-
     function formatCurrency(amount) {
-        if (amount >= 1000) {
-            const value = amount / 1000;
-            return value.toFixed(2) + " triệu";
-        } else {
-            return amount + "K";
-        }
+        if (amount === 0) return "0VND";
+        return amount.toLocaleString('vi-VN') + "VND";
     }
 
     function formatDiscount(value, type) {
@@ -430,4 +572,82 @@
             return formatCurrency(value);
         }
     }
+
+    function updatePromotionStats() {
+        fetch('/api/promotions/stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('totalPromotions').textContent = data.data.totalPromotions;
+                    document.getElementById('totalUsed').textContent = data.data.totalUsed.toLocaleString();
+                }
+            })
+            .catch(error => console.error('Error updating stats:', error));
+    }
+
+    function updatePromotionUsage(promoId, newUsedCount, totalCount) {
+        const card = document.querySelector(`[data-promo-id="${promoId}"]`);
+        if (!card) return;
+
+        const progressBar = card.querySelector('.usage-progress');
+        const usedCountSpan = card.querySelector('.used-count');
+        const remainingBadge = card.querySelector('.remaining-count');
+
+        if (progressBar && usedCountSpan) {
+            const percentage = totalCount > 0 ? Math.round((newUsedCount / totalCount) * 100) : 0;
+            const remaining = totalCount - newUsedCount;
+
+            progressBar.style.width = percentage + '%';
+            progressBar.setAttribute('data-used', newUsedCount);
+
+            usedCountSpan.textContent = newUsedCount;
+
+            if (remainingBadge) {
+                if (remaining > 1) {
+                    remainingBadge.textContent = `x${remaining}`;
+                    remainingBadge.style.display = 'inline-block';
+                } else {
+                    remainingBadge.style.display = 'none';
+                }
+            }
+
+            // Update usage text
+            const usageText = card.querySelector('.usage-text');
+            if (usageText) {
+                usageText.innerHTML = `Đã dùng: <span class="used-count">${newUsedCount}</span>/${totalCount} (${percentage}%)`;
+            }
+
+            card.style.transform = 'scale(1.02)';
+            card.style.boxShadow = '0 8px 30px rgba(40, 167, 69, 0.3)';
+            setTimeout(() => {
+                card.style.transform = '';
+                card.style.boxShadow = '';
+            }, 2000);
+        }
+    }
+
+    function checkRecentPromotionUsage() {
+        fetch('/api/promotions/recent-usage')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.hasUpdate) {
+                    const { promoId, newUsedCount, totalCount } = data.data;
+                    updatePromotionUsage(promoId, newUsedCount, totalCount);
+                    updatePromotionStats();
+
+                    // Show notification
+                    console.log(`[v0] Promotion ${data.data.promoCode} usage updated: ${newUsedCount}/${totalCount}`);
+                }
+            })
+            .catch(error => console.error('Error checking recent usage:', error));
+    }
+
+    setInterval(checkRecentPromotionUsage, 3000); // Check every 3 seconds for recent updates
+    setInterval(updatePromotionStats, 30000); // Update general stats every 30 seconds
+
+    window.addEventListener('promotionUsed', function(event) {
+        const { promoId, newUsedCount, totalCount } = event.detail;
+        updatePromotionUsage(promoId, newUsedCount, totalCount);
+        updatePromotionStats();
+    });
 </script>

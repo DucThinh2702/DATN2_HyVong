@@ -150,5 +150,22 @@ namespace DATN1WEB.Controllers
             TempData["SuccessMessage"] = "Xoá tin tức thành công!";
             return RedirectToAction(nameof(Index));
         }
+        // ============ DETAILS ============
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            var news = await _context.News
+                .Include(n => n.Author)               // nếu có bảng tác giả
+                .FirstOrDefaultAsync(n => n.NewsId == id);
+
+            if (news == null)
+            {
+                TempData["ErrorMessage"] = "Bài viết không tồn tại hoặc đã bị xoá.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(news); // View: Views/News/Details.cshtml (bạn đã có)
+        }
+
     }
 }
