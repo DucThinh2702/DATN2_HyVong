@@ -1,986 +1,4 @@
-﻿@* @{ *@
-@*     ViewData["Title"] = "Thanh toán - The Bag Studio"; *@
-@*     Layout = "~/Views/Shared/_LayoutUser.cshtml"; *@
-@* } *@
-@* @section Styles { *@
-@*     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet" /> *@
-@*     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"> *@
-@*     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> *@
-@*     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" /> *@
-@*     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script> *@
-@*     <link href="css/style.css" rel="stylesheet" /> *@
-@* } *@
-@* <div class="container-fluid"> *@
-@*     <div class="row px-xl-5"> *@
-@*         <div class="col-12"> *@
-@*             <nav class="breadcrumb bg-light mb-30"> *@
-@*                 <a class="breadcrumb-item text-dark" href="@Url.Action("Index","User")">Trang chủ</a> *@
-@*                 <a class="breadcrumb-item text-dark" href="#">Trang</a> *@
-@*                 <span class="breadcrumb-item active">Thanh toán</span> *@
-@*             </nav> *@
-@*         </div> *@
-@*     </div> *@
-@* </div> *@
-@* <div class="container py-5"> *@
-@*     <div class="row g-4"> *@
-@*         <div class="col-lg-8"> *@
-@*             <div class="card shadow-sm border-0"> *@
-@*                 <div class="card-header bg-secondary text-white"> *@
-@*                     <h5 class="mb-0 text-uppercase">Địa chỉ nhận hàng</h5> *@
-@*                 </div> *@
-@*                 <div class="card-body"> *@
-@*                     <div class="row g-3"> *@
-@*                         <div class="col-md-6"> *@
-@*                             <label for="customer-name" class="form-label">Tên người nhận</label> *@
-@*                             <!-- Tự động điền thông tin từ user đăng nhập --> *@
-@*                             <input id="customer-name" class="form-control" type="text" placeholder="Tên người nhận" value="@ViewBag.UserProfile?.FullName" /> *@
-@*                         </div> *@
-@*                         <div class="col-md-6"> *@
-@*                             <label for="customer-email" class="form-label">E-mail</label> *@
-@*                             <!-- Tự động điền email từ user đăng nhập --> *@
-@*                             <input id="customer-email" class="form-control" type="email" placeholder="email@gmail.com" value="@ViewBag.UserProfile?.Email" /> *@
-@*                         </div> *@
-@*                         <div class="col-md-6"> *@
-@*                             <label for="customer-phone" class="form-label">Số điện thoại</label> *@
-@*                             <!-- Tự động điền số điện thoại từ user đăng nhập --> *@
-@*                             <input id="customer-phone" class="form-control" type="text" placeholder="0123 456 789" value="@ViewBag.UserProfile?.Phone" /> *@
-@*                         </div> *@
-@*                         <div class="col-md-6"> *@
-@*                             <label for="province" class="form-label">Tỉnh/Thành phố</label> *@
-@*                             <select id="province" class="form-select"> *@
-@*                                 <option value="">Chọn tỉnh/thành</option> *@
-@*                             </select> *@
-@*                         </div> *@
-@*                         <div class="col-md-6"> *@
-@*                             <label for="ward" class="form-label">Phường/Xã (bao gồm thông tin sáp nhập)</label> *@
-@*                             <select id="ward" class="form-select"> *@
-@*                                 <option value="">Chọn phường/xã</option> *@
-@*                             </select> *@
-@*                         </div> *@
-@*                         <div class="col-md-6"> *@
-@*                             <label for="customer-address" class="form-label">Địa chỉ cụ thể</label> *@
-@*                             <input id="customer-address" class="form-control" type="text" placeholder="Số nhà, tên đường" /> *@
-@*                         </div> *@
-@*                         <div class="col-12"> *@
-@*                             <label for="order-note" class="form-label">Ghi chú đơn hàng</label> *@
-@*                             <textarea id="order-note" class="form-control" rows="3" placeholder="Ghi chú cho đơn hàng (tùy chọn)"></textarea> *@
-@*                         </div> *@
-@*                     </div> *@
-@*                 </div> *@
-@*             </div> *@
-@*         </div> *@
-@*         <div class="col-lg-4"> *@
-@*             <div class="card shadow-sm border-0 mb-4"> *@
-@*                 <div class="card-header bg-secondary text-white"> *@
-@*                     <h5 class="mb-0 text-uppercase">Tổng đơn hàng</h5> *@
-@*                 </div> *@
-@*                 <div class="card-body" id="checkoutCart"> *@
-@*                     <h6 class="mb-3 fw-bold">Sản phẩm đã chọn</h6> *@
-@*                     <div id="checkoutItems" class="mb-3"></div> *@
-
-@*                     <!-- Added promotion selection section --> *@
-@*                     <div class="border-top pt-3 mb-3"> *@
-@*                         <div class="d-flex justify-content-between align-items-center mb-2"> *@
-@*                             <span class="text-muted">Mã khuyến mại</span> *@
-@*                             <button type="button" class="btn btn-link p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#promotionModal"> *@
-@*                                 <i class="bi bi-percent me-1"></i>Chọn hoặc nhập mã *@
-@*                             </button> *@
-@*                         </div> *@
-@*                         <div id="selectedPromotion" class="d-none"> *@
-@*                             <div class="bg-light p-2 rounded"> *@
-@*                                 <div class="d-flex justify-content-between align-items-center"> *@
-@*                                     <div> *@
-@*                                         <small class="text-success fw-bold" id="promotionCode"></small> *@
-@*                                         <div class="small text-muted" id="promotionDescription"></div> *@
-@*                                     </div> *@
-@*                                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removePromotion()"> *@
-@*                                         <i class="bi bi-x"></i> *@
-@*                                     </button> *@
-@*                                 </div> *@
-@*                             </div> *@
-@*                         </div> *@
-@*                     </div> *@
-
-@*                     <div class="border-top pt-3"> *@
-@*                         <!-- Added subtotal and discount rows --> *@
-@*                         <div class="d-flex justify-content-between mb-2"> *@
-@*                             <span>Tạm tính</span> *@
-@*                             <span id="checkoutSubtotal">0 VNĐ</span> *@
-@*                         </div> *@
-@*                         <div class="d-flex justify-content-between mb-2 text-success d-none" id="discountRow"> *@
-@*                             <span>Giảm giá</span> *@
-@*                             <span id="discountAmount">-0 VNĐ</span> *@
-@*                         </div> *@
-@*                         <div class="d-flex justify-content-between"> *@
-@*                             <h5 class="fw-bold">Tổng cộng</h5> *@
-@*                             <h5 id="checkoutTotal" class="text-danger fw-bold">0 VNĐ</h5> *@
-@*                         </div> *@
-@*                     </div> *@
-@*                 </div> *@
-@*             </div> *@
-@*             <div class="card shadow-sm border-0"> *@
-@*                 <div class="card-header bg-secondary text-white"> *@
-@*                     <h5 class="mb-0 text-uppercase">Phương thức thanh toán</h5> *@
-@*                 </div> *@
-@*                 <div class="card-body"> *@
-@*                     <div class="form-check mb-2"> *@
-@*                         <input type="radio" class="form-check-input" name="payment" id="cod" /> *@
-@*                         <label class="form-check-label" for="cod">Thanh toán khi nhận hàng</label> *@
-@*                     </div> *@
-
-@*                     <div class="form-check mb-3"> *@
-@*                         <input type="radio" class="form-check-input" name="payment" id="vnpay" /> *@
-@*                         <label class="form-check-label" for="vnpay">Thanh toán qua VNPay</label> *@
-@*                     </div> *@
-
-@*                     <div class="form-check mb-3"> *@
-@*                         <input type="radio" class="form-check-input" name="payment" id="bank" /> *@
-@*                         <label class="form-check-label" for="bank">Chuyển khoản ngân hàng</label> *@
-@*                     </div> *@
-
-@*                     <!-- Cập nhật button để xử lý thanh toán VNPay từ view thanh toán --> *@
-@*                     <button id="btn-order" class="btn btn-danger w-100 fw-bold py-2">Đặt hàng</button> *@
-@*                     <button id="vnpay-payment-btn" class="btn btn-primary w-100 fw-bold py-2 mt-2" style="display:none;">Thanh toán VNPay</button> *@
-
-@*                     @if (TempData["PayOSError"] != null) *@
-@*                     { *@
-@*                         <div class="alert alert-danger mt-3">@TempData["PayOSError"]</div> *@
-@*                     } *@
-@*                 </div> *@
-@*             </div> *@
-@*         </div> *@
-@*     </div> *@
-@* </div> *@
-
-@* <!-- Added promotion selection modal --> *@
-@* <div class="modal fade" id="promotionModal" tabindex="-1" aria-labelledby="promotionModalLabel" aria-hidden="true"> *@
-@*     <div class="modal-dialog modal-lg"> *@
-@*         <div class="modal-content"> *@
-@*             <div class="modal-header"> *@
-@*                 <h5 class="modal-title" id="promotionModalLabel">Khuyến mại</h5> *@
-@*                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> *@
-@*             </div> *@
-@*             <div class="modal-body"> *@
-@*                 <div class="mb-3"> *@
-@*                     <div class="input-group"> *@
-@*                         <input type="text" class="form-control" id="promotionCodeInput" placeholder="Bạn có mã khuyến mại khác?"> *@
-@*                         <button class="btn btn-primary" type="button" onclick="applyPromotionCode()">Áp dụng</button> *@
-@*                     </div> *@
-@*                 </div> *@
-
-@*                 <div id="promotionError" class="alert alert-danger d-none"></div> *@
-
-@*                 <div id="availablePromotions"> *@
-@*                     <h6 class="mb-3">Mã khuyến mại có sẵn</h6> *@
-@*                     <div id="promotionsList" class="d-flex flex-column gap-2"> *@
-@*                         <div class="text-center py-4"> *@
-@*                             <div class="spinner-border text-primary" role="status"> *@
-@*                                 <span class="visually-hidden">Đang tải...</span> *@
-@*                             </div> *@
-@*                             <div class="mt-2">Đang tải danh sách khuyến mại...</div> *@
-@*                         </div> *@
-@*                     </div> *@
-@*                 </div> *@
-@*             </div> *@
-@*         </div> *@
-@*     </div> *@
-@* </div> *@
-
-@* @section Scripts { *@
-@*     <script> *@
-@*         document.addEventListener("DOMContentLoaded", () => { *@
-@*           // ====== Elements ====== *@
-@*           const btnOrder = document.getElementById("btn-order"); *@
-@*           const vnpayBtn = document.getElementById("vnpay-payment-btn"); *@
-@*           const provinceSel = document.getElementById("province"); *@
-@*           const wardSel = document.getElementById("ward"); *@
-@*           const checkoutItems = document.getElementById("checkoutItems"); *@
-@*           const checkoutTotal = document.getElementById("checkoutTotal"); *@
-@*           const checkoutSubtotal = document.getElementById("checkoutSubtotal"); *@
-@*           const discountRow = document.getElementById("discountRow"); *@
-@*           const discountAmount = document.getElementById("discountAmount"); *@
-
-@*           let selectedPromotion = null; *@
-@*           let availablePromotions = []; *@
-@*           let cartItems = []; *@
-
-@*           // Provinces source flag: 'primary' (34tinhthanh) | 'fallback' (open-api) *@
-@*           provinceSel.dataset.source = "primary"; *@
-
-@*           // ====== Default: COD selected ====== *@
-@*           document.getElementById("cod").checked = true; *@
-@*           btnOrder.style.display = "block"; *@
-@*           vnpayBtn.style.display = "none"; *@
-
-@*           // ====== Toggle payment buttons ====== *@
-@*           document.querySelectorAll('input[name="payment"]').forEach((r) => { *@
-@*             r.addEventListener("change", (e) => { *@
-@*               const id = e.target.id; *@
-@*               if (id === "vnpay") { *@
-@*                 btnOrder.style.display = "none"; *@
-@*                 vnpayBtn.style.display = "block"; *@
-@*               } else { *@
-@*                 btnOrder.style.display = "block"; *@
-@*                 vnpayBtn.style.display = "none"; *@
-@*               } *@
-@*             }); *@
-@*           }); *@
-
-@*           // ====== Helpers ====== *@
-@*           const CACHE_PREFIX = "tbs_checkout_"; *@
-@*           const now = () => Date.now(); *@
-
-@*           function setCache(key, value, ttlMs) { *@
-@*             try { localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ value, exp: now() + ttlMs })); } catch {} *@
-@*           } *@
-@*           function getCache(key) { *@
-@*             try { *@
-@*               const raw = localStorage.getItem(CACHE_PREFIX + key); *@
-@*               if (!raw) return null; *@
-@*               const { value, exp } = JSON.parse(raw); *@
-@*               if (!exp || exp < now()) { localStorage.removeItem(CACHE_PREFIX + key); return null; } *@
-@*               return value; *@
-@*             } catch { return null; } *@
-@*           } *@
-
-@*           // fetchJSON with timeout, retry, and external AbortController support *@
-@*           async function fetchJSON(url, options = {}, timeoutMs = 12000, retries = 0) { *@
-@*             let lastErr; *@
-@*             for (let attempt = 0; attempt <= retries; attempt++) { *@
-@*               const inner = new AbortController(); *@
-@*               const outerSignal = options.signal; *@
-@*               if (outerSignal && typeof outerSignal.addEventListener === "function") { *@
-@*                 if (outerSignal.aborted) inner.abort(); *@
-@*                 outerSignal.addEventListener("abort", () => inner.abort(), { once: true }); *@
-@*               } *@
-@*               const timer = setTimeout(() => inner.abort(), timeoutMs); *@
-@*               try { *@
-@*                 const res = await fetch(url, { ...options, signal: inner.signal }); *@
-@*                 if (!res.ok) { *@
-@*                   const msg = await res.text().catch(() => ""); *@
-@*                   throw new Error(`HTTP ${res.status} ${res.statusText} - ${msg}`); *@
-@*                 } *@
-@*                 return await res.json(); *@
-@*               } catch (e) { *@
-@*                 lastErr = e; *@
-@*                 if (attempt < retries) continue; *@
-@*                 throw e; *@
-@*               } finally { clearTimeout(timer); } *@
-@*             } *@
-@*             throw lastErr; *@
-@*           } *@
-
-@*           // Parse JSON an toàn: nếu server không trả JSON thì đọc text và ném lỗi rõ ràng *@
-@*           async function safeParseJson(response) { *@
-@*             const ct = response.headers.get("content-type") || ""; *@
-@*             if (ct.includes("application/json")) { *@
-@*               return await response.json(); *@
-@*             } *@
-@*             const text = await response.text(); *@
-@*             throw new Error(text ? `Phản hồi không phải JSON: ${text.substring(0, 200)}...` : "Phản hồi rỗng từ server"); *@
-@*           } *@
-
-@*           // ====== Provinces (primary + fallback) ====== *@
-@*           async function loadProvinces() { *@
-@*             provinceSel.disabled = true; *@
-@*             wardSel.disabled = true; *@
-@*             provinceSel.innerHTML = "<option value=''>Đang tải tỉnh/thành...</option>"; *@
-@*             wardSel.innerHTML = "<option value=''>Chọn phường/xã</option>"; *@
-@*             try { *@
-@*               const data = await fetchJSON("https://34tinhthanh.com/api/provinces", {}, 9000, 1); *@
-@*               provinceSel.innerHTML = "<option value=''>Chọn tỉnh/thành</option>"; *@
-@*               data.forEach(p => provinceSel.add(new Option(p.name, p.province_code))); *@
-@*               provinceSel.dataset.source = "primary"; *@
-@*             } catch (err) { *@
-@*               console.warn("PRIMARY provinces lỗi, dùng fallback:", err); *@
-@*               try { *@
-@*                 const list = await fetchJSON("https://provinces.open-api.vn/api/?depth=1", {}, 9000, 1); *@
-@*                 provinceSel.innerHTML = "<option value=''>Chọn tỉnh/thành</option>"; *@
-@*                 list.forEach(p => provinceSel.add(new Option(p.name, p.code))); *@
-@*                 provinceSel.dataset.source = "fallback"; *@
-@*               } catch (err2) { *@
-@*                 console.error("Fallback provinces cũng lỗi:", err2); *@
-@*                 provinceSel.innerHTML = "<option value=''>Không tải được tỉnh/thành</option>"; *@
-@*                 alert("Không thể tải danh sách tỉnh/thành. Vui lòng kiểm tra kết nối mạng."); *@
-@*               } *@
-@*             } finally { *@
-@*               provinceSel.disabled = false; *@
-@*               wardSel.disabled = false; *@
-@*             } *@
-@*           } *@
-
-@*           // ====== Wards fast loader (race + abort + cache) ====== *@
-@*           let wardReqSeq = 0; *@
-@*           let wardAborters = []; *@
-@*           function abortWardRequests() { *@
-@*             wardAborters.forEach(a => { try { a.abort(); } catch {} }); *@
-@*             wardAborters = []; *@
-@*           } *@
-
-@*           const SRC = { *@
-@*             wards_primary: (provinceCode, { signal } = {}) => *@
-@*               fetchJSON(`https://34tinhthanh.com/api/wards?province_code=${encodeURIComponent(provinceCode)}`, *@
-@*                 { signal }, 8000, 1 *@
-@*               ).then(list => list.map(w => ({ *@
-@*                 code: String(w.ward_code), *@
-@*                 name: w.has_merger *@
-@*                   ? `${w.ward_name}${Array.isArray(w.old_units) && w.old_units.length ? ` (sáp nhập từ: ${w.old_units.join(", ")})` : " (đã sáp nhập)"}` *@
-@*                   : w.ward_name *@
-@*               }))), *@
-
-@*             wards_fallback: (provinceCode, { signal } = {}) => *@
-@*               fetchJSON(`https://provinces.open-api.vn/api/p/${encodeURIComponent(provinceCode)}?depth=2`, *@
-@*                 { signal }, 7000, 1 *@
-@*               ).then(p => { *@
-@*                 const wards = []; *@
-@*                 (p?.districts || []).forEach(d => (d?.wards || []).forEach(w => wards.push({ code: String(w.code), name: w.name }))); *@
-@*                 wards.sort((a, b) => a.name.localeCompare(b.name, "vi")); *@
-@*                 return wards; *@
-@*               }) *@
-@*           }; *@
-
-@*           function renderWards(list) { *@
-@*             wardSel.innerHTML = "<option value=''>Chọn phường/xã</option>"; *@
-@*             for (const w of list) wardSel.add(new Option(w.name, w.code)); *@
-@*           } *@
-@*           const hasMergedLabels = (list) => list.some(w => typeof w.name === "string" && w.name.includes("sáp nhập")); *@
-
-@*           async function refreshWardsUpgrade(provinceCode, cacheKey, mySeq) { *@
-@*             const priCtrl = new AbortController(); *@
-@*             wardAborters.push(priCtrl); *@
-@*             try { *@
-@*               const better = await SRC.wards_primary(provinceCode, { signal: priCtrl.signal }); *@
-@*               if (mySeq !== wardReqSeq) return; *@
-@*               if (better?.length) { *@
-@*                 const currentVal = wardSel.value; *@
-@*                 renderWards(better); *@
-@*                 if (currentVal) wardSel.value = currentVal; *@
-@*                 setCache(cacheKey, better, 30 * 24 * 60 * 60 * 1000); *@
-@*               } *@
-@*             } catch {} *@
-@*           } *@
-
-@*           async function loadWardsFast(provinceCode) { *@
-@*             if (!provinceCode) { *@
-@*               wardSel.innerHTML = "<option value=''>Chọn phường/xã</option>"; *@
-@*               return; *@
-@*             } *@
-
-@*             abortWardRequests(); *@
-@*             const mySeq = ++wardReqSeq; *@
-
-@*             wardSel.disabled = true; *@
-@*             wardSel.innerHTML = "<option value=''>Đang tải phường/xã...</option>"; *@
-
-@*             const cacheKey = `wards_v1_${provinceCode}`; *@
-@*             const cached = getCache(cacheKey); *@
-@*             if (cached?.length) { *@
-@*               renderWards(cached); *@
-@*               wardSel.disabled = false; *@
-@*               refreshWardsUpgrade(provinceCode, cacheKey, mySeq); *@
-@*               return; *@
-@*             } *@
-
-@*             const priCtrl = new AbortController(); *@
-@*             const fbCtrl  = new AbortController(); *@
-@*             wardAborters.push(priCtrl, fbCtrl); *@
-
-@*             const pri = SRC.wards_primary(provinceCode, { signal: priCtrl.signal }); *@
-@*             const fb  = SRC.wards_fallback(provinceCode, { signal: fbCtrl.signal }); *@
-
-@*             try { *@
-@*               const first = await Promise.race([pri, fb]); *@
-@*               if (mySeq !== wardReqSeq) return; *@
-@*               renderWards(first); *@
-@*               wardSel.disabled = false; *@
-@*               setCache(cacheKey, first, 30 * 24 * 60 * 60 * 1000); *@
-@*             } catch (e) {} *@
-
-@*             try { *@
-@*               const better = await pri; *@
-@*               if (mySeq !== wardReqSeq) return; *@
-@*               const currentVal = wardSel.value; *@
-@*               const prevCount = wardSel.options.length - 1; *@
-@*               if (better?.length && (better.length !== prevCount || hasMergedLabels(better))) { *@
-@*                 renderWards(better); *@
-@*                 if (currentVal) wardSel.value = currentVal; *@
-@*                 setCache(cacheKey, better, 30 * 24 * 60 * 60 * 1000); *@
-@*               } *@
-@*             } catch {} *@
-@*           } *@
-
-@*           // ====== Bindings ====== *@
-@*           loadProvinces(); *@
-
-@*           let debTimer = null; *@
-@*           provinceSel.addEventListener("change", () => { *@
-@*             const code = provinceSel.value; *@
-@*             clearTimeout(debTimer); *@
-@*             debTimer = setTimeout(() => { *@
-@*               if (!code) { wardSel.innerHTML = "<option value=''>Chọn phường/xã</option>"; return; } *@
-@*               loadWardsFast(code); *@
-@*             }, 150); *@
-@*           }); *@
-
-@*           if (provinceSel.value) loadWardsFast(provinceSel.value); *@
-
-@*           function getShippingFee(provinceCode, provinceName) { *@
-@*             if (!provinceCode && !provinceName) return 30000; // Default 30k *@
-
-@*             // Get province name for calculation *@
-@*             const name = provinceName || (provinceSel.options[provinceSel.selectedIndex]?.text || ""); *@
-
-@*             // Distance-based shipping from Can Tho (30k-100k VND) *@
-@*             const shippingRates = { *@
-@*               // Can Tho and nearby provinces (30k) *@
-@*               "Cần Thơ": 30000, *@
-@*               "An Giang": 35000, *@
-@*               "Kiên Giang": 40000, *@
-@*               "Hậu Giang": 35000, *@
-@*               "Sóc Trăng": 40000, *@
-@*               "Bạc Liêu": 45000, *@
-@*               "Cà Mau": 50000, *@
-@*               "Đồng Tháp": 40000, *@
-@*               "Long An": 45000, *@
-@*               "Tiền Giang": 45000, *@
-@*               "Bến Tre": 45000, *@
-@*               "Trà Vinh": 45000, *@
-@*               "Vĩnh Long": 40000, *@
-
-@*               // Ho Chi Minh City and nearby (50k) *@
-@*               "Hồ Chí Minh": 50000, *@
-@*               "Tây Ninh": 55000, *@
-@*               "Bình Dương": 50000, *@
-@*               "Đồng Nai": 55000, *@
-@*               "Bà Rịa - Vũng Tàu": 60000, *@
-@*               "Bình Phước": 60000, *@
-
-@*               // Central provinces (60k-70k) *@
-@*               "Lâm Đồng": 65000, *@
-@*               "Đắk Lắk": 70000, *@
-@*               "Đắk Nông": 70000, *@
-@*               "Gia Lai": 75000, *@
-@*               "Kon Tum": 80000, *@
-@*               "Khánh Hòa": 70000, *@
-@*               "Ninh Thuận": 70000, *@
-@*               "Bình Thuận": 65000, *@
-@*               "Phú Yên": 75000, *@
-@*               "Bình Định": 75000, *@
-@*               "Quảng Ngãi": 80000, *@
-@*               "Quảng Nam": 80000, *@
-@*               "Đà Nẵng": 75000, *@
-@*               "Thừa Thiên Huế": 80000, *@
-@*               "Quảng Trị": 85000, *@
-@*               "Quảng Bình": 85000, *@
-@*               "Hà Tĩnh": 90000, *@
-@*               "Nghệ An": 90000, *@
-@*               "Thanh Hóa": 90000, *@
-
-@*               // Northern provinces (85k-100k) *@
-@*               "Ninh Bình": 85000, *@
-@*               "Nam Định": 90000, *@
-@*               "Thái Bình": 90000, *@
-@*               "Hưng Yên": 85000, *@
-@*               "Hà Nam": 85000, *@
-@*               "Hà Nội": 90000, *@
-@*               "Vĩnh Phúc": 85000, *@
-@*               "Bắc Ninh": 85000, *@
-@*               "Hải Dương": 90000, *@
-@*               "Hải Phòng": 90000, *@
-@*               "Quảng Ninh": 95000, *@
-@*               "Bắc Giang": 90000, *@
-@*               "Lạng Sơn": 100000, *@
-@*               "Cao Bằng": 100000, *@
-@*               "Hà Giang": 100000, *@
-@*               "Tuyên Quang": 95000, *@
-@*               "Thái Nguyên": 90000, *@
-@*               "Phú Thọ": 90000, *@
-@*               "Yên Bái": 95000, *@
-@*               "Lào Cai": 100000, *@
-@*               "Điện Biên": 100000, *@
-@*               "Lai Châu": 100000, *@
-@*               "Sơn La": 95000, *@
-@*               "Hòa Bình": 90000 *@
-@*             }; *@
-
-@*             // Find matching province name *@
-@*             for (const [province, fee] of Object.entries(shippingRates)) { *@
-@*               if (name.includes(province)) { *@
-@*                 return fee; *@
-@*               } *@
-@*             } *@
-
-@*             // Default for unknown provinces *@
-@*             return 60000; // 60k for unspecified provinces *@
-@*           } *@
-
-@*           // ====== Render checkout summary (updated with promotion logic) ====== *@
-@*           function renderCheckout() { *@
-@*             cartItems = JSON.parse(localStorage.getItem("selectedCartItems") || "[]"); *@
-@*             let subtotal = 0; *@
-@*             if (cartItems.length === 0) { *@
-@*               checkoutItems.innerHTML = "<p>Không có sản phẩm được chọn.</p>"; *@
-@*             } else { *@
-@*               checkoutItems.innerHTML = ""; *@
-@*               cartItems.forEach(item => { *@
-@*                 subtotal += (item.total || (item.price * item.quantity)); *@
-@*                 checkoutItems.innerHTML += ` *@
-@*                   <div class="border-bottom mb-2 pb-2"> *@
-@*                     <h6 class="mb-1">${item.name}</h6> *@
-@*                     <div class="small text-muted">Màu: ${item.color ?? ""} &middot; Size: ${item.size ?? ""}</div> *@
-@*                     <div class="small">SL: ${item.quantity}</div> *@
-@*                     <div class="small">Giá: ${Number(item.price).toLocaleString("vi-VN")} VNĐ</div> *@
-@*                     <div class="small fw-semibold">Tổng: ${Number(item.total || (item.price * item.quantity)).toLocaleString("vi-VN")} VNĐ</div> *@
-@*                   </div>`; *@
-@*               }); *@
-@*             } *@
-
-@*             checkoutSubtotal.textContent = Number(subtotal).toLocaleString("vi-VN") + " VNĐ"; *@
-
-@*             const provinceName = provinceSel.options[provinceSel.selectedIndex]?.text || ""; *@
-@*             let shippingFee = getShippingFee(provinceSel.value, provinceName); *@
-@*             let discount = 0; *@
-@*             let shippingDiscount = 0; *@
-
-@*             if (selectedPromotion) { *@
-@*               if (selectedPromotion.discountType === 'free_shipping') { *@
-@*                 shippingDiscount = shippingFee; *@
-@*                 shippingFee = 0; *@
-@*               } else { *@
-@*                 discount = calculateDiscount(selectedPromotion, subtotal); *@
-@*               } *@
-
-@*               discountAmount.textContent = "-" + Number(discount + shippingDiscount).toLocaleString("vi-VN") + " VNĐ"; *@
-@*               discountRow.classList.remove("d-none"); *@
-@*             } else { *@
-@*               discountRow.classList.add("d-none"); *@
-@*             } *@
-
-@*             ensureShipRow(); *@
-@*             const shippingFeeEl = document.getElementById('shippingFee'); *@
-@*             if (shippingFeeEl) { *@
-@*               shippingFeeEl.textContent = Number(shippingFee).toLocaleString('vi-VN') + ' VNĐ'; *@
-@*             } *@
-
-@*             const finalTotal = subtotal + shippingFee - discount; *@
-@*             checkoutTotal.textContent = Number(finalTotal).toLocaleString("vi-VN") + " VNĐ"; *@
-
-@*             // Save totals for payment processing *@
-@*             const totals = { *@
-@*               subtotal, *@
-@*               shippingFee: shippingFee + shippingDiscount, // Original shipping fee *@
-@*               discount: discount + shippingDiscount, *@
-@*               finalTotal *@
-@*             }; *@
-@*             localStorage.setItem('tbs_checkout_totals', JSON.stringify(totals)); *@
-@*           } *@
-
-@*           function ensureShipRow() { *@
-@*             let shipRowEl = document.getElementById('shippingRow'); *@
-@*             if (shipRowEl) return shipRowEl; *@
-
-@*             const checkoutTotalWrap = document.querySelector('#checkoutCart .border-top.pt-3'); *@
-@*             shipRowEl = document.createElement('div'); *@
-@*             shipRowEl.className = 'd-flex justify-content-between mb-2'; *@
-@*             shipRowEl.id = 'shippingRow'; *@
-@*             shipRowEl.innerHTML = ` *@
-@*               <span>Phí vận chuyển</span> *@
-@*               <span id="shippingFee">0 VNĐ</span> *@
-@*             `; *@
-
-@*             const totalH5 = document.querySelector('#checkoutTotal')?.parentElement; *@
-@*             if (totalH5 && totalH5.parentElement === checkoutTotalWrap) { *@
-@*               checkoutTotalWrap.insertBefore(shipRowEl, totalH5); *@
-@*             } else { *@
-@*               checkoutTotalWrap.appendChild(shipRowEl); *@
-@*             } *@
-@*             return shipRowEl; *@
-@*           } *@
-
-@*           provinceSel.addEventListener("change", () => { *@
-@*             setTimeout(renderCheckout, 200); // Delay to allow ward loading *@
-@*           }); *@
-
-@*           function calculateDiscount(promotion, subtotal) { *@
-@*             if (!promotion || subtotal < promotion.minOrderValue) return 0; *@
-
-@*             if (promotion.discountType === 'percentage') { *@
-@*               const discount = (subtotal * promotion.discountValue) / 100; *@
-@*               return Math.min(discount, promotion.maxDiscountAmount || discount); *@
-@*             } else { *@
-@*               return Math.min(promotion.discountValue, subtotal); *@
-@*             } *@
-@*           } *@
-
-@*           function getCartCategories() { *@
-@*             const categories = new Set(); *@
-@*             cartItems.forEach(item => { *@
-@*               if (item.categoryId) { *@
-@*                 categories.add(item.categoryId); *@
-@*               } *@
-@*             }); *@
-@*             return Array.from(categories); *@
-@*           } *@
-
-@*           function canUsePromotion(promotion) { *@
-@*             const now = new Date(); *@
-@*             const startDate = new Date(promotion.startDate); *@
-@*             const endDate = new Date(promotion.endDate); *@
-
-@*             // Check date validity *@
-@*             if (now < startDate || now > endDate) return false; *@
-
-@*             // Check usage limit *@
-@*             if (promotion.usageLimit && promotion.usedCount >= promotion.usageLimit) return false; *@
-
-@*             // Check category compatibility *@
-@*             if (promotion.status === 0) return true; // All products *@
-
-@*             const cartCategories = getCartCategories(); *@
-@*             return cartCategories.includes(promotion.status); *@
-@*           } *@
-
-@*           async function loadPromotions() { *@
-@*             try { *@
-@*               console.log('[DEBUG] Loading promotions...'); *@
-
-@*               const response = await fetch('/api/promotions/active', { *@
-@*                 method: 'GET', *@
-@*                 headers: { *@
-@*                   'Content-Type': 'application/json', *@
-@*                   'X-Requested-With': 'XMLHttpRequest' *@
-@*                 } *@
-@*               }); *@
-
-@*               console.log('[DEBUG] Response status:', response.status); *@
-
-@*               if (!response.ok) { *@
-@*                 throw new Error(`HTTP ${response.status}: ${response.statusText}`); *@
-@*               } *@
-
-@*               const result = await response.json(); *@
-@*               console.log('[DEBUG] API Response:', result); *@
-
-@*               if (result.success) { *@
-@*                 availablePromotions = result.data || []; *@
-@*                 console.log('[DEBUG] Loaded promotions:', availablePromotions.length); *@
-@*                 renderPromotionsList(); *@
-@*               } else { *@
-@*                 throw new Error(result.message || 'Không thể tải danh sách khuyến mại'); *@
-@*               } *@
-@*             } catch (error) { *@
-@*               console.error('[ERROR] Loading promotions:', error); *@
-@*               document.getElementById('promotionsList').innerHTML = ` *@
-@*                 <div class="text-center py-4 text-danger"> *@
-@*                   <i class="bi bi-exclamation-triangle fs-1"></i> *@
-@*                   <div class="mt-2">Lỗi tải khuyến mại: ${error.message}</div> *@
-@*                   <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadPromotions()">Thử lại</button> *@
-@*                 </div>`; *@
-@*             } *@
-@*           } *@
-
-@*           function renderPromotionsList() { *@
-@*             const container = document.getElementById('promotionsList'); *@
-
-@*             console.log('[DEBUG] Rendering promotions list, count:', availablePromotions.length); *@
-
-@*             if (availablePromotions.length === 0) { *@
-@*               container.innerHTML = ` *@
-@*                 <div class="text-center py-4 text-muted"> *@
-@*                   <i class="bi bi-percent fs-1"></i> *@
-@*                   <div class="mt-2">Hiện không có chương trình khuyến mại nào</div> *@
-@*                 </div>`; *@
-@*               return; *@
-@*             } *@
-
-@*             container.innerHTML = ''; *@
-
-@*             availablePromotions.forEach((promotion, index) => { *@
-@*               console.log(`[DEBUG] Rendering promotion ${index}:`, promotion); *@
-
-@*               const canUse = canUsePromotion(promotion); *@
-@*               const isSelected = selectedPromotion && selectedPromotion.promotionId === promotion.promotionId; *@
-
-@*               const promotionCard = document.createElement('div'); *@
-@*               promotionCard.className = `card ${canUse ? 'border-primary' : 'border-secondary'} ${!canUse ? 'opacity-50' : ''} ${isSelected ? 'bg-primary bg-opacity-10' : ''}`; *@
-@*               promotionCard.style.cursor = canUse ? 'pointer' : 'not-allowed'; *@
-
-@*               const discountText = promotion.discountType === 'percentage' *@
-@*                 ? `Giảm ${promotion.discountValue}%${promotion.maxDiscountAmount ? ` (tối đa ${Number(promotion.maxDiscountAmount).toLocaleString('vi-VN')} VNĐ)` : ''}` *@
-@*                 : promotion.discountType === 'free_shipping' *@
-@*                 ? 'Miễn phí vận chuyển' *@
-@*                 : `Giảm ${Number(promotion.discountValue).toLocaleString('vi-VN')} VNĐ`; *@
-
-@*               const categoryText = promotion.status === 0 ? 'Tất cả sản phẩm' : getCategoryName(promotion.status); *@
-
-@*               promotionCard.innerHTML = ` *@
-@*                 <div class="card-body p-3"> *@
-@*                   <div class="d-flex justify-content-between align-items-start"> *@
-@*                     <div class="flex-grow-1"> *@
-@*                       <h6 class="card-title mb-1 ${canUse ? 'text-primary' : 'text-muted'}">${promotion.promotionCode}</h6> *@
-@*                       <p class="card-text small mb-1">${promotion.description || discountText}</p> *@
-@*                       <div class="small text-muted"> *@
-@*                         <div>Áp dụng: ${categoryText}</div> *@
-@*                         <div>Đơn tối thiểu: ${Number(promotion.minOrderValue || 0).toLocaleString('vi-VN')} VNĐ</div> *@
-@*                         <div>HSD: ${new Date(promotion.endDate).toLocaleDateString('vi-VN')}</div> *@
-@*                       </div> *@
-@*                     </div> *@
-@*                     <div class="text-end"> *@
-@*                       ${isSelected ? '<i class="bi bi-check-circle-fill text-success fs-5"></i>' : ''} *@
-@*                       ${!canUse ? '<i class="bi bi-lock-fill text-muted"></i>' : ''} *@
-@*                     </div> *@
-@*                   </div> *@
-@*                 </div>`; *@
-
-@*               if (canUse) { *@
-@*                 promotionCard.addEventListener('click', () => selectPromotion(promotion)); *@
-@*               } *@
-
-@*               container.appendChild(promotionCard); *@
-@*             }); *@
-@*           } *@
-
-@*           function getCategoryName(categoryId) { *@
-@*             const categoryNames = { *@
-@*               5: 'Phụ kiện', *@
-@*               8: 'Túi du lịch', *@
-@*               1002: 'Túi xách công sở', *@
-@*               1003: 'Túi xách thời trang' *@
-@*             }; *@
-@*             return categoryNames[categoryId] || 'Danh mục khác'; *@
-@*           } *@
-
-@*           function selectPromotion(promotion) { *@
-@*             selectedPromotion = promotion; *@
-
-@*             document.getElementById('promotionCode').textContent = promotion.promotionCode; *@
-@*             document.getElementById('promotionDescription').textContent = promotion.description || *@
-@*               (promotion.discountType === 'percentage' *@
-@*                 ? `Giảm ${promotion.discountValue}%` *@
-@*                 : promotion.discountType === 'free_shipping' *@
-@*                 ? 'Miễn phí vận chuyển' *@
-@*                 : `Giảm ${Number(promotion.discountValue).toLocaleString('vi-VN')} VNĐ`); *@
-
-@*             document.getElementById('selectedPromotion').classList.remove('d-none'); *@
-
-@*             renderCheckout(); // Recalculate totals *@
-@*             renderPromotionsList(); // Update selection state *@
-
-@*             // Close modal *@
-@*             const modal = bootstrap.Modal.getInstance(document.getElementById('promotionModal')); *@
-@*             modal.hide(); *@
-@*           } *@
-
-@*           window.removePromotion = function() { *@
-@*             selectedPromotion = null; *@
-@*             document.getElementById('selectedPromotion').classList.add('d-none'); *@
-@*             renderCheckout(); *@
-@*             renderPromotionsList(); *@
-@*           } *@
-
-@*           window.applyPromotionCode = async function() { *@
-@*             const code = document.getElementById('promotionCodeInput').value.trim(); *@
-@*             const errorDiv = document.getElementById('promotionError'); *@
-
-@*             if (!code) { *@
-@*               showPromotionError('Vui lòng nhập mã khuyến mại'); *@
-@*               return; *@
-@*             } *@
-
-@*             try { *@
-@*               const response = await fetch(`/api/promotions/validate/${encodeURIComponent(code)}`, { *@
-@*                 method: 'POST', *@
-@*                 headers: { 'Content-Type': 'application/json' }, *@
-@*                 body: JSON.stringify({ *@
-@*                   cartItems: cartItems.map(item => ({ *@
-@*                     categoryId: item.categoryId, *@
-@*                     quantity: item.quantity, *@
-@*                     price: item.price *@
-@*                   })) *@
-@*                 }) *@
-@*               }); *@
-
-@*               const result = await response.json(); *@
-
-@*               if (result.success && result.data) { *@
-@*                 selectPromotion(result.data); *@
-@*                 document.getElementById('promotionCodeInput').value = ''; *@
-@*                 errorDiv.classList.add('d-none'); *@
-@*               } else { *@
-@*                 showPromotionError(result.message || 'Mã khuyến mại không hợp lệ hoặc không áp dụng được cho đơn hàng này'); *@
-@*               } *@
-@*             } catch (error) { *@
-@*               console.error('Error validating promotion:', error); *@
-@*               showPromotionError('Có lỗi xảy ra khi kiểm tra mã khuyến mại'); *@
-@*             } *@
-@*           } *@
-
-@*           function showPromotionError(message) { *@
-@*             const errorDiv = document.getElementById('promotionError'); *@
-@*             errorDiv.textContent = message; *@
-@*             errorDiv.classList.remove('d-none'); *@
-@*           } *@
-
-@*           window.loadPromotions = loadPromotions; *@
-
-@*           // Load promotions when modal is opened *@
-@*           document.getElementById('promotionModal').addEventListener('show.bs.modal', function() { *@
-@*             console.log('[DEBUG] Promotion modal opened'); *@
-@*             if (availablePromotions.length === 0) { *@
-@*               loadPromotions(); *@
-@*             } *@
-@*           }); *@
-
-@*           renderCheckout(); *@
-
-@*           // ====== VNPay payment handler (chỉ khi chọn VNPay) ====== *@
-@*           vnpayBtn.addEventListener("click", async (e) => { *@
-@*             e.preventDefault(); *@
-
-@*             const customerName = document.getElementById("customer-name").value.trim(); *@
-@*             const customerPhone = document.getElementById("customer-phone").value.trim(); *@
-@*             const customerAddress = document.getElementById("customer-address").value.trim(); *@
-@*             const orderNote = document.getElementById("order-note").value || ""; *@
-
-@*             if (!customerName || !customerPhone || !customerAddress || !provinceSel.value || !wardSel.value) { *@
-@*               alert("Vui lòng nhập đầy đủ thông tin giao hàng!"); *@
-@*               return; *@
-@*             } *@
-
-@*             const selectedItems = JSON.parse(localStorage.getItem("selectedCartItems") || "[]"); *@
-@*             if (selectedItems.length === 0) { alert("Không có sản phẩm được chọn!"); return; } *@
-
-@*             const provinceName = provinceSel.options[provinceSel.selectedIndex]?.text || ""; *@
-@*             const wardName = wardSel.options[wardSel.selectedIndex]?.text || ""; *@
-@*             const fullAddress = `${customerAddress}, ${wardName}, ${provinceName}`; *@
-
-@*             const totals = JSON.parse(localStorage.getItem('tbs_checkout_totals') || '{}'); *@
-@*             const paymentData = { *@
-@*               customerName, *@
-@*               customerPhone, *@
-@*               fullAddress, *@
-@*               orderNote, *@
-@*               items: selectedItems.map((item) => ({ *@
-@*                 variantId: item.variantId || item.ProductVariantId, *@
-@*                 quantity: item.quantity, *@
-@*                 price: item.price *@
-@*               })), *@
-@*               // Add promotion and shipping data *@
-@*         PromoCode: selectedPromotion?.promotionId ?? null, *@
-@*                     promotionType: selectedPromotion?.discountType || null, *@
-@*               discountAmount: totals.discount || 0, *@
-@*               shippingFee: totals.shippingFee || 0 *@
-@*             }; *@
-
-@*             try { *@
-@*               vnpayBtn.disabled = true; *@
-@*               vnpayBtn.innerText = "Đang xử lý..."; *@
-@*               const response = await fetch("/VNPay/CreatePaymentFromCheckout", { *@
-@*                 method: "POST", *@
-@*                 headers: { "Content-Type": "application/json" }, *@
-@*                 body: JSON.stringify(paymentData) *@
-@*               }); *@
-@*               const result = await safeParseJson(response); *@
-@*               if (result.success && result.paymentUrl) { *@
-@*                 window.location.href = result.paymentUrl; *@
-@*               } else { *@
-@*                 alert(result.message || "Có lỗi xảy ra khi tạo thanh toán!"); *@
-@*               } *@
-@*             } catch (error) { *@
-@*               console.error("Error:", error); *@
-@*               alert(error.message || "Có lỗi xảy ra khi kết nối server!"); *@
-@*             } finally { *@
-@*               vnpayBtn.disabled = false; *@
-@*               vnpayBtn.innerText = "Thanh toán VNPay"; *@
-@*             } *@
-@*           }); *@
-
-@*           // ====== Regular order handler (COD / Bank - gọi /User/CreateCashOrder) ====== *@
-@*           btnOrder.addEventListener("click", async () => { *@
-@*             const items = JSON.parse(localStorage.getItem("selectedCartItems") || "[]"); *@
-@*             if (items.length === 0) { alert("Giỏ hàng rỗng!"); return; } *@
-
-@*             const name = document.getElementById("customer-name").value.trim(); *@
-@*             const phone = document.getElementById("customer-phone").value.trim(); *@
-@*             const address = document.getElementById("customer-address").value.trim(); *@
-@*             const orderNote = document.getElementById("order-note").value || ""; *@
-
-@*             if (!name || !phone || !address || !provinceSel.value || !wardSel.value) { *@
-@*               alert("Vui lòng nhập đủ thông tin giao hàng!"); *@
-@*               return; *@
-@*             } *@
-
-@*             const provinceName = provinceSel.options[provinceSel.selectedIndex]?.text || ""; *@
-@*             const wardName = wardSel.options[wardSel.selectedIndex]?.text || ""; *@
-@*             const fullAddress = `${address}, ${wardName}, ${provinceName}`; *@
-
-@*             // 1: COD, 2: Bank *@
-@*             let paymentMethod = null; *@
-@*             if (document.getElementById("cod").checked) paymentMethod = 1; *@
-@*             if (document.getElementById("bank").checked) paymentMethod = 2; *@
-@*             if (!paymentMethod) { alert("Vui lòng chọn phương thức thanh toán!"); return; } *@
-
-@*             const totals = JSON.parse(localStorage.getItem('tbs_checkout_totals') || '{}'); *@
-@*             const payload = { *@
-@*               CustomerName: name, *@
-@*               CustomerPhone: phone, *@
-@*               FullAddress: fullAddress, *@
-@*               OrderNote: orderNote, *@
-@*               PaymentMethod: paymentMethod, *@
-@*               Items: items.map(it => ({ *@
-@*                 VariantId: it.variantId || it.ProductVariantId, *@
-@*                 Quantity: it.quantity, *@
-@*                 Price: it.price *@
-@*               })), *@
-@*               // Add promotion and shipping data *@
-@*         PromoCode: selectedPromotion?.promotionId ?? null, *@
-@*                       PromotionType: selectedPromotion?.discountType || null, *@
-@*               DiscountAmount: totals.discount || 0, *@
-@*               ShippingFee: totals.shippingFee || 0 *@
-@*             }; *@
-
-@*             try { *@
-@*               btnOrder.disabled = true; *@
-@*               const oldText = btnOrder.innerText; *@
-@*               btnOrder.innerText = paymentMethod === 1 ? "Đang tạo đơn COD..." : "Đang tạo đơn (Chuyển khoản)..."; *@
-
-@*               const res = await fetch("/User/CreateCashOrder", { *@
-@*                 method: "POST", *@
-@*                 headers: { "Content-Type": "application/json" }, *@
-@*                 body: JSON.stringify(payload) *@
-@*               }); *@
-
-@*               const result = await safeParseJson(res); *@
-
-@*               if (!res.ok || !result?.success) { *@
-@*                 throw new Error(result?.message || "Tạo đơn hàng thất bại"); *@
-@*               } *@
-
-@*               // Xóa giỏ cục bộ *@
-@*               localStorage.removeItem("selectedCartItems"); *@
-@*               localStorage.removeItem("tbs_checkout_totals"); *@
-
-@*               // Điều hướng *@
-@*               if (result.redirectUrl) { *@
-@*                 window.location.href = result.redirectUrl; *@
-@*               } else if (result.orderId) { *@
-@*                 window.location.href = `/User/OrderSuccess/${encodeURIComponent(result.orderId)}`; *@
-@*               } else { *@
-@*                 alert(result.message || "Đặt hàng thành công! Chúng tôi sẽ liên hệ xác nhận."); *@
-@*                 window.location.href = "/User/Orders"; *@
-@*               } *@
-@*             } catch (err) { *@
-@*               console.error(err); *@
-@*               alert(err.message || "Có lỗi xảy ra khi tạo đơn hàng!"); *@
-@*             } finally { *@
-@*               btnOrder.disabled = false; *@
-@*               btnOrder.innerText = "Đặt hàng"; *@
-@*             } *@
-@*           }); *@
-@*         }); *@
-@*     </script> *@
-@* } *@
-@{
+﻿@{
     ViewData["Title"] = "Thanh toán - The Bag Studio";
     Layout = "~/Views/Shared/_LayoutUser.cshtml";
 }
@@ -996,7 +14,7 @@
     <div class="row px-xl-5">
         <div class="col-12">
             <nav class="breadcrumb bg-light mb-30">
-                <a class="breadcrumb-item text-dark" href="@Url.Action("Index","User")">Trang chủ</a>
+                <a class="breadcrumb-item text-dark" href="@Url.Action("Index", "User")">Trang chủ</a>
                 <a class="breadcrumb-item text-dark" href="#">Trang</a>
                 <span class="breadcrumb-item active">Thanh toán</span>
             </nav>
@@ -1175,7 +193,63 @@
 
 
 @section Scripts {
+
     <script>
+               // ==== Category map (ưu tiên localStorage, bù thiếu từ API) ====
+        let CATEGORY_MAP = {};
+                  let selectedPromotion = null;
+          let availablePromotions = [];
+          let cartItems = [];
+        try { CATEGORY_MAP = JSON.parse(localStorage.getItem('tbs_category_map') || '{}'); } catch { CATEGORY_MAP = {}; }
+
+        // ⚠️ REPLACE HÀM NÀY
+        async function ensureCategoryMap(requiredIds = [], seedFromPromos = []) {
+          // seed từ dữ liệu có sẵn trong promotions (nếu có tên)
+          (seedFromPromos || []).forEach(p => {
+            const cid = normalizePromoCategoryId(p);
+            const cname = p.categoryName || p.category || p.category_title;
+            if (Number.isFinite(cid) && cid !== 0 && cname) CATEGORY_MAP[cid] = cname;
+          });
+
+          const missing = Array.from(new Set(
+            (requiredIds || [])
+              .map(Number)
+              .filter(id => Number.isFinite(id) && id !== 0 && !CATEGORY_MAP[id])
+          ));
+          if (missing.length === 0) return;
+
+          async function mergeCategoryList(payload) {
+            const arr = Array.isArray(payload) ? payload : (payload?.data || []);
+            (arr || []).forEach(c => {
+              const id = Number(c.id ?? c.categoryId ?? c.CategoryId ?? c.categoryID);
+              const name = c.name ?? c.categoryName ?? c.CategoryName ?? c.title ?? c.displayName;
+              if (Number.isFinite(id) && name) CATEGORY_MAP[id] = name;
+            });
+          }
+
+          try {
+            // ưu tiên endpoint theo id
+            const res = await fetch(`/api/categories/by-ids?ids=${missing.join(',')}`);
+            if (res.ok) {
+              const json = await res.json();
+              await mergeCategoryList(json);
+              localStorage.setItem('tbs_category_map', JSON.stringify(CATEGORY_MAP));
+              return;
+            }
+          } catch {}
+
+          try {
+            // fallback: lấy toàn bộ
+            const res2 = await fetch(`/api/categories/simple`);
+            if (res2.ok) {
+              const json2 = await res2.json();
+              await mergeCategoryList(json2);
+              localStorage.setItem('tbs_category_map', JSON.stringify(CATEGORY_MAP));
+            }
+          } catch { /* im lặng */ }
+        }
+
+
         document.addEventListener("DOMContentLoaded", () => {
           // ====== Elements ======
           const btnOrder = document.getElementById("btn-order");
@@ -1192,9 +266,10 @@
           const discountRow = document.getElementById("discountRow");
           const discountAmount = document.getElementById("discountAmount");
 
-          let selectedPromotion = null;
-          let availablePromotions = [];
-          let cartItems = [];
+                  selectedPromotion = null;
+        availablePromotions = [];
+        cartItems = [];
+
 
           provinceSel.dataset.source = "primary";
 
@@ -1317,8 +392,8 @@
               ).then(p => {
                 const wards = [];
                 (p?.districts || []).forEach(d => (d?.wards || []).forEach(w => wards.push({ code: String(w.code), name: w.name })));
-                wards.sort((a, b) => a.name.localeCompare(a.name, "vi"));
-                return wards;
+        wards.sort((a, b) => a.name.localeCompare(b.name, "vi"));
+                        return wards;
               })
           };
 
@@ -1458,16 +533,48 @@
             cartItems.forEach(item => { if (item.categoryId) categories.add(item.categoryId); });
             return Array.from(categories);
           }
-          function canUsePromotion(promotion) {
-            const now = new Date();
-            const startDate = new Date(promotion.startDate);
-            const endDate = new Date(promotion.endDate);
-            if (now < startDate || now > endDate) return false;
-            if (promotion.usageLimit && promotion.usedCount >= promotion.usageLimit) return false;
-            if (promotion.status === 0) return true;
-            const cartCategories = getCartCategories();
-            return cartCategories.includes(promotion.status);
+        function getCartCategories() {
+          const categories = new Set();
+          (cartItems || []).forEach(i => { if (i.categoryId != null) categories.add(Number(i.categoryId)); });
+          return [...categories];
+        }
+
+        // Lấy CategoryId của mã KM theo nhiều khả năng (categoryId/status là số, hoặc status là string số)
+        function normalizePromoCategoryId(p) {
+          if (p.categoryId != null) return Number(p.categoryId);
+          if (typeof p.status === 'number') return Number(p.status);
+          if (typeof p.status === 'string') {
+            const n = parseInt(p.status, 10);
+            if (!Number.isNaN(n)) return n;
           }
+          return null;
+        }
+
+        // Kiểm tra “áp dụng tất cả” theo nhiều định dạng trả về từ API
+        function isAllProductsPromo(p) {
+          if (p == null) return false;
+          const cid = normalizePromoCategoryId(p);
+          if (cid === 0) return true;
+          const s = ((p.categoryName ?? p.status) ?? '').toString().trim().toLowerCase();
+          return s === '' || s === 'tất cả sản phẩm' || s === 'all';
+        }
+
+        function canUsePromotion(p) {
+          const now = new Date();
+          const start = new Date(p.startDate);
+          const end   = new Date(p.endDate);
+          if (now < start || now > end) return false;
+          if (p.usageLimit && p.usedCount >= p.usageLimit) return false;
+
+          if (isAllProductsPromo(p)) return true;
+
+          const requiredCatId = normalizePromoCategoryId(p);
+          if (requiredCatId == null) return false;
+
+          const cartCategories = getCartCategories();   // mảng các CategoryId trong giỏ
+          return cartCategories.includes(requiredCatId);
+        }
+
 
           // ====== Render checkout (with combobox) ======
           function renderCheckout() {
@@ -1493,7 +600,14 @@
             }
 
             checkoutSubtotal.textContent = Number(subtotal).toLocaleString("vi-VN") + " VNĐ";
-
+                    // Nếu đang chọn mã nhưng *không còn đủ điều kiện* theo subtotal mới → bỏ chọn
+        if (selectedPromotion) {
+          const eligSel = getPromotionEligibility(selectedPromotion, subtotal);
+          if (!eligSel.ok) {
+            selectedPromotion = null;
+            document.getElementById('selectedPromotion').classList.add('d-none');
+          }
+        }
             const provinceName = provinceSel.options[provinceSel.selectedIndex]?.text || "";
             let shippingFee = getShippingFee(provinceSel.value, provinceName);
             let discount = 0, shippingDiscount = 0;
@@ -1529,82 +643,191 @@
           });
 
           // ====== Khuyến mại ======
-          async function loadPromotions() {
-            try {
-              const response = await fetch('/api/promotions/active', { method: 'GET', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
-              if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-              const result = await response.json();
-              if (result.success) { availablePromotions = result.data || []; renderPromotionsList(); }
-              else throw new Error(result.message || 'Không thể tải danh sách khuyến mại');
-            } catch (error) {
-              document.getElementById('promotionsList').innerHTML = `
-                <div class="text-center py-4 text-danger">
-                  <i class="bi bi-exclamation-triangle fs-1"></i>
-                  <div class="mt-2">Lỗi tải khuyến mại: ${error.message}</div>
-                  <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadPromotions()">Thử lại</button>
-                </div>`;
-            }
-          }
-          function getCategoryName(categoryId) {
-            const names = { 5: 'Phụ kiện', 8: 'Túi du lịch', 1002: 'Túi xách công sở', 1003: 'Túi xách thời trang' };
-            return names[categoryId] || 'Danh mục khác';
-          }
-          function renderPromotionsList() {
-            const container = document.getElementById('promotionsList');
-            if (availablePromotions.length === 0) {
-              container.innerHTML = `<div class="text-center py-4 text-muted"><i class="bi bi-percent fs-1"></i><div class="mt-2">Hiện không có chương trình khuyến mại nào</div></div>`;
-              return;
-            }
-            container.innerHTML = '';
-            availablePromotions.forEach(promotion => {
-              const canUse = canUsePromotion(promotion);
-              const isSelected = selectedPromotion && selectedPromotion.promotionId === promotion.promotionId;
-              const card = document.createElement('div');
-              card.className = `card ${canUse ? 'border-primary' : 'border-secondary'} ${!canUse ? 'opacity-50' : ''} ${isSelected ? 'bg-primary bg-opacity-10' : ''}`;
-              card.style.cursor = canUse ? 'pointer' : 'not-allowed';
-              const discountText = promotion.discountType === 'percentage'
-                ? `Giảm ${promotion.discountValue}%${promotion.maxDiscountAmount ? ` (tối đa ${Number(promotion.maxDiscountAmount).toLocaleString('vi-VN')} VNĐ)` : ''}`
-                : promotion.discountType === 'free_shipping' ? 'Miễn phí vận chuyển'
-                : `Giảm ${Number(promotion.discountValue).toLocaleString('vi-VN')} VNĐ`;
-              const categoryText = promotion.status === 0 ? 'Tất cả sản phẩm' : getCategoryName(promotion.status);
-              card.innerHTML = `
-                <div class="card-body p-3">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                      <h6 class="card-title mb-1 ${canUse ? 'text-primary' : 'text-muted'}">${promotion.promotionCode}</h6>
-                      <p class="card-text small mb-1">${promotion.description || discountText}</p>
-                      <div class="small text-muted">
-                        <div>Áp dụng: ${categoryText}</div>
-                        <div>Đơn tối thiểu: ${Number(promotion.minOrderValue || 0).toLocaleString('vi-VN')} VNĐ</div>
-                        <div>HSD: ${new Date(promotion.endDate).toLocaleDateString('vi-VN')}</div>
-                      </div>
-                    </div>
-                    <div class="text-end">
-                      ${isSelected ? '<i class="bi bi-check-circle-fill text-success fs-5"></i>' : ''}
-                      ${!canUse ? '<i class="bi bi-lock-fill text-muted"></i>' : ''}
-                    </div>
-                  </div>
-                </div>`;
-              if (canUse) card.addEventListener('click', () => selectPromotion(promotion));
-              container.appendChild(card);
+        async function loadPromotions() {
+          try {
+            const response = await fetch('/api/promotions/active', {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
             });
-          }
-          function selectPromotion(promotion) {
-            selectedPromotion = promotion;
-            document.getElementById('promotionCode').textContent = promotion.promotionCode;
-            document.getElementById('promotionDescription').textContent =
-              promotion.description ||
-              (promotion.discountType === 'percentage'
-                ? `Giảm ${promotion.discountValue}%`
-                : promotion.discountType === 'free_shipping'
-                  ? 'Miễn phí vận chuyển'
-                  : `Giảm ${Number(promotion.discountValue).toLocaleString('vi-VN')} VNĐ`);
-            document.getElementById('selectedPromotion').classList.remove('d-none');
-            renderCheckout();
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message || 'Không thể tải danh sách khuyến mại');
+
+            availablePromotions = result.data || [];
+
+            // >>> NEW: gom tất cả categoryId xuất hiện trong danh sách mã
+            const needIds = Array.from(new Set(
+              (availablePromotions || [])
+                .map(p => {
+                  if (p.categoryId != null) return Number(p.categoryId);
+                  if (typeof p.status === 'number') return Number(p.status);
+                  if (typeof p.status === 'string') {
+                    const n = parseInt(p.status, 10);
+                    return Number.isNaN(n) ? null : n;
+                  }
+                  return null;
+                })
+                .filter(id => id != null && id !== 0)
+            ));
+
+            await ensureCategoryMap(needIds);   // <<< đảm bảo có tên cho cả các danh mục không nằm trong giỏ
             renderPromotionsList();
-            const modal = bootstrap.Modal.getInstance(document.getElementById('promotionModal'));
-            modal.hide();
+          } catch (error) {
+            document.getElementById('promotionsList').innerHTML = `
+              <div class="text-center py-4 text-danger">
+                <i class="bi bi-exclamation-triangle fs-1"></i>
+                <div class="mt-2">Lỗi tải khuyến mại: ${error.message}</div>
+                <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadPromotions()">Thử lại</button>
+              </div>`;
           }
+        }
+
+
+                  // === Helpers: chuẩn hoá CategoryId của mã KM ===
+        function normalizePromoCategoryId(p) {
+          if (p == null) return null;
+          if (p.categoryId != null) return Number(p.categoryId);
+          if (typeof p.status === 'number') return Number(p.status);
+          if (typeof p.status === 'string') {
+            const n = parseInt(p.status, 10);
+            if (!Number.isNaN(n)) return n;
+          }
+          return null;
+        }
+
+        function isAllProductsPromo(p) {
+          const cid = normalizePromoCategoryId(p);
+          if (cid === 0) return true;
+          const s = ((p.categoryName ?? p.status) ?? '').toString().trim().toLowerCase();
+          return s === '' || s === 'tất cả sản phẩm' || s === 'all';
+        }
+
+        // helper chuẩn hoá khoá duy nhất của mã KM
+        function getPromoKey(p) {
+          if (!p) return null;
+          return (
+            p.promotionId ?? p.promoId ?? p.id ??
+            p.promoCode ?? p.promotionCode ?? p.promoNameCode ?? null
+          );
+        }
+                       // === Subtotal hiện tại (KHÔNG tính ship) ===
+        function getCurrentSubtotal() {
+          return (cartItems || []).reduce(
+            (s, it) => s + (Number(it.total ?? (it.price * it.quantity)) || 0), 0
+          );
+        }
+
+        // === Đánh giá điều kiện dùng mã cho GIỎ HÀNG HIỆN TẠI ===
+        function getPromotionEligibility(promo, subtotal) {
+          if (!promo) return { ok: false, code: 'invalid', reason: 'Mã không hợp lệ' };
+
+          const now = new Date();
+          const start = promo.startDate ? new Date(promo.startDate) : null;
+          const end   = promo.endDate ? new Date(promo.endDate) : null;
+
+          if (end && now > end)   return { ok: false, code: 'expired',      reason: 'Mã đã hết hạn' };
+          if (start && now < start) return { ok: false, code: 'not_started', reason: 'Chương trình chưa bắt đầu' };
+
+          if (promo.usageLimit && Number(promo.usedCount) >= Number(promo.usageLimit)) {
+            return { ok: false, code: 'quota', reason: 'Mã đã hết lượt dùng' };
+          }
+
+          // Danh mục
+          if (!isAllProductsPromo(promo)) {
+            const requiredCatId = normalizePromoCategoryId(promo);
+            const cartCats = getCartCategories();
+            if (requiredCatId == null || !cartCats.includes(requiredCatId)) {
+              return { ok: false, code: 'category', reason: 'Mã này không phù hợp với sản phẩm' };
+            }
+          }
+
+          // Đơn tối thiểu (KHÔNG gồm ship)
+          const min = Number(promo.minOrderValue ?? promo.minOrderAmount ?? 0);
+          if (subtotal < min) {
+            return { ok: false, code: 'min_order', reason: `Chưa đạt đơn tối thiểu ${min.toLocaleString('vi-VN')} VNĐ` };
+          }
+
+          return { ok: true };
+        }
+
+        function renderPromotionsList() {
+          const container = document.getElementById('promotionsList');
+          if (!Array.isArray(availablePromotions) || availablePromotions.length === 0) {
+            container.innerHTML = `<div class="text-center py-4 text-muted"><i class="bi bi-percent fs-1"></i><div class="mt-2">Hiện không có chương trình khuyến mại nào</div></div>`;
+            return;
+          }
+          container.innerHTML = '';
+
+          const selectedKey = getPromoKey(selectedPromotion);
+          const subtotalNow = getCurrentSubtotal(); // 👈 dùng subtotal hiện tại
+
+          availablePromotions.forEach(promotion => {
+            const elig = getPromotionEligibility(promotion, subtotalNow);
+            const canUse = !!elig.ok;
+            const cardKey = getPromoKey(promotion);
+            const isSelected = !!selectedKey && !!cardKey && String(cardKey) === String(selectedKey);
+
+            const _cid = normalizePromoCategoryId(promotion);
+            const nameFromMap = (_cid != null) ? CATEGORY_MAP[_cid] : null;
+            const categoryText = isAllProductsPromo(promotion)
+              ? 'Tất cả sản phẩm'
+              : (promotion.categoryName || nameFromMap || `Danh mục #${_cid}`);
+
+            const discountText = promotion.discountType === 'percentage'
+              ? `Giảm ${promotion.discountValue}%${promotion.maxDiscountAmount ? ` (tối đa ${Number(promotion.maxDiscountAmount).toLocaleString('vi-VN')} VNĐ)` : ''}`
+              : (promotion.discountType === 'free_shipping' ? 'Miễn phí vận chuyển' : `Giảm ${Number(promotion.discountValue).toLocaleString('vi-VN')} VNĐ`);
+
+            const card = document.createElement('div');
+            card.className = `card ${canUse ? 'border-primary' : 'border-secondary'} ${!canUse ? 'opacity-50' : ''} ${isSelected ? 'bg-primary bg-opacity-10' : ''}`;
+            card.style.cursor = canUse ? 'pointer' : 'not-allowed';
+
+            card.innerHTML = `
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1">
+                    <h6 class="card-title mb-1 ${canUse ? 'text-primary' : 'text-muted'}">
+                      ${promotion.promotionCode || promotion.promoCode || promotion.promoNameCode || promotion.promoName || 'Mã khuyến mại'}
+                    </h6>
+                    <p class="card-text small mb-1">${promotion.description || discountText}</p>
+                    <div class="small text-muted">
+                      <div>Áp dụng: ${categoryText}</div>
+                      <div>Đơn tối thiểu: ${Number(promotion.minOrderValue ?? promotion.minOrderAmount ?? 0).toLocaleString('vi-VN')} VNĐ</div>
+                      <div>HSD: ${promotion.endDate ? new Date(promotion.endDate).toLocaleDateString('vi-VN') : '—'}</div>
+                    </div>
+                    ${canUse ? '' : `<div class="small text-danger mt-1">${elig.reason}</div>`}  <!-- 👈 Lý do khóa -->
+                  </div>
+                  <div class="text-end">
+                    ${isSelected ? '<i class="bi bi-check-circle-fill text-success fs-5"></i>' : ''}
+                    ${!canUse ? '<i class="bi bi-lock-fill text-muted"></i>' : ''}
+                  </div>
+                </div>
+              </div>`;
+
+            if (canUse) card.addEventListener('click', () => selectPromotion(promotion));
+            container.appendChild(card);
+          });
+        }
+
+        // đảm bảo selectPromotion gắn thêm key để render lại chắc chắn chỉ 1 card được tick
+        function selectPromotion(promotion) {
+          selectedPromotion = { ...promotion, __key: getPromoKey(promotion) }; // lưu khoá
+          document.getElementById('promotionCode').textContent =
+            promotion.promotionCode || promotion.promoCode || promotion.promoNameCode || promotion.promoName || '';
+          document.getElementById('promotionDescription').textContent =
+            promotion.description ||
+            (promotion.discountType === 'percentage'
+              ? `Giảm ${promotion.discountValue}%`
+              : promotion.discountType === 'free_shipping'
+                ? 'Miễn phí vận chuyển'
+                : `Giảm ${Number(promotion.discountValue).toLocaleString('vi-VN')} VNĐ`);
+          document.getElementById('selectedPromotion').classList.remove('d-none');
+          renderCheckout();
+          renderPromotionsList();
+          const modal = bootstrap.Modal.getInstance(document.getElementById('promotionModal'));
+          modal.hide();
+        }
+
           window.removePromotion = function() { selectedPromotion = null; document.getElementById('selectedPromotion').classList.add('d-none'); renderCheckout(); renderPromotionsList(); }
           window.applyPromotionCode = async function() {
             const code = document.getElementById('promotionCodeInput').value.trim();
@@ -1617,6 +840,11 @@
               });
               const result = await response.json();
               if (result.success && result.data) {
+                          const elig = getPromotionEligibility(result.data, getCurrentSubtotal());
+        if (!elig.ok) {
+          showPromotionError(elig.reason); // 👈 hiện rõ lý do
+          return;
+        }
                 selectPromotion(result.data);
                 document.getElementById('promotionCodeInput').value = '';
                 errorDiv.classList.add('d-none');
@@ -1821,6 +1049,9 @@
             } finally { btnOrder.disabled = false; btnOrder.innerText = "Đặt hàng"; }
           });
         });
+
+
+
     </script>
 }
 
