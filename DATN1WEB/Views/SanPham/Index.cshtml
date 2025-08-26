@@ -1,4 +1,280 @@
-﻿@using System.Linq
+﻿@* @using System.Linq *@
+@* @model List<DATN1API.Models.Product> *@
+
+@* @{ *@
+@*     ViewData["Title"] = "Danh sách sản phẩm"; *@
+@*     var lowStockProducts = ViewBag.LowStockProducts as List<DATN1API.Models.Product> ?? new(); *@
+@*     int page = ViewBag.Page ?? 1; *@
+@*     int totalPages = ViewBag.TotalPages ?? 0; *@
+@*     string search = ViewBag.Search as string ?? ""; *@
+@* } *@
+
+@* <div class="content-header d-flex align-items-center justify-content-between"> *@
+@*     <div> *@
+@*         <h1 class="mb-2"><i class="fas fa-shopping-bag me-3 text-success"></i>Sản phẩm</h1> *@
+@*         <nav aria-label="breadcrumb"> *@
+@*             <ol class="breadcrumb"> *@
+@*                 <li class="breadcrumb-item"><a href="@Url.Action("Index", "Admin")">Dashboard</a></li> *@
+@*                 <li class="breadcrumb-item active">Quản lý danh mục sản phẩm</li> *@
+@*             </ol> *@
+@*         </nav> *@
+@*     </div> *@
+
+@*     <!-- bên phải --> *@
+@*     <div class="d-flex align-items-center gap-3 ms-auto"> *@
+@*         <!-- Chuông trước --> *@
+@*         <div class="dropdown"> *@
+@*             <button id="lowStockBtn" class="btn btn-outline-warning position-relative" data-bs-toggle="dropdown" aria-expanded="false"> *@
+@*                 <i class="fas fa-bell"></i> *@
+@*                 @if (lowStockProducts.Any()) *@
+@*                 { *@
+@*                     <span id="lowStockBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"> *@
+@*                         @lowStockProducts.Count *@
+@*                     </span> *@
+@*                 } *@
+@*             </button> *@
+@*             <ul class="dropdown-menu dropdown-menu-end notification-dropdown"> *@
+@*                 <li class="notification-item"> *@
+@*                     <h6 class="mb-2 fw-bold text-warning"> *@
+@*                         <i class="fas fa-exclamation-triangle me-2"></i>Sản phẩm sắp hết hàng *@
+@*                     </h6> *@
+@*                 </li> *@
+@*                 @if (!lowStockProducts.Any()) *@
+@*                 { *@
+@*                     <li class="notification-item"><span class="text-muted">Không có sản phẩm sắp hết hàng</span></li> *@
+@*                 } *@
+@*                 else *@
+@*                 { *@
+@*                     @foreach (var p in lowStockProducts) *@
+@*                     { *@
+@*                         <li class="notification-item"> *@
+@*                             <a class="text-decoration-none" href="@Url.Action("Edit", new { id = p.ProductId })"> *@
+@*                                 <div class="d-flex align-items-center"> *@
+@*                                     <i class="fas fa-box text-warning me-2"></i> *@
+@*                                     <div class="fw-semibold">@p.ProductName</div> *@
+@*                                 </div> *@
+@*                             </a> *@
+@*                         </li> *@
+@*                     } *@
+@*                 } *@
+@*             </ul> *@
+@*         </div> *@
+
+@*         <!-- Ô tìm kiếm nằm ngoài cùng bên phải --> *@
+@*         <form method="get" class="input-group" style="width:340px;"> *@
+@*             <span class="input-group-text"><i class="fas fa-search"></i></span> *@
+@*             <input type="text" name="search" value="@search" class="form-control search-box" placeholder="Tìm kiếm sản phẩm..." /> *@
+@*         </form> *@
+@*     </div> *@
+@* </div> *@
+
+
+@* <!-- Stats Cards --> *@
+@* <div class="row g-4 mb-4"> *@
+@*     <div class="col-xl-3 col-md-6"> *@
+@*         <div class="card stat-card"> *@
+@*             <div class="card-body d-flex justify-content-between align-items-center"> *@
+@*                 <div> *@
+@*                     <h6 class="text-uppercase text-muted small mb-1">Tổng sản phẩm</h6> *@
+@*                     <h4 class="fw-bold text-dark mb-0">@ViewBag.TotalCount</h4> *@
+@*                 </div> *@
+@*                 <div class="stat-icon bg-primary bg-opacity-10"><i class="fas fa-shopping-bag text-primary"></i></div> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@*     <div class="col-xl-3 col-md-6"> *@
+@*         <div class="card stat-card"> *@
+@*             <div class="card-body d-flex justify-content-between align-items-center"> *@
+@*                 <div> *@
+@*                     <h6 class="text-uppercase text-muted small mb-1">Đang bán</h6> *@
+@*                     <h4 class="fw-bold text-dark mb-0">@ViewBag.InStockCount</h4> *@
+@*                 </div> *@
+@*                 <div class="stat-icon bg-success bg-opacity-10"><i class="fas fa-check-circle text-success"></i></div> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@*     <div class="col-xl-3 col-md-6"> *@
+@*         <div class="card stat-card"> *@
+@*             <div class="card-body d-flex justify-content-between align-items-center"> *@
+@*                 <div> *@
+@*                     <h6 class="text-uppercase text-muted small mb-1">Sắp hết hàng</h6> *@
+@*                     <h4 class="fw-bold text-dark mb-0">@ViewBag.LowStockCount</h4> *@
+@*                 </div> *@
+@*                 <div class="stat-icon bg-warning bg-opacity-10"><i class="fas fa-exclamation-triangle text-warning"></i></div> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@*     <div class="col-xl-3 col-md-6"> *@
+@*         <div class="card stat-card"> *@
+@*             <div class="card-body d-flex justify-content-between align-items-center"> *@
+@*                 <div> *@
+@*                     <h6 class="text-uppercase text-muted small mb-1">Hết hàng</h6> *@
+@*                     <h4 class="fw-bold text-dark mb-0">@ViewBag.OutOfStockCount</h4> *@
+@*                 </div> *@
+@*                 <div class="stat-icon bg-danger bg-opacity-10"><i class="fas fa-times-circle text-danger"></i></div> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+
+@* <!-- Products Table --> *@
+@* <div class="card"> *@
+@*     <div class="card-header bg-transparent d-flex justify-content-between align-items-center"> *@
+@*         <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Danh sách sản phẩm</h5> *@
+@*         <div class="d-flex gap-2"> *@
+@*             <a asp-controller="SanPham" asp-action="Create" class="btn btn-primary btn-sm"> *@
+@*                 <i class="fas fa-plus me-1"></i>Thêm sản phẩm *@
+@*             </a> *@
+@*         </div> *@
+@*     </div> *@
+
+@*     <div class="table-responsive"> *@
+@*         <table class="table table-modern mb-0"> *@
+@*             <thead> *@
+@*                 <tr> *@
+@*                     <th>Ảnh</th> *@
+@*                     <th>Tên sản phẩm</th> *@
+@*                     <th>Giá bán</th> *@
+@*                     <th>Tồn kho</th> *@
+@*                     <th>Trạng thái</th> *@
+@*                     <th class="text-center">Hành động</th> *@
+@*                 </tr> *@
+@*             </thead> *@
+@*             <tbody> *@
+@*                 @if (Model != null && Model.Any()) *@
+@*                 { *@
+@*                     foreach (var item in Model) *@
+@*                     { *@
+@*                         var totalStock = item?.ProductVariants?.Sum(v => v.Stock ?? 0) ?? 0; *@
+@*                         string statusLabel; *@
+@*                         if (!string.IsNullOrWhiteSpace(item?.Status) && item!.Status!.Equals("Inactive", StringComparison.OrdinalIgnoreCase)) *@
+@*                             statusLabel = "Ngừng bán"; *@
+@*                         else if (totalStock <= 0) *@
+@*                             statusLabel = "Hết hàng"; *@
+@*                         else if (totalStock <= 5) *@
+@*                             statusLabel = "Sắp hết"; *@
+@*                         else *@
+@*                             statusLabel = "Đang bán"; *@
+
+@*                         <tr> *@
+@*                             <!-- Ảnh --> *@
+@*                             <td style="width: 100px;"> *@
+@*                                 @if (!string.IsNullOrEmpty(item?.ThumbnailImage)) *@
+@*                                 { *@
+@*                                     <div class="ratio ratio-1x1 bg-light rounded d-flex justify-content-center align-items-center overflow-hidden" style="max-width:80px;"> *@
+@*                                         <img src="~/hinh/@System.IO.Path.GetFileName(item.ThumbnailImage)" *@
+@*                                              alt="@item.ProductName" *@
+@*                                              class="img-fluid" *@
+@*                                              style="object-fit: cover; width: 100%; height: 100%;" /> *@
+@*                                     </div> *@
+@*                                 } *@
+@*                                 else *@
+@*                                 { *@
+@*                                     <div class="ratio ratio-1x1 bg-light rounded d-flex justify-content-center align-items-center text-muted" style="max-width:80px;"> *@
+@*                                         <i class="fas fa-image"></i> *@
+@*                                     </div> *@
+@*                                 } *@
+@*                             </td> *@
+
+@*                             <!-- Tên sản phẩm --> *@
+@*                             <td> *@
+@*                                 <div class="product-name">@item?.ProductName</div> *@
+@*                                 <small class="product-sku">SKU: BAG-@item?.ProductId</small> *@
+@*                             </td> *@
+
+@*                             <!-- Giá bán --> *@
+@*                             <td><span class="price">@((item?.SalePrice ?? 0).ToString("N0")) ₫</span></td> *@
+
+@*                             <!-- Tồn kho --> *@
+@*                             <td>@totalStock</td> *@
+
+@*                             <!-- Trạng thái --> *@
+@*                             <td> *@
+@*                                 @switch (statusLabel) *@
+@*                                 { *@
+@*                                     case "Ngừng bán": *@
+@*                                         @:<span class="badge bg-secondary">Ngừng bán</span> *@
+@*                                         break; *@
+@*                                     case "Hết hàng": *@
+@*                                         @:<span class="badge bg-danger">Hết hàng</span> *@
+@*                                         break; *@
+@*                                     case "Sắp hết": *@
+@*                                         @:<span class="badge bg-warning text-dark">Sắp hết</span> *@
+@*                                         break; *@
+@*                                     default: *@
+@*                                         @:<span class="badge bg-success">Đang bán</span> *@
+@*                                         break; *@
+@*                                 } *@
+@*                             </td> *@
+
+@*                             <!-- Hành động --> *@
+@*                             <td class="text-center"> *@
+@*                                 <div class="d-flex gap-1 justify-content-center"> *@
+@*                                     <a asp-action="Details" asp-route-id="@item?.ProductId" class="btn btn-action btn-outline-info" title="Xem chi tiết"><i class="fas fa-eye"></i></a> *@
+@*                                     <a asp-action="Edit" asp-route-id="@item?.ProductId" class="btn btn-action btn-outline-warning" title="Chỉnh sửa"><i class="fas fa-edit"></i></a> *@
+@*                                     <a asp-action="Delete" asp-route-id="@item?.ProductId" class="btn btn-action btn-outline-danger" title="Xóa"><i class="fas fa-trash"></i></a> *@
+@*                                 </div> *@
+@*                             </td> *@
+@*                         </tr> *@
+@*                     } *@
+@*                 } *@
+@*                 else *@
+@*                 { *@
+@*                     <tr> *@
+@*                         <td colspan="6" class="text-center text-muted">Không có sản phẩm nào</td> *@
+@*                     </tr> *@
+@*                 } *@
+@*             </tbody> *@
+@*         </table> *@
+@*     </div> *@
+
+@*     @if (totalPages > 1) *@
+@*     { *@
+@*         <nav aria-label="Page navigation" class="mt-3"> *@
+@*             <ul class="pagination justify-content-center"> *@
+@*                 <li class="page-item @(page <= 1 ? "disabled" : "")"> *@
+@*                     <a class="page-link" href="@Url.Action("Index", new { page = page - 1, search = search })"> *@
+@*                         <i class="fas fa-chevron-left"></i> *@
+@*                     </a> *@
+@*                 </li> *@
+
+@*                 @for (int i = 1; i <= totalPages; i++) *@
+@*                 { *@
+@*                     <li class="page-item @(i == page ? "active" : "")"> *@
+@*                         <a class="page-link" href="@Url.Action("Index", new { page = i, search = search })">@i</a> *@
+@*                     </li> *@
+@*                 } *@
+
+@*                 <li class="page-item @(page >= totalPages ? "disabled" : "")"> *@
+@*                     <a class="page-link" href="@Url.Action("Index", new { page = page + 1, search = search })"> *@
+@*                         <i class="fas fa-chevron-right"></i> *@
+@*                     </a> *@
+@*                 </li> *@
+@*             </ul> *@
+@*         </nav> *@
+@*     } *@
+@* </div> *@
+@* <script> *@
+@*     (function () { *@
+@*         const btn   = document.getElementById('lowStockBtn'); *@
+@*         const badge = document.getElementById('lowStockBadge'); *@
+
+@*         // Ẩn sẵn nếu trước đó đã xem *@
+@*         if (badge && localStorage.getItem('lowStockSeen') === '1') { *@
+@*             badge.classList.add('d-none'); *@
+@*         } *@
+
+@*         if (!btn) return; *@
+
+@*         // Khi dropdown mở -> ẩn badge và lưu trạng thái đã xem *@
+@*         btn.addEventListener('show.bs.dropdown' in window ? 'show.bs.dropdown' : 'click', function () { *@
+@*             if (badge) badge.classList.add('d-none'); *@
+@*             localStorage.setItem('lowStockSeen', '1'); *@
+@*         }); *@
+@*     })(); *@
+@* </script> *@
+
+@using System.Linq
 @model List<DATN1API.Models.Product>
 
 @{
@@ -134,7 +410,7 @@
                 <tr>
                     <th>Ảnh</th>
                     <th>Tên sản phẩm</th>
-                    <th>Giá bán</th>
+                    <th>Số biến thể</th> <!-- đổi nhãn cột -->
                     <th>Tồn kho</th>
                     <th>Trạng thái</th>
                     <th class="text-center">Hành động</th>
@@ -146,6 +422,8 @@
                     foreach (var item in Model)
                     {
                         var totalStock = item?.ProductVariants?.Sum(v => v.Stock ?? 0) ?? 0;
+                        var variantCount = item?.ProductVariants?.Count() ?? 0;   // tổng số biến thể
+
                         string statusLabel;
                         if (!string.IsNullOrWhiteSpace(item?.Status) && item!.Status!.Equals("Inactive", StringComparison.OrdinalIgnoreCase))
                             statusLabel = "Ngừng bán";
@@ -182,8 +460,8 @@
                                 <small class="product-sku">SKU: BAG-@item?.ProductId</small>
                             </td>
 
-                            <!-- Giá bán -->
-                            <td><span class="price">@((item?.SalePrice ?? 0).ToString("N0")) ₫</span></td>
+                            <!-- Số biến thể -->
+                            <td>@variantCount</td>
 
                             <!-- Tồn kho -->
                             <td>@totalStock</td>
@@ -254,6 +532,7 @@
         </nav>
     }
 </div>
+
 <script>
     (function () {
         const btn   = document.getElementById('lowStockBtn');

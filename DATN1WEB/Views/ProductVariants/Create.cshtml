@@ -50,9 +50,9 @@
                         <span asp-validation-for="SizeId" class="text-danger small"></span>
                     </div>
                     <div class="col-12 col-lg-6">
-                        <label class="form-label">SKU (tuỳ chọn)</label>
-                        <input asp-for="Sku" class="form-control" />
-                        <span asp-validation-for="Sku" class="text-danger small"></span>
+                        <label class="form-label">SKU</label>
+                        <input type="hidden" asp-for="Sku" />
+                        <span id="SkuPreview" class="form-control bg-light"></span>
                     </div>
 
                     <!-- Hàng 3 -->
@@ -63,15 +63,16 @@
                     </div>
                     <div class="col-12 col-lg-6">
                         <label class="form-label">Trạng thái</label>
-                        <input asp-for="Status" class="form-control" value="Active" />
-                        <span asp-validation-for="Status" class="text-danger small"></span>
+                        <input type="hidden" asp-for="Status" value="Đang bán" />
+                        <span class="form-control">Đang bán</span>
+
                     </div>
 
                     <!-- Hàng 4: giá có addon ₫ -->
                     <div class="col-12 col-lg-6">
                         <label class="form-label">Giá gốc</label>
                         <div class="input-group">
-                            <input asp-for="OriginalPrice" class="form-control" type="number" step="0.01" min="0" />
+                            <input asp-for="OriginalPrice" class="form-control" type="text" data-type="currency" />
                             <span class="input-group-text">₫</span>
                         </div>
                         <span asp-validation-for="OriginalPrice" class="text-danger small"></span>
@@ -79,7 +80,7 @@
                     <div class="col-12 col-lg-6">
                         <label class="form-label">Giá bán</label>
                         <div class="input-group">
-                            <input asp-for="SalePrice" class="form-control" type="number" step="0.01" min="0" />
+                            <input asp-for="SalePrice" class="form-control" type="text" data-type="currency" />
                             <span class="input-group-text">₫</span>
                         </div>
                         <span asp-validation-for="SalePrice" class="text-danger small"></span>
@@ -252,6 +253,142 @@
             });
           });
         });
+
+        // sinh mã sku
+                    $(function () {
+          // Bỏ dấu nhưng giữ nguyên khoảng trắng/chuỗi
+          function toAsciiKeepSpaces(s) {
+            if (!s) return '';
+            return s
+              .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // bỏ dấu
+              .replace(/đ/g, 'd').replace(/Đ/g, 'D')           // đ → d
+              .replace(/\s+/g, ' ')                             // gộp nhiều space thành 1
+              .trim();
+          }
+
+          function generateSkuFromNames() {
+            const productId = $('#ProductId').val();
+            const sizeText  = $('#SizeId option:selected').text().trim();
+            const colorText = $('#ColorId option:selected').text().trim();
+
+            if (productId && $('#SizeId').val() && $('#ColorId').val()) {
+              const sku = `BAG_${toAsciiKeepSpaces(sizeText)}_${toAsciiKeepSpaces(colorText)}_${productId}`;
+              $('[name="Sku"]').val(sku);   // hidden input gửi về server
+              $('#SkuPreview').text(sku);   // hiển thị cho người dùng
+            } else {
+              $('[name="Sku"]').val('');
+              $('#SkuPreview').text('(Chưa đủ dữ liệu để sinh SKU)');
+            }
+          }
+
+          $('#ProductId, #SizeId, #ColorId').on('change', generateSkuFromNames);
+          generateSkuFromNames();
+        });
+
+        // tiền tệ
+                $(function () {
+          // === Helpers giống form Sản phẩm ===
+          function normalizeMoney(val) {
+            if (val == null) return '';
+            return String(val).replace(/[^\d.-]/g, ''); // "1,200,000" -> "1200000"
+          }
+
+          function formatCurrencyInput(el) {
+            let val = el.value || '';
+            if (!val) { el.value = ''; return; }
+            // giữ số & dấu . -
+            val = val.replace(/[^\d.-]/g, '');
+            const parts = val.split('.');
+            let intPart = parts[0].replace(/-/g,'');
+            const neg = val.startsWith('-');
+            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            el.value = (neg ? '-' : '') + intPart + (parts.length > 1 ? '.' + parts[1] : '');
+          }
+
+          // === Thêm rule tiền tệ ===
+          $.validator.addMethod('money', function (v) {
+            const n = parseFloat(normalizeMoney(v));
+            return !isNaN(n);
+          }, 'Giá không hợp lệ');
+
+          $.validator.addMethod('gtMoney0', function (v) {
+            const n = parseFloat(normalizeMoney(v));
+            return !isNaN(n) && n > 0;
+          }, 'Phải > 0');
+
+          // So sánh OriginalPrice ≥ SalePrice dựa trên giá đã normalize
+          $.validator.addMethod('origGeSale', function (v, el) {
+            const orig = parseFloat(normalizeMoney(v));
+            const sale = parseFloat(normalizeMoney($('#SalePrice').val()));
+            if (isNaN(orig) || isNaN(sale)) return true;
+            return orig >= sale;
+          }, 'Giá gốc phải ≥ Giá bán');
+
+          const $form = $('#variantForm');
+
+          // === Cập nhật rules dùng money/gtMoney0/origGeSale ===
+          $form.validate({
+            ignore: [],
+            onkeyup:   el => $(el).valid(),
+            onfocusout:el => $(el).valid(),
+            errorElement: 'div',
+            errorClass: 'invalid-feedback',
+            highlight:   el => $(el).addClass('is-invalid'),
+            unhighlight: el => $(el).removeClass('is-invalid'),
+            errorPlacement: function (err, el) {
+              const $el = $(el);
+              if ($el.parent('.input-group').length) err.insertAfter($el.parent());
+              else err.insertAfter($el);
+            },
+            invalidHandler: function () {
+              $('#modelSummary').removeClass('d-none').text('Vui lòng kiểm tra các trường được đánh dấu.');
+            },
+            rules: {
+              ProductId: {},
+              ColorId:   {},
+              SizeId:    {},
+
+              Stock:         { required: true, onlyNumber: true, min: 0 },
+              SalePrice:     { required: true, money: true, gtMoney0: true },
+              OriginalPrice: { required: true, money: true, gtMoney0: true, origGeSale: true },
+              Status:        { required: true, minlength: 3 },
+
+              ImageFile:      { imageType: true, fileSize: 2 * 1024 * 1024 },
+              'GalleryFiles': { imageTypeMulti: true, fileSizeMulti: 2 * 1024 * 1024, fileCountMax: 10 }
+            },
+            messages: {
+              ProductId:     { required: 'Vui lòng chọn sản phẩm' },
+              ColorId:       { required: 'Vui lòng chọn màu' },
+              SizeId:        { required: 'Vui lòng chọn kích cỡ' },
+              Stock:         { required: 'Vui lòng nhập tồn kho' },
+              SalePrice:     { required: 'Vui lòng nhập giá bán' },
+              OriginalPrice: { required: 'Vui lòng nhập giá gốc', origGeSale: 'Giá gốc phải ≥ Giá bán' },
+              Status:        { required: 'Vui lòng nhập trạng thái', minlength: 'Tối thiểu 3 ký tự' },
+              ImageFile:     { imageType: 'Chỉ chấp nhận JPEG/PNG/WebP/GIF', fileSize: 'Tối đa 2MB' },
+              'GalleryFiles':{
+                imageTypeMulti: 'Chỉ chấp nhận JPEG/PNG/WebP/GIF',
+                fileSizeMulti:  'Mỗi ảnh tối đa 2MB',
+                fileCountMax:   'Bạn chỉ được chọn tối đa 10 ảnh'
+              }
+            }
+          });
+
+          // === Format khi gõ và khi blur ===
+          $(document).on('keyup blur', 'input[data-type="currency"]', function () {
+            formatCurrencyInput(this);
+          });
+
+          // Format sẵn nếu có giá trị từ server (edit / post-back lỗi)
+          $('input[data-type="currency"]').each(function(){ formatCurrencyInput(this); });
+
+          // === Trước khi submit: gỡ dấu phẩy để server bind decimal ===
+          $form.on('submit', function () {
+            $('input[data-type="currency"]').each(function () {
+              this.value = normalizeMoney(this.value);
+            });
+          });
+        });
+
     </script>
 }
 

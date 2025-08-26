@@ -16,7 +16,7 @@
     .form-label .text-danger {
         font-weight: 700;
     }
-
+    /* jQuery Validate chèn .invalid-feedback sau input; hiển thị khi input có .is-invalid */
     .is-invalid + .invalid-feedback {
         display: block;
     }
@@ -42,7 +42,7 @@
 
 <div class="content-header">
     <h1 class="mb-2">Chỉnh sửa sản phẩm</h1>
-    <p class="text-muted">Cập nhật thông tin, giá, danh mục và trạng thái hiển thị.</p>
+    <p class="text-muted">Cập nhật thông tin, danh mục, trạng thái hiển thị và ảnh sản phẩm.</p>
 </div>
 
 <div class="card">
@@ -50,41 +50,24 @@
         <form asp-action="Edit" enctype="multipart/form-data" method="post" id="productEditForm" novalidate>
             <input type="hidden" asp-for="ProductId" />
 
-            <!-- Tên sản phẩm (một hàng) -->
+            <!-- Tên sản phẩm -->
             <div class="mb-3">
                 <label for="ProductName" class="form-label fw-bold">Tên sản phẩm <span class="text-danger">*</span></label>
                 <input asp-for="ProductName" class="form-control" placeholder="Nhập tên sản phẩm (≥ 10 ký tự)" />
-                <div class="invalid-feedback">Vui lòng nhập tên sản phẩm (ít nhất 10 ký tự).</div>
             </div>
 
-            <!-- Mô tả (một hàng) -->
+            <!-- Mô tả -->
             <div class="mb-3">
                 <label for="Description" class="form-label fw-bold">Mô tả sản phẩm <span class="text-danger">*</span></label>
                 <textarea asp-for="Description" id="Description" class="form-control"></textarea>
-                <div class="invalid-feedback">Vui lòng nhập mô tả (ít nhất 10 ký tự).</div>
             </div>
 
-            <!-- Giá bán & Giá gốc (2 cột) -->
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="SalePrice" class="form-label fw-bold">Giá bán <span class="text-danger">*</span></label>
-                    <input asp-for="SalePrice" class="form-control" inputmode="decimal" placeholder="Nhập giá bán" />
-                    <div class="invalid-feedback">Giá bán phải là số &gt; 0.</div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="OriginalPrice" class="form-label fw-bold">Giá gốc <span class="text-danger">*</span></label>
-                    <input asp-for="OriginalPrice" class="form-control" inputmode="decimal" placeholder="Nhập giá gốc (≥ Giá bán)" />
-                    <div class="invalid-feedback">Giá gốc phải là số &gt; 0 và ≥ Giá bán.</div>
-                </div>
-            </div>
-
-            <!-- Danh mục & Trạng thái (2 cột) -->
+            <!-- Danh mục & Trạng thái -->
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="CategoryId" class="form-label fw-bold">Danh mục <span class="text-danger">*</span></label>
                     @Html.DropDownListFor(m => m.CategoryId, (SelectList)ViewBag.Categories, "-- Chọn danh mục --",
                              new { @class = "form-select", @id = "CategoryId" })
-                    <div class="invalid-feedback">Vui lòng chọn danh mục.</div>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label asp-for="Status" class="form-label fw-bold">Trạng thái <span class="text-danger">*</span></label>
@@ -95,26 +78,23 @@
                     },
                              "-- Chọn trạng thái --",
                              new { @class = "form-select", id = "Status" })
-                    <div class="invalid-feedback">Vui lòng chọn trạng thái.</div>
                 </div>
             </div>
 
-            <!-- Chất liệu & Input chọn ảnh (2 cột cùng hàng) -->
+            <!-- Chất liệu & Ảnh -->
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="Material" class="form-label fw-bold">Chất liệu <span class="text-danger">*</span></label>
                     <input asp-for="Material" class="form-control" placeholder="Nhập chất liệu (≥ 3 ký tự)" />
-                    <div class="invalid-feedback">Vui lòng nhập chất liệu (ít nhất 3 ký tự).</div>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="ImageFile" class="form-label fw-bold">Chọn ảnh mới (không bắt buộc)</label>
                     <input type="file" name="ImageFile" id="ImageFile" class="form-control" accept="image/*" />
                     <div class="form-text">Hỗ trợ JPEG/PNG/WebP, tối đa 2MB.</div>
-                    <div class="invalid-feedback">Ảnh không hợp lệ hoặc quá 2MB.</div>
                 </div>
             </div>
 
-            <!-- Hàng hiển thị ảnh: Ảnh hiện tại & Xem trước ảnh mới (2 cột) -->
+            <!-- Ảnh hiện tại & Xem trước ảnh mới -->
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Ảnh hiện tại</label>
@@ -164,6 +144,7 @@
                 height: 200,
                 callbacks: {
                     onChange: function (contents) {
+                        // giữ plain text trong textarea để jQuery Validate kiểm tra minlength
                         $('#Description').val($('<div>').html(contents).text().trim()).trigger('keyup');
                     }
                 },
@@ -176,16 +157,6 @@
             });
 
             // ===== CUSTOM RULES =====
-            $.validator.addMethod('onlyNumber', function (v) {
-                return $.isNumeric(v) || v === '';
-            }, 'Vui lòng nhập số (không nhập ký tự)');
-            $.validator.addMethod('gt0', function (v) { return parseFloat(v) > 0; }, 'Vui lòng nhập số lớn hơn 0');
-            $.validator.addMethod('geTo', function (v, el, sel) {
-                const other = parseFloat($(sel).val());
-                const cur = parseFloat(v);
-                if (isNaN(other) || isNaN(cur)) return true;
-                return cur >= other;
-            }, 'Phải ≥ trường tham chiếu');
             $.validator.addMethod('fileSize', function (v, el, bytes) {
                 if (!el.files || !el.files.length) return true;
                 return el.files[0].size <= bytes;
@@ -197,7 +168,7 @@
 
             const $form = $('#productEditForm');
 
-            // ===== VALIDATE =====
+            // ===== VALIDATE (chỉ 1 thông báo lỗi / field) =====
             $form.validate({
                 ignore: [],
                 onkeyup: function (el) { $(el).valid(); },
@@ -207,34 +178,33 @@
                 highlight: function (el) { $(el).addClass('is-invalid'); },
                 unhighlight: function (el) { $(el).removeClass('is-invalid'); },
                 errorPlacement: function (err, el) {
-                    if ($(el).closest('td').length) err.appendTo($(el).closest('td'));
-                    else if ($(el).hasClass('form-select')) err.insertAfter($(el));
-                    else if ($(el).attr('name') === 'Description') err.insertAfter($('#Description').next('.note-editor'));
-                    else err.insertAfter($(el));
+                    // Summernote: gắn sau editor để không trùng
+                    if ($(el).attr('name') === 'Description') {
+                        err.insertAfter($('#Description').next('.note-editor'));
+                    } else {
+                        err.insertAfter($(el));
+                    }
                 },
                 rules: {
-                    ProductName:   { required: true, minlength: 10 },
-                    Description:   { required: true, minlength: 10 },
-                    SalePrice:     { required: true, onlyNumber: true, gt0: true },
-                    OriginalPrice: { required: true, onlyNumber: true, gt0: true, geTo: '#SalePrice' },
-                    CategoryId:    { required: true },
-                    Status:        { required: true },
-                    Material:      { required: true, minlength: 3 },
-                    ImageFile:     { imageType: true, fileSize: 2 * 1024 * 1024 }
+                    ProductName: { required: true, minlength: 10 },
+                    Description: { required: true, minlength: 10 },
+                    CategoryId:  { required: true },
+                    Status:      { required: true },
+                    Material:    { required: true, minlength: 3 },
+                    // Ảnh mới không bắt buộc, nhưng nếu chọn thì phải đúng định dạng & ≤ 2MB
+                    ImageFile:   { imageType: true, fileSize: 2 * 1024 * 1024 }
                 },
                 messages: {
-                    ProductName:   { required: 'Vui lòng nhập tên sản phẩm', minlength: 'Ít nhất 10 ký tự' },
-                    Description:   { required: 'Vui lòng nhập mô tả', minlength: 'Ít nhất 10 ký tự' },
-                    SalePrice:     { required: 'Vui lòng nhập giá bán' },
-                    OriginalPrice: { required: 'Vui lòng nhập giá gốc', geTo: 'Giá gốc phải ≥ Giá bán' },
-                    CategoryId:    { required: 'Vui lòng chọn danh mục' },
-                    Status:        { required: 'Vui lòng chọn trạng thái' },
-                    Material:      { required: 'Vui lòng nhập chất liệu', minlength: 'Ít nhất 3 ký tự' },
-                    ImageFile:     { imageType: 'Chỉ JPEG/PNG/WebP', fileSize: 'Tối đa 2MB' }
+                    ProductName: { required: 'Vui lòng nhập tên sản phẩm', minlength: 'Vui lòng nhập tên sản phẩm (ít nhất 10 ký tự).' },
+                    Description: { required: 'Vui lòng nhập mô tả', minlength: 'Vui lòng nhập mô tả (ít nhất 10 ký tự).' },
+                    CategoryId:  { required: 'Vui lòng chọn danh mục' },
+                    Status:      { required: 'Vui lòng chọn trạng thái' },
+                    Material:    { required: 'Vui lòng nhập chất liệu', minlength: 'Vui lòng nhập chất liệu (ít nhất 3 ký tự).' },
+                    ImageFile:   { imageType: 'Chỉ JPEG/PNG/WebP', fileSize: 'Tối đa 2MB' }
                 }
             });
 
-            // ===== Snapshot (tính cả tên file) =====
+            // ===== ĐỒNG BỘ MÔ TẢ & CẢNH BÁO CHƯA THAY ĐỔI =====
             const syncDesc = () => {
                 const contents = $('#Description').summernote('code');
                 $('#Description').val($('<div>').html(contents).text().trim());
@@ -248,8 +218,7 @@
 
             $form.on('submit', function (e) {
                 syncDesc();
-                if (!$form.valid()) return;
-
+                if (!$form.valid()) return; // dừng nếu có lỗi
                 const current = snapshot();
                 if (current === initialSnapshot) {
                     e.preventDefault();
@@ -262,7 +231,7 @@
                 }
             });
 
-            // ===== LIVE PREVIEW ẢNH MỚI =====
+            // ===== XEM TRƯỚC ẢNH MỚI =====
             const $file = $('#ImageFile');
             const $newPreview = $('#newPreview');
             const originalNewPreviewHtml = $newPreview.html();

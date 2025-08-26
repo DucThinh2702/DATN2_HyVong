@@ -1,21 +1,20 @@
 ﻿@model List<DATN1API.Models.Order>
 @using System.Globalization
-@using System.Linq
+@using Microsoft.AspNetCore.WebUtilities
 @{
     ViewData["Title"] = "Đơn hàng";
     string q = Context.Request.Query["search"];
     string orderStatus = Context.Request.Query["orderStatus"];
     string paymentStatus = Context.Request.Query["paymentStatus"];
 
-    Func<object?, string> formatDate = d =>
+    string FormatDate(object? d)
     {
         if (d == null) return "";
         if (d is DateTime dt) return dt.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
         if (d is DateTimeOffset dto) return dto.LocalDateTime.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture);
         return d.ToString();
-    };
+    }
 
-    // ===== Badge cho OrderStatus (giữ logic cũ, nhận EN & VI)
     string OrderBadgeClass(string? s) => (s ?? "").Trim().ToLowerInvariant() switch
     {
         "pending" or "chờ xác nhận" => "badge bg-warning-subtle text-warning fw-semibold",
@@ -34,11 +33,8 @@
         "cancelled" or "canceled" or "đã huỷ" or "đã hủy" => "Đã huỷ",
         _ => "Không rõ"
     };
-}
 
-@functions {
-    // ===== CHUẨN HOÁ PAYMENT TỪ DB (EN/VN) =====
-    private string NormalizePaymentView(string? s)
+    string NormalizePaymentView(string? s)
     {
         var x = (s ?? "").Trim().ToLowerInvariant();
         return x switch
@@ -49,20 +45,32 @@
             _ => "Unknown"
         };
     }
-    private string PaymentLabel(string? s) => NormalizePaymentView(s) switch
+    string PaymentLabel(string? s) => NormalizePaymentView(s) switch
     {
         "Paid" => "Đã thanh toán",
         "Unpaid" => "Chưa thanh toán",
         "Pending" => "Chờ thanh toán",
         _ => "Không rõ"
     };
-    private string PaymentBadgeClass(string? s) => NormalizePaymentView(s) switch
+    string PaymentBadgeClass(string? s) => NormalizePaymentView(s) switch
     {
         "Paid" => "badge bg-success-subtle text-success fw-semibold",
         "Unpaid" => "badge bg-secondary-subtle text-secondary fw-semibold",
         "Pending" => "badge bg-warning-subtle text-warning fw-semibold",
         _ => "badge bg-light text-dark fw-semibold"
     };
+
+    // helper giữ query khi bấm phân trang
+    string MergeQuery(string extra)
+    {
+        var qp = QueryHelpers.ParseQuery(Context.Request.QueryString.Value ?? "");
+        var dict = qp.ToDictionary(k => k.Key, v => v.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+        foreach (var kv in QueryHelpers.ParseQuery("?" + extra))
+            dict[kv.Key] = kv.Value.ToString();
+
+        var q = QueryHelpers.AddQueryString("", dict);
+        return q.TrimStart('?');
+    }
 }
 
 <div class="content-header">
@@ -77,30 +85,29 @@
     </div>
 
     <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
-        <div class="input-group" style="width: 300px;">
+        <div class="input-group" style="width: 320px;">
             <span class="input-group-text"><i class="fas fa-search"></i></span>
             <input name="search" value="@q" class="form-control" placeholder="Mã đơn / tên / SĐT / địa chỉ..." />
         </div>
 
-        <!-- OrderStatus -->
         <select name="orderStatus" class="form-select" style="width:200px">
             <option value="">-- Trạng thái đơn --</option>
-            <option value="Pending" selected="@(string.Equals(orderStatus,"Pending",   StringComparison.OrdinalIgnoreCase))">Chờ xác nhận</option>
+            <option value="Pending" selected="@(string.Equals(orderStatus,"Pending",StringComparison.OrdinalIgnoreCase))">Chờ xác nhận</option>
             <option value="Processing" selected="@(string.Equals(orderStatus,"Processing",StringComparison.OrdinalIgnoreCase))">Đang chuẩn bị</option>
-            <option value="Shipping" selected="@(string.Equals(orderStatus,"Shipping",  StringComparison.OrdinalIgnoreCase))">Đang giao</option>
-            <option value="Completed" selected="@(string.Equals(orderStatus,"Completed", StringComparison.OrdinalIgnoreCase))">Hoàn tất</option>
-            <option value="Cancelled" selected="@(string.Equals(orderStatus,"Cancelled", StringComparison.OrdinalIgnoreCase))">Đã hủy</option>
+            <option value="Shipping" selected="@(string.Equals(orderStatus,"Shipping",StringComparison.OrdinalIgnoreCase))">Đang giao</option>
+            <option value="Completed" selected="@(string.Equals(orderStatus,"Completed",StringComparison.OrdinalIgnoreCase))">Hoàn tất</option>
+            <option value="Cancelled" selected="@(string.Equals(orderStatus,"Cancelled",StringComparison.OrdinalIgnoreCase))">Đã hủy</option>
         </select>
 
-        <!-- PaymentStatus -->
         <select name="paymentStatus" class="form-select" style="width:170px">
             <option value="">-- TT Thanh toán --</option>
-            <option value="Paid" selected="@(string.Equals(paymentStatus,"Paid",  StringComparison.OrdinalIgnoreCase))">Đã thanh toán</option>
+            <option value="Paid" selected="@(string.Equals(paymentStatus,"Paid",StringComparison.OrdinalIgnoreCase))">Đã thanh toán</option>
             <option value="Unpaid" selected="@(string.Equals(paymentStatus,"Unpaid",StringComparison.OrdinalIgnoreCase))">Chưa thanh toán</option>
             <option value="Pending" selected="@(string.Equals(paymentStatus,"Pending",StringComparison.OrdinalIgnoreCase))">Chờ thanh toán</option>
         </select>
 
         <button class="btn btn-outline-primary"><i class="fas fa-filter me-1"></i>Lọc</button>
+        <a href="@Url.Action("Index","Orders")" class="btn btn-outline-secondary">Xoá lọc</a>
     </form>
 </div>
 
@@ -156,6 +163,10 @@
 <div class="card">
     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
         <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Danh sách đơn hàng</h5>
+        @if (ViewBag.FilteredTotal != null)
+        {
+            <span class="text-muted small">Tìm thấy @ViewBag.FilteredTotal kết quả</span>
+        }
     </div>
 
     <div class="card-body p-0">
@@ -189,31 +200,21 @@
 
                             <tr>
                                 <td class="fw-semibold">#@o.OrderId</td>
-                                <td>@formatDate(o.OrderDate)</td>
+                                <td>@FormatDate(o.OrderDate)</td>
                                 <td>@o.RecipientName</td>
                                 <td>@o.RecipientPhone</td>
                                 <td class="text-center">@qty</td>
                                 <td class="text-end fw-semibold">@grand.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫</td>
-
-                                <!-- Payment status: dùng helper chuẩn hoá -->
                                 <td>
-                                    <span class="@PaymentBadgeClass(o.PaymentStatus)">
-                                        @PaymentLabel(o.PaymentStatus)
-                                    </span>
+                                    <span class="@PaymentBadgeClass(o.PaymentStatus)">@PaymentLabel(o.PaymentStatus)</span>
                                 </td>
-
-                                <!-- Order status -->
                                 <td>
-                                    <span class="@OrderBadgeClass(o.OrderStatus)">
-                                        @VNOrder(o.OrderStatus)
-                                    </span>
+                                    <span class="@OrderBadgeClass(o.OrderStatus)">@VNOrder(o.OrderStatus)</span>
                                 </td>
-
                                 <td class="text-center">
                                     <div class="d-flex gap-1 justify-content-center">
                                         <a asp-action="Details" asp-route-id="@o.OrderId" class="btn btn-action btn-outline-info" title="Chi tiết"><i class="fas fa-eye"></i></a>
                                         <a asp-action="Edit" asp-route-id="@o.OrderId" class="btn btn-action btn-outline-warning" title="Sửa"><i class="fas fa-edit"></i></a>
-                                        
                                     </div>
                                 </td>
                             </tr>
@@ -229,6 +230,37 @@
             </table>
         </div>
     </div>
+
+    @* PHÂN TRANG 10/TRANG *@
+    @if ((int)(ViewBag.TotalPages ?? 1) > 1)
+    {
+        var page = (int)(ViewBag.Page ?? 1);
+        var totalPages = (int)(ViewBag.TotalPages ?? 1);
+
+        <nav class="p-3">
+            <ul class="pagination mb-0">
+                @{
+                    string QP(int p) => $"page={p}";
+                    string Combine(string qs) => $"{Context.Request.Path}?{MergeQuery(qs)}";
+                }
+
+                <li class="page-item @(page <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Combine(QP(page - 1))">«</a>
+                </li>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == page ? "active" : "")">
+                        <a class="page-link" href="@Combine(QP(i))">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(page >= totalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Combine(QP(page + 1))">»</a>
+                </li>
+            </ul>
+        </nav>
+    }
 </div>
 
 <style>
@@ -254,5 +286,3 @@
         padding: .25rem .5rem;
     }
 </style>
-
-<!-- (tuỳ chọn) Heartbeat/SignalR của bạn có thể giữ nguyên như trước -->

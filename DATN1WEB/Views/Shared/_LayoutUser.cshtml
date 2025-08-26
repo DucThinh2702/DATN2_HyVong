@@ -3,19 +3,83 @@
 }
 <!DOCTYPE html>
 <html lang="vi">
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var anti = Antiforgery.GetAndStoreTokens(Context);
+}
 <head>
     <meta charset="utf-8" />
     <title>@title</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <link rel="icon" href="~/img/favicon.ico" />
+    @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+    <meta name="request-verification-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+
+    <!-- CSRF for AJAX -->
+    <meta name="request-verification-token" content="@anti.RequestToken" />
+
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+
     <!-- CSS libs -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
     @RenderSection("Styles", required: false)
 </head>
+<!-- Toast container -->
+<!-- Flash message -->
+<div class="flash-container">
+    @{
+        var successMsg = (TempData["Success"] ?? TempData["SuccessMessage"]) as string;
+        var errorMsg = (TempData["Error"] ?? TempData["ErrorMessage"]) as string;
+    }
+    @if (!string.IsNullOrEmpty(successMsg))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@successMsg
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(errorMsg))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@errorMsg
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+</div>
+
+<style>
+    .flash-container {
+        position: fixed;
+        top: 16px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        z-index: 1100;
+        pointer-events: none;
+    }
+
+        .flash-container .alert {
+            pointer-events: auto;
+            width: min(560px, calc(100vw - 32px));
+            box-shadow: 0 10px 30px rgba(0,0,0,.12);
+            margin: 0;
+        }
+</style>
+
+<script>
+    // Auto close flash sau 3s
+    setTimeout(() => {
+      document.querySelectorAll('.flash-container .alert')
+        .forEach(a => bootstrap.Alert.getOrCreateInstance(a).close());
+    }, 3000);
+</script>
+
+
 <body style="font-family: 'Poppins', sans-serif;">
 
     <!-- ===================== HEADER (y chang Index) ===================== -->
@@ -319,3 +383,38 @@
     @RenderSection("Scripts", required: false)
 </body>
 </html>
+<!-- Toast container (đặt trong <body>) -->
+<div id="toastArea" class="toast-container position-fixed top-0 end-0 p-3" style="z-index:20000"></div>
+
+<script>
+    // Hàm hiển thị toast Bootstrap 5
+    window.showToast = function (message, type = 'info', delay = 3500) {
+      const kinds = { success:'success', danger:'danger', warning:'warning', info:'info' };
+      const cls = kinds[type] || 'info';
+
+      const wrap = document.getElementById('toastArea');
+      const el = document.createElement('div');
+      el.className = 'toast align-items-center text-bg-' + cls + ' border-0';
+      el.setAttribute('role', 'alert');
+      el.setAttribute('aria-live', 'assertive');
+      el.setAttribute('aria-atomic', 'true');
+      el.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                  data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>`;
+
+      wrap.appendChild(el);
+      new bootstrap.Toast(el, { delay }).show();
+    };
+
+    // Ghi đè alert mặc định của trình duyệt ⇒ dùng toast
+    (function () {
+      const nativeAlert = window.alert;
+      window.alert = function (msg) {
+        try { showToast(String(msg), 'info'); }
+        catch { nativeAlert(msg); } // fallback nếu Bootstrap chưa sẵn sàng
+      };
+    })();
+</script>

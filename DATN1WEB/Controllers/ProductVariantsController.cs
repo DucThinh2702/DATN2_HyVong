@@ -48,6 +48,14 @@ namespace DATN1WEB.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProductVariant variant)
         {
+            // Bắt buộc sinh SKU server-side
+            variant.Sku = $"BAG_{variant.SizeId}_{variant.ColorId}_{variant.ProductId}";
+
+            if (!ModelState.IsValid)
+            {
+                await LoadProductColorSize(variant.ProductId);
+                return View(variant);
+            }
             if (variant.ProductId <= 0) ModelState.AddModelError("ProductId", "Vui lòng chọn sản phẩm");
             if (variant.ColorId <= 0) ModelState.AddModelError("ColorId", "Vui lòng chọn màu sắc");
             if (variant.SizeId <= 0) ModelState.AddModelError("SizeId", "Vui lòng chọn kích cỡ");

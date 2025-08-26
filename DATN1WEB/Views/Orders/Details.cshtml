@@ -7,56 +7,81 @@
 }
 
 @functions {
-    // ===== Badge & Nhãn =====
-    string OrderBadge(string? s) => (s ?? "").ToLowerInvariant() switch
+    // ====== ORDER (EN/VN → canonical) ======
+    private string NormalizeOrder(string? s)
     {
-        "pending" => "badge bg-warning-subtle text-warning fw-semibold",
-        "processing" => "badge bg-info-subtle text-info fw-semibold",
-        "shipping" or "shipped" => "badge bg-primary-subtle text-primary fw-semibold",
-        "completed" => "badge bg-success-subtle text-success fw-semibold",
-        "cancelled" or "canceled" => "badge bg-danger-subtle text-danger fw-semibold",
-        "returned" => "badge bg-secondary-subtle text-secondary fw-semibold",
-        _ => "badge bg-light text-dark fw-semibold"
-    };
-    string PaymentBadge(string? s) => (s ?? "").ToLowerInvariant() switch
+        var x = (s ?? "").Trim().ToLowerInvariant();
+        return x switch
+        {
+            "pending" or "chờ xác nhận" => "Pending",
+            "processing" or "đang chuẩn bị" or "đang xử lý" or "chờ xử lý" => "Processing",
+            "shipping" or "shipped" or "đang giao" or "vận chuyển" => "Shipping",
+            "completed" or "delivered" or "hoàn tất" or "hoàn thành" => "Completed",
+            "cancelled" or "canceled" or "đã huỷ" or "đã hủy" => "Cancelled",
+            "returned" or "đã trả hàng" => "Returned",
+            _ => "Unknown"
+        };
+    }
+    private string VNOrder(string? s) => NormalizeOrder(s) switch
     {
-        "paid" => "badge bg-success-subtle text-success fw-semibold",
-        "unpaid" => "badge bg-secondary-subtle text-secondary fw-semibold",
-        "pending" => "badge bg-warning-subtle text-warning fw-semibold",
-        "refunded" => "badge bg-info-subtle text-info fw-semibold",
-        "failed" => "badge bg-danger-subtle text-danger fw-semibold",
-        _ => "badge bg-light text-dark fw-semibold"
-    };
-    string VNPayment(string? s) => (s ?? "").ToLowerInvariant() switch
-    {
-        "paid" => "Đã thanh toán",
-        "unpaid" => "Chưa thanh toán",
-        "pending" => "Chờ thanh toán",
-        "refunded" => "Đã hoàn tiền",
-        "failed" => "Thanh toán thất bại",
+        "Pending" => "Chờ xác nhận",
+        "Processing" => "Đang chuẩn bị",
+        "Shipping" => "Đang giao",
+        "Completed" => "Hoàn tất",
+        "Cancelled" => "Đã huỷ",
+        "Returned" => "Đã trả hàng",
         _ => "Không rõ"
     };
-    string VNOrder(string? s) => (s ?? "").ToLowerInvariant() switch
+    private string OrderBadge(string? s) => NormalizeOrder(s) switch
     {
-        "pending" => "Chờ xác nhận",
-        "processing" => "Đang chuẩn bị",
-        "shipping" or "shipped" => "Đang giao",
-        "completed" => "Hoàn tất",
-        "cancelled" or "canceled" => "Đã huỷ",
-        "returned" => "Đã trả hàng",
+        "Pending" => "badge bg-warning-subtle text-warning fw-semibold",
+        "Processing" => "badge bg-primary-subtle text-primary fw-semibold",
+        "Shipping" => "badge bg-info-subtle text-info fw-semibold",
+        "Completed" => "badge bg-success-subtle text-success fw-semibold",
+        "Cancelled" => "badge bg-danger-subtle text-danger fw-semibold",
+        "Returned" => "badge bg-secondary-subtle text-secondary fw-semibold",
+        _ => "badge bg-light text-dark fw-semibold"
+    };
+
+    // ====== PAYMENT (EN/VN → canonical) ======
+    private string NormalizePayment(string? s)
+    {
+        var x = (s ?? "").Trim().ToLowerInvariant();
+        return x switch
+        {
+            "paid" or "đã thanh toán" or "da thanh toan" => "Paid",
+            "unpaid" or "chưa thanh toán" or "chua thanh toan" => "Unpaid",
+            "pending" or "chờ thanh toán" or "cho thanh toan" => "Pending",
+            "refunded" or "đã hoàn tiền" => "Refunded",
+            "failed" or "thanh toán thất bại" => "Failed",
+            _ => "Unknown"
+        };
+    }
+    private string VNPayment(string? s) => NormalizePayment(s) switch
+    {
+        "Paid" => "Đã thanh toán",
+        "Unpaid" => "Chưa thanh toán",
+        "Pending" => "Chờ thanh toán",
+        "Refunded" => "Đã hoàn tiền",
+        "Failed" => "Thanh toán thất bại",
         _ => "Không rõ"
     };
+    private string PaymentBadge(string? s) => NormalizePayment(s) switch
+    {
+        "Paid" => "badge bg-success-subtle text-success fw-semibold",
+        "Unpaid" => "badge bg-secondary-subtle text-secondary fw-semibold",
+        "Pending" => "badge bg-warning-subtle text-warning fw-semibold",
+        "Refunded" => "badge bg-info-subtle text-info fw-semibold",
+        "Failed" => "badge bg-danger-subtle text-danger fw-semibold",
+        _ => "badge bg-light text-dark fw-semibold"
+    };
+
     string FmtDate(DateTime? d) => d.HasValue ? d.Value.ToString("dd/MM/yyyy HH:mm") : "";
 
-    // ===== Ưu tiên giá ở OrderDetail, fallback Variant =====
+    // ====== TÍNH TIỀN ======
     decimal UnitOf(dynamic d) =>
-        (decimal)(d?.UnitPrice
-              ?? d?.ProductVariant?.SalePrice
-              ?? d?.ProductVariant?.OriginalPrice
-              ?? 0m);
-
+        (decimal)(d?.UnitPrice ?? d?.ProductVariant?.SalePrice ?? d?.ProductVariant?.OriginalPrice ?? 0m);
     int QtyOf(dynamic d) => (int)(d?.Quantity ?? 0);
-
     decimal LineTotalOf(dynamic d)
     {
         var unit = UnitOf(d);
@@ -66,21 +91,17 @@
 }
 
 @{
-    // ===== TÍNH LẠI CHẮC CHẮN ĐÚNG =====
     decimal itemsSubtotal = (Model?.OrderDetails?.Any() == true)
         ? Model.OrderDetails.Sum(d => LineTotalOf(d))
         : 0m;
 
-    // Nếu Controller có đẩy số khác (không bắt buộc dùng)
     if (ViewBag.ItemsSubtotal is decimal vbSub && vbSub > 0) itemsSubtotal = vbSub;
 
     decimal shippingFee = Model?.ShippingFee ?? 0m;
     if (ViewBag.ShippingFee is decimal vbShip) shippingFee = vbShip;
 
-    // Grand total luôn = subtotal(recalc) + ship
     decimal grandTotal = itemsSubtotal + shippingFee;
 
-    // Giá đã lưu trên đơn (nếu có) – chỉ hiển thị tham khảo
     decimal? totalRecorded = Model?.TotalAmount;
     bool showRecorded = totalRecorded.HasValue && totalRecorded.Value != itemsSubtotal;
 }
@@ -124,7 +145,6 @@
                         <strong>@(Model.Promotion.PromoNameCode ?? Model.Promotion.PromoName)</strong>
                     </div>
                 }
-
             </div>
         </div>
     </div>
@@ -197,7 +217,6 @@
                             var color = pv?.Color?.ColorName;
                             var size = pv?.Size?.SizeName;
 
-                            // Ảnh: URL tuyệt đối hoặc file trong /hinh
                             string? imgUrl = null;
                             var thumb = pv?.ThumbnailImage ?? "";
                             if (Uri.TryCreate(thumb, UriKind.Absolute, out _)) imgUrl = thumb;

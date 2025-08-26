@@ -45,10 +45,10 @@
                     <p class="card-text">
                         <strong>Mô tả:</strong><br /> @Html.Raw(Model.Description)
                     </p>
-                    <p class="card-text">
-                        <strong>Giá bán:</strong> @(Model.SalePrice?.ToString("N0") ?? "Chưa có") ₫ <br />
-                        <strong>Giá gốc:</strong> @(Model.OriginalPrice?.ToString("N0") ?? "Chưa có") ₫
-                    </p>
+                    @* <p class="card-text"> *@
+                    @*     <strong>Giá bán:</strong> @(Model.SalePrice?.ToString("N0") ?? "Chưa có") ₫ <br /> *@
+                    @*     <strong>Giá gốc:</strong> @(Model.OriginalPrice?.ToString("N0") ?? "Chưa có") ₫ *@
+                    @* </p> *@
                     <p class="card-text">
                         <strong>Chất liệu:</strong> @Model.Material <br />
                         <strong>Danh mục:</strong> @Model.Category?.CategoryName <br />

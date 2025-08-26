@@ -278,6 +278,7 @@
 @*     </script> *@
 @* } *@
 @model List<DATN1WEB.Models.ViewModels.MyOrderListItemVM>
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = "Đơn hàng của tôi";
     var page = (int)(ViewBag.Page ?? 1);
@@ -291,20 +292,38 @@
 <div class="container py-4">
     <div class="d-flex align-items-center justify-content-between mb-3">
         <h4 class="mb-0">Đơn hàng của tôi</h4>
-        <a class="btn btn-outline-secondary" href="@Url.Action("Index","User")">
+        <a class="btn btn-outline-secondary" asp-controller="User" asp-action="Index">
             <i class="bi bi-bag"></i> Tiếp tục mua sắm
         </a>
     </div>
 
-    <form class="row g-2 mb-3">
+    <!-- Thông báo TempData (nếu layout của bạn chưa hiển thị) -->
+    @if (TempData["Success"] is string sMsg)
+    {
+        <div class="alert alert-success">@sMsg</div>
+    }
+    @if (TempData["Error"] is string eMsg)
+    {
+        <div class="alert alert-danger">@eMsg</div>
+    }
+
+    <form class="row g-2 mb-3" method="get" asp-controller="User" asp-action="Orders">
         <div class="col-md-3">
             <select name="status" class="form-select" onchange="this.form.submit()">
-                @foreach (var op in statusOptions)
+                @foreach (var op in statusOptions ?? new List<SelectListItem>())
                 {
-                    <option value="@op.Value" selected="@(op.Value == status)">@op.Text</option>
+                    if (string.Equals(op.Value, status, StringComparison.Ordinal))
+                    {
+                        <option value="@op.Value" selected>@op.Text</option>
+                    }
+                    else
+                    {
+                        <option value="@op.Value">@op.Text</option>
+                    }
                 }
             </select>
         </div>
+
         <div class="col-md-6">
             <input name="q" value="@q" class="form-control" placeholder="Tìm theo mã đơn, tên người nhận, SĐT, địa chỉ, ghi chú..." />
         </div>
@@ -330,53 +349,56 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (!Model.Any())
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="9" class="text-center py-4">Chưa có đơn hàng nào.</td></tr>
+                }
+                else
+                {
+                    foreach (var o in Model)
                     {
-                        <tr><td colspan="9" class="text-center py-4">Chưa có đơn hàng nào.</td></tr>
-                    }
-                    else
-                    {
-                        foreach (var o in Model)
-                        {
-                            var st = (o.OrderStatus ?? "").Trim().ToLower();
-                            var canCancel = string.IsNullOrWhiteSpace(st) || st == "pending" || st == "chờ xác nhận";
-                            var isCancelled = st == "cancelled" || st == "canceled" || st == "đã huỷ" || st == "đã hủy";
+                        var st = (o.OrderStatus ?? "").Trim().ToLower();
+                        var canCancel = string.IsNullOrWhiteSpace(st) || st == "pending" || st == "chờ xác nhận";
+                        var isCancelled = st == "cancelled" || st == "canceled" || st == "đã huỷ" || st == "đã hủy";
 
-                            <tr>
-                                <td>#@o.OrderId</td>
-                                <td>@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
-                                <td class="text-center">@o.Quantity</td>
-                                <td class="text-end">@o.TotalAmount.ToString("N0") VNĐ</td>
-                                <td>@Html.Raw(BadgePayment(o.PaymentStatus))</td>
-                                <td>@Html.Raw(BadgeOrder(o.OrderStatus))</td>
-                                <td>@o.RecipientName<br /><small class="text-muted">@o.RecipientPhone</small></td>
-                                <td class="text-truncate" style="max-width:260px" title="@o.DeliveryAddress">@o.DeliveryAddress</td>
-                                <td class="text-end">
-                                    <a class="btn btn-sm btn-outline-primary" href="@Url.Action("OrderDetail","User", new { id = o.OrderId })">Xem</a>
+                        <tr>
+                            <td>#@o.OrderId</td>
+                            <td>@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-center">@o.Quantity</td>
+                            <td class="text-end">@o.TotalAmount.ToString("N0") VNĐ</td>
+                            <td>@Html.Raw(BadgePayment(o.PaymentStatus))</td>
+                            <td>@Html.Raw(BadgeOrder(o.OrderStatus))</td>
+                            <td>@o.RecipientName<br /><small class="text-muted">@o.RecipientPhone</small></td>
+                            <td class="text-truncate" style="max-width:260px" title="@o.DeliveryAddress">@o.DeliveryAddress</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary" asp-controller="User" asp-action="OrderDetail" asp-route-id="@o.OrderId">Xem</a>
 
-                                    @if (canCancel)
-                                    {
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-danger ms-1"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#cancelModal"
-                                                data-order-id="@o.OrderId">
-                                            Huỷ
-                                        </button>
-                                    }
+                                @if (canCancel)
+                                {
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger ms-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#cancelModal"
+                                            data-order-id="@o.OrderId">
+                                        Huỷ
+                                    </button>
+                                }
 
-                                    @if (isCancelled)
-                                    {
-                                        <button type="button"
-                                                class="btn btn-sm btn-outline-success ms-1"
-                                                onclick="reorderOrder(@o.OrderId)">
+                                @if (isCancelled)
+                                {
+                                    <!-- Đặt lại = POST form + TempData -->
+                                    <form asp-controller="User" asp-action="Reorder" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@o.OrderId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success ms-1">
                                             Đặt lại
                                         </button>
-                                    }
-                                </td>
-                            </tr>
-                        }
+                                    </form>
+                                }
+                            </td>
+                        </tr>
                     }
+                }
                 </tbody>
             </table>
         </div>
@@ -385,16 +407,16 @@
             <nav>
                 <ul class="pagination mb-0 justify-content-end">
                     <li class="page-item @(page<=1?"disabled":"")">
-                        <a class="page-link" href="@Url.Action("Orders", new { page = page-1, status, q })">«</a>
+                        <a class="page-link" asp-action="Orders" asp-route-page="@(page-1)" asp-route-status="@status" asp-route-q="@q">«</a>
                     </li>
                     @for (int i = 1; i <= totalPages; i++)
                     {
                         <li class="page-item @(i==page?"active":"")">
-                            <a class="page-link" href="@Url.Action("Orders", new { page = i, status, q })">@i</a>
+                            <a class="page-link" asp-action="Orders" asp-route-page="@i" asp-route-status="@status" asp-route-q="@q">@i</a>
                         </li>
                     }
                     <li class="page-item @(page>=totalPages?"disabled":"")">
-                        <a class="page-link" href="@Url.Action("Orders", new { page = page+1, status, q })">»</a>
+                        <a class="page-link" asp-action="Orders" asp-route-page="@(page+1)" asp-route-status="@status" asp-route-q="@q">»</a>
                     </li>
                 </ul>
             </nav>
@@ -402,62 +424,65 @@
     </div>
 </div>
 
-<!-- Modal xác nhận huỷ + lý do (kiểu Shopee) -->
+<!-- Modal huỷ: POST form tới /User/CancelOrder -->
 <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Huỷ đơn hàng</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Huỷ đơn hàng</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+
+      <form id="cancelForm" asp-controller="User" asp-action="CancelOrder" method="post">
+        @Html.AntiForgeryToken()
+        <div class="modal-body">
+          <input type="hidden" name="Id" id="cancelOrderId" />
+          <input type="hidden" name="Reason" id="cancelReasonField" />
+
+          <div class="mb-2">
+            <div class="alert alert-warning py-2 px-3">
+              Bạn đang yêu cầu huỷ đơn <strong id="cancelOrderCode">#</strong>.
+              Huỷ chỉ áp dụng cho đơn <strong>Chờ xác nhận</strong>.
             </div>
+          </div>
 
-            <div class="modal-body">
-                <input type="hidden" id="cancelOrderId" />
-                <div class="mb-2">
-                    <div class="alert alert-warning py-2 px-3">
-                        Bạn đang yêu cầu huỷ đơn <strong id="cancelOrderCode">#</strong>.
-                        Huỷ chỉ áp dụng cho đơn <strong>Chờ xác nhận</strong>.
-                    </div>
-                </div>
+          <div class="mb-3">
+            <label class="form-label">Chọn lý do huỷ đơn <span class="text-danger">*</span></label>
+            <select id="cancelReasonSelect" class="form-select">
+              <option value="" selected>-- Chọn lý do --</option>
+              <option value="change_item">Muốn đổi sản phẩm/kích cỡ/màu</option>
+              <option value="change_address">Muốn đổi địa chỉ nhận hàng</option>
+              <option value="change_payment">Muốn đổi phương thức thanh toán</option>
+              <option value="seller_slow">Người bán phản hồi chậm / Chuẩn bị lâu</option>
+              <option value="delivery_late">Thời gian giao hàng dự kiến quá lâu</option>
+              <option value="found_better_price">Tìm được giá tốt hơn</option>
+              <option value="ordered_by_mistake">Đặt nhầm / Không còn nhu cầu</option>
+              <option value="merge_orders">Muốn gộp đơn để tiết kiệm phí vận chuyển</option>
+              <option value="wrong_info">Sai thông tin người nhận (Tên/SĐT/Địa chỉ)</option>
+              <option value="adjust_quantity">Muốn thay đổi số lượng sản phẩm</option>
+              <option value="other">Lý do khác</option>
+            </select>
+            <div class="form-text">Vui lòng chọn một lý do phù hợp.</div>
+            <div id="cancelError" class="text-danger small mt-1"></div>
+          </div>
 
-                <!-- Combobox lý do -->
-                <div class="mb-3">
-                    <label class="form-label">Chọn lý do huỷ đơn <span class="text-danger">*</span></label>
-                    <select id="cancelReasonSelect" class="form-select">
-                        <option value="" selected>-- Chọn lý do --</option>
-                        <option value="change_item">Muốn đổi sản phẩm/kích cỡ/màu</option>
-                        <option value="change_address">Muốn đổi địa chỉ nhận hàng</option>
-                        <option value="change_payment">Muốn đổi phương thức thanh toán</option>
-                        <option value="seller_slow">Người bán phản hồi chậm / Chuẩn bị lâu</option>
-                        <option value="delivery_late">Thời gian giao hàng dự kiến quá lâu</option>
-                        <option value="found_better_price">Tìm được giá tốt hơn</option>
-                        <option value="ordered_by_mistake">Đặt nhầm / Không còn nhu cầu</option>
-                        <option value="merge_orders">Muốn gộp đơn để tiết kiệm phí vận chuyển</option>
-                        <option value="wrong_info">Sai thông tin người nhận (Tên/SĐT/Địa chỉ)</option>
-                        <option value="adjust_quantity">Muốn thay đổi số lượng sản phẩm</option>
-                        <option value="other">Lý do khác</option>
-                    </select>
-                    <div class="form-text">Vui lòng chọn một lý do phù hợp.</div>
-                    <div id="cancelError" class="text-danger small mt-1"></div> <!-- Nơi hiển thị lỗi -->
-                </div>
-
-                <!-- Ô mô tả chỉ hiện khi chọn "Lý do khác" -->
-                <div class="mb-1 d-none" id="reasonOtherWrap">
-                    <label class="form-label">Mô tả chi tiết <span class="text-danger">*</span></label>
-                    <textarea id="cancelReasonOther" class="form-control" rows="3" maxlength="500"
-                              placeholder="Nhập mô tả ngắn gọn (tối thiểu 5 ký tự)"></textarea>
-                    <div class="form-text"><span id="reasonCount">0</span>/500 ký tự</div>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button id="btnConfirmCancel" class="btn btn-danger">
-                    <i class="bi bi-x-circle"></i> Xác nhận huỷ
-                </button>
-            </div>
+          <div class="mb-1 d-none" id="reasonOtherWrap">
+            <label class="form-label">Mô tả chi tiết <span class="text-danger">*</span></label>
+            <textarea id="cancelReasonOther" class="form-control" rows="3" maxlength="500"
+                      placeholder="Nhập mô tả ngắn gọn (tối thiểu 5 ký tự)"></textarea>
+            <div class="form-text"><span id="reasonCount">0</span>/500 ký tự</div>
+          </div>
         </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Đóng</button>
+          <button id="btnConfirmCancel" class="btn btn-danger" type="button">
+            <i class="bi bi-x-circle"></i> Xác nhận huỷ
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
 @functions {
@@ -475,7 +500,6 @@
             _ => "Chờ xác nhận"
         };
     }
-
     string CanonPay(string s)
     {
         var x = (s ?? "").Trim().ToLowerInvariant();
@@ -488,7 +512,6 @@
             _ => "Chưa thanh toán"
         };
     }
-
     string BadgeOrder(string s)
     {
         var v = CanonOrder(s);
@@ -502,7 +525,6 @@
             _ => "<span class='badge bg-secondary'>Chờ xác nhận</span>"
         };
     }
-
     string BadgePayment(string s)
     {
         var v = CanonPay(s);
@@ -517,121 +539,83 @@
 }
 
 @section Scripts {
-    <script>
-        // ===== Elements =====
-        const cancelModalEl   = document.getElementById('cancelModal');
-        const reasonSelect    = document.getElementById('cancelReasonSelect');
-        const reasonOtherWrap = document.getElementById('reasonOtherWrap');
-        const reasonOther     = document.getElementById('cancelReasonOther');
-        const reasonCount     = document.getElementById('reasonCount');
-        const errorEl         = document.getElementById('cancelError');
+<script>
+  // ===== Elements =====
+  const cancelModalEl   = document.getElementById('cancelModal');
+  const reasonSelect    = document.getElementById('cancelReasonSelect');
+  const reasonOtherWrap = document.getElementById('reasonOtherWrap');
+  const reasonOther     = document.getElementById('cancelReasonOther');
+  const reasonCount     = document.getElementById('reasonCount');
+  const errorEl         = document.getElementById('cancelError');
 
-        // Reset khi mở modal
-        if (cancelModalEl) {
-            cancelModalEl.addEventListener('show.bs.modal', function (event) {
-                const btn = event.relatedTarget;
-                const orderId = btn?.getAttribute('data-order-id') || '';
-                document.getElementById('cancelOrderId').value = orderId;
-                document.getElementById('cancelOrderCode').innerText = '#' + orderId;
+  // Reset khi mở modal
+  cancelModalEl?.addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    const orderId = btn?.getAttribute('data-order-id') || '';
+    document.getElementById('cancelOrderId').value = orderId;
+    document.getElementById('cancelOrderCode').innerText = '#' + orderId;
 
-                reasonSelect.value = '';
-                reasonOther.value = '';
-                reasonOtherWrap.classList.add('d-none');
-                reasonCount.textContent = '0';
-                errorEl.textContent = '';
-            });
-        }
+    reasonSelect.value = '';
+    reasonOther.value = '';
+    reasonOtherWrap.classList.add('d-none');
+    reasonCount.textContent = '0';
+    errorEl.textContent = '';
+  });
 
-        // Hiện/ẩn "Lý do khác"
-        reasonSelect?.addEventListener('change', function () {
-            errorEl.textContent = '';
-            if (this.value === 'other') {
-                reasonOtherWrap.classList.remove('d-none');
-                reasonOther.focus();
-            } else {
-                reasonOtherWrap.classList.add('d-none');
-                reasonOther.value = '';
-                reasonCount.textContent = '0';
-            }
-        });
+  // Hiện/ẩn "Lý do khác"
+  reasonSelect?.addEventListener('change', function () {
+    errorEl.textContent = '';
+    if (this.value === 'other') {
+      reasonOtherWrap.classList.remove('d-none');
+      reasonOther.focus();
+    } else {
+      reasonOtherWrap.classList.add('d-none');
+      reasonOther.value = '';
+      reasonCount.textContent = '0';
+    }
+  });
 
-        // Đếm ký tự mô tả
-        reasonOther?.addEventListener('input', function () {
-            reasonCount.textContent = String(this.value.length);
-            if (this.value.trim().length >= 5) errorEl.textContent = '';
-        });
+  // Đếm ký tự mô tả
+  reasonOther?.addEventListener('input', function () {
+    reasonCount.textContent = String(this.value.length);
+    if (this.value.trim().length >= 5) errorEl.textContent = '';
+  });
 
-        // Xác nhận huỷ: hiển thị lỗi trong form (không dùng alert)
-        document.getElementById('btnConfirmCancel')?.addEventListener('click', async () => {
-            const id = document.getElementById('cancelOrderId').value;
-            const reasonCode = reasonSelect.value;
-            errorEl.textContent = '';
+  // Xác nhận huỷ: hợp lệ -> set hidden Reason và submit form
+  document.getElementById('btnConfirmCancel')?.addEventListener('click', () => {
+    const id = document.getElementById('cancelOrderId').value;
+    const reasonCode = reasonSelect.value;
+    errorEl.textContent = '';
 
-            if (!id) { errorEl.textContent = 'Thiếu mã đơn.'; return; }
-            if (!reasonCode) { errorEl.textContent = 'Vui lòng chọn lý do huỷ.'; return; }
+    if (!id) { errorEl.textContent = 'Thiếu mã đơn.'; return; }
+    if (!reasonCode) { errorEl.textContent = 'Vui lòng chọn lý do huỷ.'; return; }
 
-            const reasonTextMap = {
-                change_item: 'Muốn đổi sản phẩm/kích cỡ/màu',
-                change_address: 'Muốn đổi địa chỉ nhận hàng',
-                change_payment: 'Muốn đổi phương thức thanh toán',
-                seller_slow: 'Người bán phản hồi chậm / Chuẩn bị lâu',
-                delivery_late: 'Thời gian giao hàng dự kiến quá lâu',
-                found_better_price: 'Tìm được giá tốt hơn',
-                ordered_by_mistake: 'Đặt nhầm / Không còn nhu cầu',
-                merge_orders: 'Muốn gộp đơn để tiết kiệm phí vận chuyển',
-                wrong_info: 'Sai thông tin người nhận (Tên/SĐT/Địa chỉ)',
-                adjust_quantity: 'Muốn thay đổi số lượng sản phẩm',
-                other: 'Lý do khác'
-            };
-            let reasonMsg = reasonTextMap[reasonCode] || 'Lý do khác';
+    const reasonTextMap = {
+      change_item: 'Muốn đổi sản phẩm/kích cỡ/màu',
+      change_address: 'Muốn đổi địa chỉ nhận hàng',
+      change_payment: 'Muốn đổi phương thức thanh toán',
+      seller_slow: 'Người bán phản hồi chậm / Chuẩn bị lâu',
+      delivery_late: 'Thời gian giao hàng dự kiến quá lâu',
+      found_better_price: 'Tìm được giá tốt hơn',
+      ordered_by_mistake: 'Đặt nhầm / Không còn nhu cầu',
+      merge_orders: 'Muốn gộp đơn để tiết kiệm phí vận chuyển',
+      wrong_info: 'Sai thông tin người nhận (Tên/SĐT/Địa chỉ)',
+      adjust_quantity: 'Muốn thay đổi số lượng sản phẩm',
+      other: 'Lý do khác'
+    };
+    let reasonMsg = reasonTextMap[reasonCode] || 'Lý do khác';
 
-            if (reasonCode === 'other') {
-                const detail = (reasonOther.value || '').trim();
-                if (detail.length < 5) {
-                    errorEl.textContent = "Vui lòng nhập mô tả tối thiểu 5 ký tự cho 'Lý do khác'.";
-                    return;
-                }
-                reasonMsg = `${reasonMsg}: ${detail}`;
-            }
+    if (reasonCode === 'other') {
+      const detail = (reasonOther.value || '').trim();
+      if (detail.length < 5) {
+        errorEl.textContent = "Vui lòng nhập mô tả tối thiểu 5 ký tự cho 'Lý do khác'.";
+        return;
+      }
+      reasonMsg = `${reasonMsg}: ${detail}`;
+    }
 
-            try {
-                const res = await fetch('/User/CancelOrder', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: Number(id), reason: reasonMsg, reasonCode })
-                });
-                const data = await res.json();
-                if (!data.success) {
-                    errorEl.textContent = data.message || 'Không thể huỷ đơn.';
-                } else {
-                    // Thành công: reload trang (tuỳ bạn có thể đóng modal + toast)
-                    location.reload();
-                }
-            } catch {
-                errorEl.textContent = 'Không thể kết nối server.';
-            }
-        });
-
-        // Đặt lại đơn (giữ nguyên)
-        async function reorderOrder(id) {
-            if (!confirm("Bạn muốn đặt lại đơn #" + id + " ?")) return;
-            try {
-                const res = await fetch('/User/Reorder', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    if (data.redirectUrl) location.href = data.redirectUrl;
-                    else location.reload();
-                } else {
-                    alert(data.message || 'Không thể đặt lại đơn lúc này.');
-                }
-            } catch {
-                alert('Không thể đặt lại đơn lúc này.');
-            }
-        }
-        window.reorderOrder = reorderOrder;
-    </script>
+    document.getElementById('cancelReasonField').value = reasonMsg;
+    document.getElementById('cancelForm').submit();
+  });
+</script>
 }

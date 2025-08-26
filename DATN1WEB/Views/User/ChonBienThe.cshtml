@@ -1,250 +1,82 @@
 ﻿@model DATN1API.Models.Product
 @{
-    Layout = null;
+    Layout = "_LayoutUser";
     var colors = ViewBag.Colors as List<DATN1WEB.Models.Color>;
     var sizes = ViewBag.Sizes as List<DATN1WEB.Models.Size>;
-    var variantsJson = ViewBag.VariantsJson as string;
+    var variantsJson = ViewBag.VariantsJson as string; // JSON list các biến thể
 }
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="utf-8">
-    <title>Giỏ hàng</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="Free HTML Templates" name="keywords">
-    <meta content="Free HTML Templates" name="description">
-
-    <!-- Favicon -->
-    <link href="img/favicon.ico" rel="icon">
-
-    <!-- Google Web Fonts -->
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-
-    <!-- Libraries Stylesheet -->
-    <link href="lib/animate/animate.min.css" rel="stylesheet">
-    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
-
-    <!-- Customized Bootstrap Stylesheet -->
-    <link href="css/style.css" rel="stylesheet">
-</head>
 <style>
     #variantImage {
         width: 100%;
-        max-width: 400px; /* chiều rộng tối đa */
-        height: 400px; /* cố định chiều cao */
-        object-fit: contain; /* hoặc 'cover' nếu muốn cắt ảnh cho vừa */
-        background: #f5f5f5; /* nền xám nhạt nếu ảnh nhỏ hơn khung */
-        border-radius: 8px;
+        max-width: 480px;
+        height: 480px;
+        object-fit: contain;
+        background: #f5f5f5;
+        border-radius: 8px
     }
 
+    #thumbList {
+        max-height: 480px;
+        overflow: auto
+    }
+
+    .thumb {
+        width: 72px;
+        height: 72px;
+        border: 1px solid #dee2e6;
+        border-radius: .35rem;
+        padding: 0;
+        background: #fff;
+        cursor: pointer;
+        transition: transform .15s,box-shadow .15s,border-color .15s
+    }
+
+        .thumb:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 .25rem .75rem rgba(0,0,0,.08)
+        }
+
+        .thumb.active {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 .15rem rgba(13,110,253,.15)
+        }
 </style>
-<!--Hàng 1-->
-<div class="row" style="background:#f8f9fa; padding:5px 40px;">
-    <div class="col-lg-6 d-none d-lg-block">
-        <div class="d-inline-flex align-items-center h-100">
-            <a href="#" class="text-muted me-3 text-decoration-none">Liên hệ</a>
-            <a href="#" class="text-muted text-decoration-none">Giúp đỡ</a>
-        </div>
-    </div>
-    <div class="col-lg-6 d-flex justify-content-end align-items-center">
-        <!-- Tài khoản -->
-        <div class="dropdown me-2">
-            <button class="btn btn-sm dropdown-toggle border" type="button" data-toggle="dropdown">
-                Tài khoản
-            </button>
-            <div class="dropdown-menu dropdown-menu-right">
-                <a class="dropdown-item" href="login.html">Đăng nhập</a>
-                <a class="dropdown-item" href="register.html">Đăng ký</a>
-            </div>
-        </div>
-        <!-- Ngôn ngữ -->
-        <div class="dropdown">
-            <button class="btn btn-sm dropdown-toggle border" type="button" data-toggle="dropdown">
-                Ngôn ngữ
-            </button>
-            <div class="dropdown-menu dropdown-menu-right">
-                <a class="dropdown-item" href="#">Tiếng Việt</a>
-                <a class="dropdown-item" href="#">Tiếng Anh</a>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<!-- Logo + Search + Hotline -->
-<div class="container-fluid border-bottom">
-    <div class="d-flex align-items-center justify-content-between px-4 py-3">
-        <!-- Logo (trái) -->
-        <a href="#" class="text-decoration-none d-flex align-items-center">
-            <span class="fw-bold fs-2 text-warning px-2" style="background:#343a40;">THE BAG</span>
-            <span class="fw-bold fs-2 text-dark px-2" style="background:#ffc107;">STUDIO</span>
-        </a>
-        <!-- Search (giữa) -->
-        <div class="flex-grow-1 d-flex justify-content-center px-3">
-            <form method="get" asp-action="Index" style="width: 100%; max-width: 500px;">
-                <div class="input-group">
-                    <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm kiếm nhanh">
-                    <button class="btn border border-warning text-warning" type="submit">
-                        <i class="fa fa-search"></i>
-                    </button>
-                </div>
-            </form>
-
-        </div>
-        <!-- Hotline (phải) -->
-        <div class="text-end">
-            <small class="text-muted">Chăm sóc khách hàng</small>
-            <h5 class="fw-bold m-0">012 345 6789</h5>
-        </div>
-    </div>
-</div>
-    </div>
-<!-- menu -->
-
-<div class="container-fluid bg-dark mb-30">
-    <div class="row px-xl-5 align-items-center" style="height: 55px;">
-        <!-- Menu Thể loại -->
-        <div class="col-lg-auto d-none d-lg-block">
-            <div style="width: 220px;">
-                <a class="btn d-flex align-items-center justify-content-between w-100"
-                   data-bs-toggle="collapse" href="#navbar-vertical"
-                   style="height:100%; padding: 0 10px 0 30px; background:#ffc107; border-radius:0; margin-left: -10px;">
-                    <h6 class="m-0 text-dark d-flex align-items-center">
-                        <i class="fa fa-bars mr-2"></i>Thể loại
-                    </h6>
-                    <i class="fa fa-angle-down text-dark"></i>
-                </a>
-
-
-
-                <nav class="collapse position-absolute bg-white border shadow-sm"
-                     id="navbar-vertical" style="width:220px; z-index:999;">
-                    <div class="navbar-nav w-100">
-                        <div class="dropdown dropend">
-                            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                                Sản phẩm
-                            </a>
-                            @* <ul class="dropdown-menu rounded-0 border-0 m-0 shadow-sm"> *@
-                            @*     @foreach (var cat in (List<DATN.Models.Category>)ViewBag.Categories) *@
-                            @*     { *@
-                            @*         <li> *@
-                            @*             <a class="dropdown-item" *@
-                            @*                asp-controller="User" *@
-                            @*                asp-action="Index" *@
-                            @*                asp-route-categoryId="@cat.CategoryId" *@
-                            @*                asp-fragment="recentProducts"> *@
-                            @*                 @cat.CategoryName *@
-                            @*             </a> *@
-                            @*         </li> *@
-                            @*     } *@
-                            @* </ul> *@
-                        </div>
-                        <a asp-controller="Products" asp-action="Index" class="nav-item nav-link">Balo</a>
-                        <a asp-controller="Products" asp-action="Index" class="nav-item nav-link">Phụ kiện khác</a>
-                    </div>
-                </nav>
-            </div>
-        </div>
-
-        <!-- Navbar chính -->
-        <div class="col-lg">
-            <nav class="navbar navbar-expand-lg bg-dark navbar-dark py-0 px-0">
-                <a href="#" class="text-decoration-none d-block d-lg-none">
-                    <span class="h1 text-uppercase text-dark bg-light px-2">Multi</span>
-                    <span class="h1 text-uppercase text-light bg-primary px-2 ml-n1">Shop</span>
-                </a>
-                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
-                    <div class="navbar-nav mr-auto py-0">
-                        <a href="index.html" class="nav-item nav-link text-white text-decoration-none"
-                           onmouseover="this.classList.replace('text-white','text-warning')"
-                           onmouseout="this.classList.replace('text-warning','text-white')">
-                            Trang chủ
-                        </a>
-
-                        <a href="shop.html" class="nav-item nav-link text-white text-decoration-none"
-                           onmouseover="this.classList.add('text-warning')"
-                           onmouseout="this.classList.remove('text-warning')">
-                            Khuyến mãi
-                        </a>
-                        <a href="detail.html" class="nav-item nav-link text-white text-decoration-none"
-                           onmouseover="this.classList.add('text-warning')"
-                           onmouseout="this.classList.remove('text-warning')">
-                            Bộ sưu tập
-                        </a>
-                        <div class="nav-item dropdown">
-                            <a href="#" class="nav-item nav-link text-white text-decoration-none" data-bs-toggle="dropdown"
-                               onmouseover="this.classList.add('text-warning')"
-                               onmouseout="this.classList.remove('text-warning')">
-                                Trang <i class="fa fa-angle-down mt-1"></i>
-                            </a>
-                            <div class="dropdown-menu bg-primary rounded-0 border-0 m-0">
-                                <a href="cart.html" class="dropdown-item">Giỏ hàng</a>
-                                <a href="checkout.html" class="dropdown-item">Thanh toán</a>
-                            </div>
-                        </div>
-                        <a href="contact.html" class="nav-item nav-link text-white text-decoration-none"
-                           onmouseover="this.classList.add('text-warning')"
-                           onmouseout="this.classList.remove('text-warning')">
-                            Tin tức
-                        </a>
-                    </div>
-                    @* <div class="navbar-nav ml-auto py-0 d-none d-lg-flex align-items-center"> *@
-                    @*     <a href="#" class="btn px-0"> *@
-                    @*         <i class="fas fa-heart text-primary"></i> *@
-                    @*         <span class="badge text-secondary border border-secondary rounded-circle" *@
-                    @*               style="padding-bottom: 2px;">0</span> *@
-                    @*     </a> *@
-                    @*     <a href="#" class="btn px-0 ml-3"> *@
-                    @*         <i class="fas fa-shopping-cart text-primary"></i> *@
-                    @*         <span class="badge text-secondary border border-secondary rounded-circle" *@
-                    @*               style="padding-bottom: 2px;">0</span> *@
-                    @*     </a> *@
-                    @* </div> *@
-                </div>
-            </nav>
-        </div>
-    </div>
-</div>
 
 <div class="container py-5">
-    <div class="row align-items-start">
-        <!-- Ảnh biến thể -->
-        <div class="col-md-6 text-center mb-4 mb-md-0">
-            <img id="variantImage" src="@Url.Content(Model.ThumbnailImage)"
-                 class="img-fluid rounded shadow-sm border"
-                 style="max-height:400px;" alt="@Model.ProductName" />
+    <div class="row align-items-start g-4">
+        <!-- Cột ảnh -->
+        <div class="col-md-6">
+            <div class="row g-3">
+                <div class="col-12 d-md-block col-md-2 order-2 order-md-1">
+                    <div id="thumbList" class="d-flex d-md-block flex-row gap-2"></div>
+                </div>
+                <div class="col-12 col-md-10 text-center order-1 order-md-2">
+                    <img id="variantImage" src="@Url.Content(Model.ThumbnailImage)" alt="@Model.ProductName" class="img-fluid border shadow-sm">
+                </div>
+            </div>
         </div>
 
-        <!-- Thông tin sản phẩm -->
+        <!-- Thông tin -->
         <div class="col-md-6">
-            <h2 class="fw-bold mb-3">@Model.ProductName</h2>
-            <p class="text-muted">@Html.Raw(Model.Description)</p>
-            <h4 id="price" class="text-danger fw-bold mb-4">
+            <h2 class="fw-bold mb-2">@Model.ProductName</h2>
+            
+
+            <h4 id="price" class="text-danger fw-bold mb-2">
                 @String.Format("{0:N0}", Model.SalePrice ?? 0) VNĐ
             </h4>
+            <div id="stockInfo" class="small text-muted mb-4"></div>
 
-            <!-- Màu sắc -->
+            <!-- Màu -->
             <div class="mb-3">
                 <label class="fw-bold d-block mb-1">Màu sắc</label>
                 <div class="d-flex flex-wrap gap-2">
-                    @foreach (var color in colors)
+                    @foreach (var c in colors)
                     {
-                        <button type="button" class="btn btn-outline-dark btn-color" data-color="@color.ColorId">
-                            @color.ColorName
-                        </button>
+                        <button type="button" class="btn btn-outline-dark btn-color" data-color="@c.ColorId">@c.ColorName</button>
                     }
                 </div>
             </div>
@@ -253,11 +85,9 @@
             <div class="mb-3">
                 <label class="fw-bold d-block mb-1">Size</label>
                 <div class="d-flex flex-wrap gap-2">
-                    @foreach (var size in sizes)
+                    @foreach (var s in sizes)
                     {
-                        <button type="button" class="btn btn-outline-dark btn-size" data-size="@size.SizeId">
-                            @size.SizeName
-                        </button>
+                        <button type="button" class="btn btn-outline-dark btn-size" data-size="@s.SizeId">@s.SizeName</button>
                     }
                 </div>
             </div>
@@ -265,221 +95,230 @@
             <!-- Số lượng -->
             <div class="mb-3">
                 <label class="fw-bold d-block mb-1">Số lượng</label>
-                <div class="input-group" style="width: 140px;">
+                <div class="input-group" style="width:160px;">
                     <button class="btn btn-outline-secondary btn-minus" type="button">-</button>
-                    <input type="number" class="form-control text-center" value="1" min="1" id="quantity" />
+                    <input type="number" id="quantity" class="form-control text-center" value="1" min="1">
                     <button class="btn btn-outline-secondary btn-plus" type="button">+</button>
                 </div>
+                <!-- THÊM MỚI: cảnh báo -->
+                <div id="qtyWarning" class="text-danger small mt-1 d-none">Số lượng sản phẩm không đủ</div>
             </div>
 
-            <!-- Nút -->
-            <div class="d-flex gap-2 mt-4">
-                <form asp-action="MuaNgay" method="post">
-                    <input type="hidden" name="variantId" id="selectedVariant" />
-                    <input type="hidden" name="quantity" id="formQuantity" value="1" />
-                    <button type="submit" class="btn btn-dark px-4">Mua ngay</button>
+
+            <!-- Nút (ẩn cho tới khi chọn đủ / còn hàng) -->
+            <div id="buySection" class="d-none d-flex gap-2 mt-4">
+                <!-- MUA NGAY: POST /User/MuaNgay -->
+                <form asp-controller="User" asp-action="MuaNgay" method="post" class="me-1">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="variantId" class="js-variant-id" />
+                    <input type="hidden" name="quantity" class="js-qty-hidden" value="1" />
+                    <button type="submit" class="btn btn-dark px-4 js-buy-btn" disabled>Mua ngay</button>
                 </form>
 
-                <form asp-action="ThemVaoGio" method="post">
-                    <input type="hidden" name="variantId" id="selectedVariant" />
-                    <input type="hidden" name="quantity" value="1" id="formQuantity" />
-                    <button type="submit" class="btn btn-outline-dark px-4">Thêm vào giỏ hàng</button>
+                <!-- THÊM VÀO GIỎ: POST /User/ThemVaoGio -->
+                <form asp-controller="User" asp-action="ThemVaoGio" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="variantId" class="js-variant-id" />
+                    <input type="hidden" name="quantity" class="js-qty-hidden" value="1" />
+                    <button type="submit" class="btn btn-outline-dark px-4 js-buy-btn" disabled>Thêm vào giỏ hàng</button>
                 </form>
             </div>
+            <p class="text-muted m-2">@Html.Raw(Model.Description)</p>
+
         </div>
     </div>
 </div>
-
-
-
-<!-- Footer  -->
-<div class="container-fluid bg-dark text-light" style="margin-top:0; padding-top:10px; padding-bottom:10px;">
-    <div class="row px-xl-5 pt-5">
-        <!-- Liên Lạc -->
-        <div class="col-lg-4 col-md-12 mb-5 pr-3 pr-xl-5">
-            <h5 class="text-white text-uppercase mb-4 font-weight-bold">Liên lạc</h5>
-            <p class="mb-4">
-                Hãy liên lạc với chúng tôi nếu bạn đang thất mất hoặc muốn chúng tôi tư vấn sản phẩm phù hợp với bạn thì cứ liên lạc với chúng tôi
-            </p>
-            <p class="mb-2">
-                <i class="fa fa-map-marker-alt text-warning me-2"></i> 23 Ngô Quyền, P. Thường Thạnh, Q. Cái Răng, TP. Cần Thơ
-            </p>
-            <p class="mb-2">
-                <i class="fa fa-envelope text-warning me-2"></i> nhomhyvongdatn@gmail.com
-            </p>
-            <p class="mb-0">
-                <i class="fa fa-phone-alt text-warning me-2"></i> 012 345 67890
-            </p>
-        </div>
-
-        <!-- Cửa hàng nhanh -->
-        <div class="col-lg-2 col-md-4 mb-5">
-            <h5 class="text-white text-uppercase mb-4 font-weight-bold">Cửa hàng nhanh</h5>
-            <a class="text-light mb-2 d-block text-decoration-none"
-               href="#"
-               onmouseover="this.classList.replace('text-light','text-warning')"
-               onmouseout="this.classList.replace('text-warning','text-light')">
-                Trang chủ
-            </a>
-            <a class="text-light mb-2 d-block text-decoration-none"
-               href="#"
-               onmouseover="this.classList.replace('text-light','text-warning')"
-               onmouseout="this.classList.replace('text-warning','text-light')">
-                Cửa hàng của chúng tôi
-            </a>
-            <a class="text-light mb-2 d-block text-decoration-none"
-               href="#"
-               onmouseover="this.classList.replace('text-light','text-warning')"
-               onmouseout="this.classList.replace('text-warning','text-light')">
-                Chi tiết cửa hàng
-            </a>
-            <a class="text-light mb-2 d-block text-decoration-none"
-               href="#"
-               onmouseover="this.classList.replace('text-light','text-warning')"
-               onmouseout="this.classList.replace('text-warning','text-light')">
-                Giỏ hàng
-            </a>
-            <a class="text-light mb-2 d-block text-decoration-none"
-               href="#"
-               onmouseover="this.classList.replace('text-light','text-warning')"
-               onmouseout="this.classList.replace('text-warning','text-light')">
-                Thanh toán
-            </a>
-        </div>
-
-        <!-- Tài khoản của tôi -->
-        <div class="col-lg-2 col-md-4 mb-5">
-            <h5 class="text-white text-uppercase mb-4 font-weight-bold">Tài khoản của tôi</h5>
-            <a class="text-light mb-2 d-block text-decoration-none"
-               href="#"
-               onmouseover="this.classList.replace('text-light','text-warning')"
-               onmouseout="this.classList.replace('text-warning','text-light')">
-                Trang chủ
-            </a>
-            <a class="text-light mb-2 d-block text-decoration-none"
-               href="#"
-               onmouseover="this.classList.replace('text-light','text-warning')"
-               onmouseout="this.classList.replace('text-warning','text-light')">
-                Cửa hàng của chúng tôi
-            </a>
-            <a class="text-light mb-2 d-block text-decoration-none"
-               href="#"
-               onmouseover="this.classList.replace('text-light','text-warning')"
-               onmouseout="this.classList.replace('text-warning','text-light')">
-                Chi tiết cửa hàng
-            </a>
-            <a class="text-light mb-2 d-block text-decoration-none"
-               href="#"
-               onmouseover="this.classList.replace('text-light','text-warning')"
-               onmouseout="this.classList.replace('text-warning','text-light')">
-                Giỏ hàng
-            </a>
-            <a class="text-light mb-2 d-block text-decoration-none"
-               href="#"
-               onmouseover="this.classList.replace('text-light','text-warning')"
-               onmouseout="this.classList.replace('text-warning','text-light')">
-                Thanh toán
-            </a>
-        </div>
-
-        <!-- Bản tin -->
-        <div class="col-lg-4 col-md-4 mb-5">
-            <h5 class="text-white text-uppercase mb-4 font-weight-bold">Bản tin</h5>
-            <p>Hãy tìm hiểu về chúng tôi</p>
-            <form action="">
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control border-0" placeholder="Địa chỉ email của bạn">
-                    <div class="input-group-append">
-                        <button class="btn btn-warning text-dark font-weight-bold">Đăng ký</button>
-                    </div>
-                </div>
-            </form>
-            <h6 class="text-white text-uppercase mt-4 mb-3 font-weight-bold">Theo dõi chúng tôi</h6>
-            <div class="d-flex gap-2">
-                <a class="btn btn-warning btn-square"
-                   href="#"
-                   onmouseover="this.classList.replace('btn-warning','btn-light')"
-                   onmouseout="this.classList.replace('btn-light','btn-warning')">
-                    <i class="fab fa-twitter text-dark"></i>
-                </a>
-                <a class="btn btn-warning btn-square"
-                   href="#"
-                   onmouseover="this.classList.replace('btn-warning','btn-light')"
-                   onmouseout="this.classList.replace('btn-light','btn-warning')">
-                    <i class="fab fa-facebook-f text-dark"></i>
-                </a>
-                <a class="btn btn-warning btn-square"
-                   href="#"
-                   onmouseover="this.classList.replace('btn-warning','btn-light')"
-                   onmouseout="this.classList.replace('btn-light','btn-warning')">
-                    <i class="fab fa-linkedin-in text-dark"></i>
-                </a>
-                <a class="btn btn-warning btn-square"
-                   href="#"
-                   onmouseover="this.classList.replace('btn-warning','btn-light')"
-                   onmouseout="this.classList.replace('btn-light','btn-warning')">
-                    <i class="fab fa-instagram text-dark"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Back to Top -->
-<a href="#" class="btn btn-warning text-dark btn-square position-fixed"
-   style="bottom: 20px; right: 20px;">
-    <i class="fa fa-angle-double-up"></i>
-</a>
 
 <script>
+    // ===== DATA =====
+    const variants = @Html.Raw(variantsJson ?? "[]");
+
+    // ===== STATE =====
     let selectedColor = null;
-    let selectedSize = null;
-    const variants = @Html.Raw(variantsJson);
+    let selectedSize  = null;
+    let currentVariant = null;
 
-    document.querySelectorAll('.btn-color').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.btn-color').forEach(x => x.classList.remove('active'));
-            btn.classList.add('active');
-            selectedColor = btn.dataset.color;
-            setVariant();
-        };
-    });
+    // ===== DOM =====
+    const imgEl      = document.getElementById('variantImage');
+    const priceEl    = document.getElementById('price');
+    const qtyEl      = document.getElementById('quantity');
+    const thumbWrap  = document.getElementById('thumbList');
+    const buySection = document.getElementById('buySection');
+    const stockEl    = document.getElementById('stockInfo');
+    const qtyWarning = document.getElementById('qtyWarning');
 
-    document.querySelectorAll('.btn-size').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.btn-size').forEach(x => x.classList.remove('active'));
-            btn.classList.add('active');
-            selectedSize = btn.dataset.size;
-            setVariant();
-        };
-    });
+    // ===== HELPERS =====
+    const vnd = n => (parseFloat(n) || 0).toLocaleString('vi-VN') + ' VNĐ';
+    const pushVariantToForms = id => document.querySelectorAll('.js-variant-id').forEach(i => i.value = id || '');
+    const pushQtyToForms     = q  => document.querySelectorAll('.js-qty-hidden').forEach(i => i.value = q);
 
-    function setVariant() {
-        if (selectedColor && selectedSize) {
-            const variant = variants.find(v => v.ColorId == selectedColor && v.SizeId == selectedSize);
-            if (variant) {
-                document.getElementById('selectedVariant').value = variant.VariantId;
-                if (variant.ThumbnailImage) {
-                    document.getElementById('variantImage').src = variant.ThumbnailImage;
-                }
-                if (variant.SalePrice) {
-                    document.getElementById('price').innerText =
-                        parseInt(variant.SalePrice).toLocaleString('vi-VN') + ' VNĐ';
-                }
-            }
-        }
+    function markActive(selector, value, attr){
+      document.querySelectorAll(selector).forEach(x => x.classList.remove('active'));
+      const btn = document.querySelector(`${selector}[${attr}="${value}"]`);
+      if (btn) btn.classList.add('active');
+    }
+    function markActiveThumb(variantId){
+      document.querySelectorAll('#thumbList .thumb').forEach(t => {
+        t.classList.toggle('active', String(t.dataset.variantId) === String(variantId));
+      });
     }
 
-    document.querySelector('.btn-plus').onclick = () => {
-        const input = document.getElementById('quantity');
-        input.value = parseInt(input.value) + 1;
-        document.getElementById('formQuantity').value = input.value;
-    };
-    document.querySelector('.btn-minus').onclick = () => {
-        const input = document.getElementById('quantity');
-        if (parseInt(input.value) > 1) {
-            input.value = parseInt(input.value) - 1;
-            document.getElementById('formQuantity').value = input.value;
-        }
-    };
+    function findVariant(colorId, sizeId){
+      let v = variants.find(x => String(x.ColorId) === String(colorId) && String(x.SizeId) === String(sizeId));
+      if (!v) v = variants.find(x => String(x.ColorId) === String(colorId))
+             || variants.find(x => String(x.SizeId) === String(sizeId))
+             || variants[0];
+      return v;
+    }
+
+    function renderThumbs(){
+      thumbWrap.innerHTML = '';
+      const seen = new Set();
+      variants.forEach(v => {
+        const src = v.ThumbnailImage || '@Url.Content(Model.ThumbnailImage)';
+        const key = String(v.VariantId);
+        if (seen.has(key)) return; seen.add(key);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'thumb';
+        btn.dataset.variantId = v.VariantId;
+        btn.dataset.color = v.ColorId;
+        btn.dataset.size  = v.SizeId;
+        btn.innerHTML = `<img src="${src}" alt="" class="w-100 h-100" style="object-fit:cover">`;
+
+        btn.addEventListener('click', () => {
+          selectedColor = String(v.ColorId);
+          selectedSize  = String(v.SizeId);
+          markActive('.btn-color', selectedColor, 'data-color');
+          markActive('.btn-size',  selectedSize,  'data-size');
+          setVariant();
+          markActiveThumb(v.VariantId);
+        });
+
+        thumbWrap.appendChild(btn);
+      });
+    }
+
+    // Hiển thị/ẩn cảnh báo + khóa/mở nút mua theo số lượng
+    function validateQty(stock){
+      const max = parseInt(stock || 0, 10);
+      let qty = Math.max(1, parseInt(qtyEl.value || '1', 10));
+
+      // Nếu nhập tay vượt tồn thì tự co về tối đa
+      if (max > 0 && qty > max) qty = max;
+
+      qtyEl.value = qty;
+      pushQtyToForms(qty);
+
+      const ok = max > 0 && qty <= max;
+      qtyWarning.classList.toggle('d-none', ok);
+      document.querySelectorAll('.js-buy-btn').forEach(b => b.disabled = !ok);
+
+      return ok;
+    }
+
+    function updateBuyState(v){
+      const hasSel  = !!(selectedColor && selectedSize && v);
+      const hasStock = hasSel && ((v.Stock ?? 0) > 0);
+
+      // Chỉ hiện cụm nút khi biến thể còn hàng (>0)
+      buySection.classList.toggle('d-none', !hasStock);
+
+      // Cập nhật nội dung tồn
+      stockEl.textContent = hasSel ? (hasStock ? `Còn ${v.Stock} sản phẩm` : 'Hết hàng') : '';
+
+      // Gán max cho input số lượng (để UX tốt khi dùng mobile bàn phím số)
+      if (hasSel) {
+        qtyEl.max = v.Stock ?? 0;
+        validateQty(v.Stock);
+      } else {
+        document.querySelectorAll('.js-buy-btn').forEach(b => b.disabled = true);
+        qtyWarning.classList.add('d-none');
+      }
+    }
+
+    function setVariant(initial=false){
+      if (!selectedColor || !selectedSize) { updateBuyState(null); return; }
+      const v = findVariant(selectedColor, selectedSize);
+      if (!v) { updateBuyState(null); return; }
+
+      currentVariant = v;
+
+      // ảnh/giá
+      const src = v.ThumbnailImage || '@Url.Content(Model.ThumbnailImage)';
+      imgEl.src = src;
+      priceEl.textContent = vnd(v.SalePrice);
+
+      // đẩy form
+      pushVariantToForms(v.VariantId);
+
+      // active nút
+      if (initial){
+        markActive('.btn-color', String(v.ColorId), 'data-color');
+        markActive('.btn-size',  String(v.SizeId),  'data-size');
+      }
+      markActiveThumb(v.VariantId);
+
+      updateBuyState(v);
+    }
+
+    // ===== EVENTS =====
+    document.querySelectorAll('.btn-color').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedColor = btn.getAttribute('data-color');
+        markActive('.btn-color', selectedColor, 'data-color');
+        setVariant();
+      });
+    });
+    document.querySelectorAll('.btn-size').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedSize = btn.getAttribute('data-size');
+        markActive('.btn-size', selectedSize, 'data-size');
+        setVariant();
+      });
+    });
+
+    // Nút +/-
+    document.querySelector('.btn-plus')?.addEventListener('click', () => {
+      let cur = parseInt(qtyEl.value || '1', 10) + 1;
+      if (currentVariant?.Stock >= 0) cur = Math.min(cur, currentVariant.Stock);
+      qtyEl.value = cur;
+      pushQtyToForms(cur);
+      if (currentVariant) validateQty(currentVariant.Stock);
+    });
+    document.querySelector('.btn-minus')?.addEventListener('click', () => {
+      const cur = Math.max(1, parseInt(qtyEl.value || '1', 10) - 1);
+      qtyEl.value = cur;
+      pushQtyToForms(cur);
+      if (currentVariant) validateQty(currentVariant.Stock);
+    });
+
+    // Nhập tay
+    qtyEl.addEventListener('input', () => {
+      let val = Math.max(1, parseInt(qtyEl.value || '1', 10));
+      if (currentVariant?.Stock >= 0) val = Math.min(val, currentVariant.Stock);
+      qtyEl.value = val;
+      pushQtyToForms(val);
+      if (currentVariant) validateQty(currentVariant.Stock);
+    });
+
+    // ===== INIT =====
+    (function init(){
+      pushQtyToForms(qtyEl.value || 1);
+
+      if (!Array.isArray(variants) || variants.length === 0){
+        updateBuyState(null);
+        return;
+      }
+
+      renderThumbs();
+
+      const firstAvailable = variants.find(v => (v.Stock ?? 0) > 0 && String(v.Status || '').toLowerCase() !== 'inactive')
+                           || variants[0];
+
+      selectedColor = String(firstAvailable.ColorId);
+      selectedSize  = String(firstAvailable.SizeId);
+      setVariant(true);
+    })();
 </script>

@@ -452,88 +452,128 @@
     </script>
 
 
-    <!-- Categories -->
-    <div class="container-fluid pt-5">
-        <div class="px-4 mb-3 d-flex align-items-center">
-            <h2 class="fw-bold me-3 mb-0">THỂ LOẠI</h2>
-            <div class="flex-grow-1 border-bottom"></div>
-        </div>
+    @{
+        var catList = ViewBag.Categories as List<DATN1API.Models.Category> ?? new();
+        var counts = ViewBag.CategoryCounts as Dictionary<int, int> ?? new();
+        int perSlide = 4; // số item mỗi slide
+    }
 
-        <div class="row px-4 g-4">
-            @{
-                var catList = ViewBag.Categories as List<DATN1API.Models.Category> ?? new();
-            }
+    <div class="container-fluid px-1 mt-4 mt-lg-5 pt-1">
+        <h2 class="fw-bold me-3 mb-0">THỂ LOẠI</h2>
+        <div class="flex-grow-1 border-bottom"></div>
+    </div>
+
+    <div id="catCarousel" class="carousel slide px-1" data-bs-ride="false" data-bs-wrap="false" data-bs-touch="true">
+        <div class="carousel-inner">
             @if (catList.Any())
             {
-                foreach (var cat in catList)
+                for (int i = 0; i < catList.Count; i += perSlide)
                 {
-                    var raw = (cat.CategoryImage ?? "").Replace("\\", "/");
-                    string imgUrl;
-                    if (!string.IsNullOrWhiteSpace(raw) && Uri.IsWellFormedUriString(raw, UriKind.Absolute))
-                        imgUrl = raw;
-                    else
-                    {
-                        var fileName = System.IO.Path.GetFileName(raw.TrimStart('/'));
-                        imgUrl = !string.IsNullOrEmpty(fileName)
-                        ? Url.Content($"~/hinh/{fileName}")
-                        : Url.Content("~/images/placeholder-category.png");
-                    }
-                    var productCount = cat.Products?.Count ?? 0;
+                    var slice = catList.Skip(i).Take(perSlide).ToList();
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                        <div class="row gx-3">
+                            @foreach (var cat in slice)
+                            {
+                                // ảnh
+                                var raw = (cat.CategoryImage ?? "").Replace("\\", "/").Trim();
+                                string imgUrl;
+                                if (!string.IsNullOrWhiteSpace(raw) && Uri.IsWellFormedUriString(raw, UriKind.Absolute))
+                                    imgUrl = raw;
+                                else
+                                {
+                                    var fileName = System.IO.Path.GetFileName(raw.TrimStart('/'));
+                                    imgUrl = !string.IsNullOrEmpty(fileName)
+                                    ? Url.Content($"~/hinh/{fileName}")
+                                    : Url.Content("~/images/placeholder-category.png");
+                                }
+                                // đếm
+                                var productCount = counts.TryGetValue(cat.CategoryId, out var c) ? c : 0;
 
-                    <div class="col-12 col-md-6 col-lg-3">
-                        <a href="#" class="text-decoration-none">
-                            <div class="card h-100 border-0 shadow-sm"
-                                 style="transition: box-shadow .25s ease, transform .25s ease;">
-                                <div class="card-body d-flex align-items-center gap-3">
-
-                                    <!-- Ảnh FULL, không bao khung -->
-                                    <div class="flex-shrink-0 overflow-hidden"
-                                         style="width:125px; height:95px; border-radius:.5rem;">
-                                        <img src="@imgUrl" alt="@cat.CategoryName"
-                                             class="w-100 h-100"
-                                             style="object-fit:cover; transition:transform .3s ease;" />
-                                    </div>
-
-                                    <!-- Text (không tràn) -->
-                                    <div class="min-w-0">
-                                        <h6 class="mb-1 fw-semibold text-truncate" title="@cat.CategoryName">
-                                            @cat.CategoryName
-                                        </h6>
-                                        <div class="small text-muted text-truncate">@productCount sản phẩm</div>
-                                    </div>
-
+                                <div class="col-12 col-md-6 col-lg-3">
+                                    <a asp-controller="Products"
+                                       asp-action="Index"
+                                       asp-route-categoryId="@cat.CategoryId"
+                                       class="text-decoration-none">
+                                        <!-- card có border + shadow + hover -->
+                                        <div class="card h-100 border rounded-3 shadow-sm category-card">
+                                            <div class="card-body d-flex align-items-center gap-3">
+                                                <div class="ratio ratio-4x3" style="max-width: 120px;">
+                                                    <img src="@imgUrl" alt="@cat.CategoryName"
+                                                         class="img-fluid rounded-3 border object-fit-cover" />
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <h6 class="mb-1 fw-semibold text-truncate">@cat.CategoryName</h6>
+                                                    <div class="small text-muted">@productCount sản phẩm</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
                                 </div>
-                            </div>
-                        </a>
+                            }
+                        </div>
                     </div>
-
                 }
             }
             else
             {
-                <div class="col-12">
-                    <p class="text-center text-muted">Không có thể loại nào được tìm thấy.</p>
+                <div class="carousel-item active">
+                    <div class="alert alert-light mb-0">Không có thể loại nào được tìm thấy.</div>
                 </div>
             }
         </div>
+
+        <!-- Nút điều hướng -->
+        <button class="carousel-control-prev" type="button"
+                data-bs-target="#catCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+            <span class="visually-hidden">Trước</span>
+        </button>
+        <button class="carousel-control-next" type="button"
+                data-bs-target="#catCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+            <span class="visually-hidden">Sau</span>
+        </button>
     </div>
 
+    <style>
+        /* Hover vàng cho card */
+        .category-card:hover {
+            border: 1px solid gold !important;
+            box-shadow: 0 .5rem 1rem rgba(255, 215, 0, .3) !important;
+            transition: .25s ease;
+        }
+    </style>
+
+
     <script>
-        document.querySelectorAll('.card.h-100').forEach(function (card) {
-          const img = card.querySelector('img');
-          card.addEventListener('mouseenter', function () {
-            card.style.boxShadow = '0 .8rem 1.6rem rgba(0,0,0,.10)';
-            card.style.transform = 'translateY(-2px)';
-            if (img) img.style.transform = 'scale(1.05)'; // zoom nhẹ ảnh
-          });
-          card.addEventListener('mouseleave', function () {
-            card.style.boxShadow = '';
-            card.style.transform = 'none';
-            if (img) img.style.transform = 'none';
-          });
+        document.addEventListener('DOMContentLoaded', function () {
+            const el = document.getElementById('catCarousel');
+            if (!el) return;
+            const prev = el.querySelector('.carousel-control-prev');
+            const next = el.querySelector('.carousel-control-next');
+            const items = el.querySelectorAll('.carousel-item');
+            let index = 0;
+
+            function updateArrows() {
+                prev.classList.toggle('disabled', index === 0);
+                next.classList.toggle('disabled', index === items.length - 1);
+            }
+
+            el.addEventListener('slide.bs.carousel', function (e) {
+                index = e.to;
+                setTimeout(updateArrows, 400);
+            });
+            updateArrows();
         });
     </script>
 
+    <style>
+        /* Hiệu ứng hover vàng cho card */
+        .category-card:hover {
+            border: 1px solid gold !important;
+            box-shadow: 0 .5rem 1rem rgba(255, 215, 0, .3) !important;
+        }
+    </style>
 
 
 
@@ -571,21 +611,30 @@
                 <div class="row px-4 g-4">
                     @foreach (var item in Model)
                     {
+                        // Lấy biến thể đang bán (không "Inactive")
+                        var activeVars = (item.ProductVariants ?? new List<DATN1API.Models.ProductVariant>())
+                        .Where(v => string.IsNullOrWhiteSpace(v.Status) || !v.Status.Equals("Inactive", StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+
+                        decimal minSale = activeVars.Where(v => v.SalePrice.HasValue).Select(v => v.SalePrice!.Value).DefaultIfEmpty(0).Min();
+                        decimal minOrig = activeVars.Where(v => v.OriginalPrice.HasValue).Select(v => v.OriginalPrice!.Value).DefaultIfEmpty(0).Min();
+
+                        // Fallback nếu chưa có biến thể/không có giá
+                        var showSale = minSale > 0 ? minSale : (item.SalePrice ?? 0);
+                        var showOrig = minOrig > 0 ? minOrig : (item.OriginalPrice ?? 0);
+
                         <div class="col-6 col-md-4 col-lg-3">
                             <div class="card h-100 border-0 shadow-sm product-card">
-                                <!-- Ảnh + overlay (hover) -->
                                 <div class="ratio ratio-1x1 position-relative overflow-hidden">
                                     <img src="@item.ThumbnailImage"
                                          alt="@item.ProductName"
                                          class="position-absolute top-0 start-0 w-100 h-100 p-img"
                                          style="object-fit:cover; transition:transform .35s ease, filter .35s ease;" />
 
-                                    <!-- Overlay action (ẩn mặc định, hiện khi hover) -->
                                     <div class="p-overlay position-absolute top-0 start-0 w-100 h-100
-                                            d-flex align-items-center justify-content-center"
+                            d-flex align-items-center justify-content-center"
                                          style="background:rgba(255,255,255,.55); opacity:0; transition:opacity .28s ease;">
                                         <div class="d-flex gap-2">
-                                            <!-- Mua (đi tới trang chọn biến thể) -->
                                             <a class="btn btn-light border shadow-sm p-0 d-inline-flex align-items-center justify-content-center"
                                                href="/User/ChonBienThe/@item.ProductId"
                                                title="Mua"
@@ -593,53 +642,46 @@
                                                 <i class="bi bi-cart fs-5"></i>
                                             </a>
 
-                                            <!-- Thêm vào giỏ (LocalStorage) -->
                                             <button type="button"
                                                     class="btn btn-light border shadow-sm p-0 d-inline-flex align-items-center justify-content-center add-to-cart"
                                                     data-id="@item.ProductId"
                                                     data-name="@item.ProductName"
-                                                    data-price="@((int)(item.SalePrice ?? 0))"
+                                                    data-price="@((int)showSale)"
                                                     data-img="@item.ThumbnailImage"
                                                     title="Thêm vào giỏ"
                                                     style="width:46px;height:46px; transition:transform .2s ease;">
                                                 <i class="bi bi-bag-plus fs-5"></i>
                                             </button>
 
-                                            <!-- Yêu thích -->
-                                            <button type="button"
-                                                    class="btn btn-light border shadow-sm p-0 d-inline-flex align-items-center justify-content-center"
-                                                    title="Yêu thích"
-                                                    style="width:46px;height:46px; transition:transform .2s ease;">
+                                            <button type="button" class="btn btn-light border shadow-sm p-0 d-inline-flex align-items-center justify-content-center"
+                                                    title="Yêu thích" style="width:46px;height:46px; transition:transform .2s ease;">
                                                 <i class="bi bi-heart fs-5"></i>
                                             </button>
 
-                                            <!-- Xem nhanh -->
-                                            <button type="button"
-                                                    class="btn btn-light border shadow-sm p-0 d-inline-flex align-items-center justify-content-center"
-                                                    title="Xem nhanh"
-                                                    style="width:46px;height:46px; transition:transform .2s ease;">
+                                            <button type="button" class="btn btn-light border shadow-sm p-0 d-inline-flex align-items-center justify-content-center"
+                                                    title="Xem nhanh" style="width:46px;height:46px; transition:transform .2s ease;">
                                                 <i class="bi bi-search fs-5"></i>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Thông tin -->
                                 <div class="card-body text-center">
                                     <a class="text-decoration-none text-dark fw-medium d-block mb-2" href="#">
                                         @item.ProductName
                                     </a>
                                     <div class="mb-2">
-                                        <span class="fw-bold text-danger">@((item.SalePrice ?? 0).ToString("N0")) VNĐ</span>
-                                        <small class="text-muted">
-                                            <del>@((item.OriginalPrice ?? 0).ToString("N0")) VNĐ</del>
-                                        </small>
+                                        <span class="fw-bold text-danger">@showSale.ToString("N0") VNĐ</span>
+                                        @if (showOrig > showSale && showOrig > 0)
+                                        {
+                                            <small class="text-muted"><del>@showOrig.ToString("N0") VNĐ</del></small>
+                                        }
                                     </div>
                                 </div>
-                                
                             </div>
                         </div>
                     }
+
                 </div>
             }
             else
@@ -795,79 +837,64 @@
         <div class="row px-4 g-4">
             @if (ViewBag.Top4Products is List<DATN1API.Models.Product> topProducts && topProducts != null)
             {
-                foreach (var item in topProducts)
+                @foreach (var item in topProducts)
                 {
-                    <div class="col-6 col-md-4 col-lg-3">
-                        <!-- CARD -->
-                        <div class="card h-100 shadow-sm overflow-hidden position-relative"
-                             style="transition:box-shadow .25s ease;"
-                             onmouseenter="
-                           this.style.boxShadow='0 .75rem 1.5rem rgba(0,0,0,.15)';
-                           const img=this.querySelector('.prod-img'); img.style.transform='scale(1.06)';
-                           const dim=this.querySelector('.hover-dim'); dim.classList.remove('opacity-0'); dim.classList.add('opacity-25');
-                           const acts=this.querySelector('.hover-actions'); acts.style.opacity='1'; acts.style.transform='translateY(0)';"
-                             onmouseleave="
-                           this.style.boxShadow='';
-                           const img=this.querySelector('.prod-img'); img.style.transform='scale(1)';
-                           const dim=this.querySelector('.hover-dim'); dim.classList.remove('opacity-25'); dim.classList.add('opacity-0');
-                           const acts=this.querySelector('.hover-actions'); acts.style.opacity='0'; acts.style.transform='translateY(6px)';">
+                    var activeVars = (item.ProductVariants ?? new List<DATN1API.Models.ProductVariant>())
+                    .Where(v => string.IsNullOrWhiteSpace(v.Status) || !v.Status.Equals("Inactive", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
 
-                            <!-- ẢNH -->
+                    decimal minSale = activeVars.Where(v => v.SalePrice.HasValue).Select(v => v.SalePrice!.Value).DefaultIfEmpty(0).Min();
+                    decimal minOrig = activeVars.Where(v => v.OriginalPrice.HasValue).Select(v => v.OriginalPrice!.Value).DefaultIfEmpty(0).Min();
+
+                    var showSale = minSale > 0 ? minSale : (item.SalePrice ?? 0);
+                    var showOrig = minOrig > 0 ? minOrig : (item.OriginalPrice ?? 0);
+
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="card h-100 shadow-sm overflow-hidden position-relative" style="transition:box-shadow .25s ease;"
+                             onmouseenter="this.style.boxShadow='0 .75rem 1.5rem rgba(0,0,0,.15)'; const img=this.querySelector('.prod-img'); img.style.transform='scale(1.06)'; const dim=this.querySelector('.hover-dim'); dim.classList.remove('opacity-0'); dim.classList.add('opacity-25'); const acts=this.querySelector('.hover-actions'); acts.style.opacity='1'; acts.style.transform='translateY(0)';"
+                             onmouseleave="this.style.boxShadow=''; const img=this.querySelector('.prod-img'); img.style.transform='scale(1)'; const dim=this.querySelector('.hover-dim'); dim.classList.remove('opacity-25'); dim.classList.add('opacity-0'); const acts=this.querySelector('.hover-actions'); acts.style.opacity='0'; acts.style.transform='translateY(6px)';">
+
                             <div class="position-relative" style="height: 230px;">
-                                <img src="@item.ThumbnailImage"
-                                     alt="@item.ProductName"
+                                <img src="@item.ThumbnailImage" alt="@item.ProductName"
                                      class="prod-img position-absolute top-0 start-0 w-100 h-100"
                                      style="object-fit:cover; transition:transform .35s ease;" />
-
-                                <!-- Lớp phủ mờ -->
                                 <div class="hover-dim position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-0"
                                      style="transition:opacity .25s ease;"></div>
 
-                                <!-- Cụm nút ở giữa -->
                                 <div class="hover-actions position-absolute top-50 start-50 translate-middle d-flex gap-2"
                                      style="opacity:0; transform:translateY(6px); transition:opacity .25s ease, transform .25s ease;">
-                                    <a class="btn btn-light btn-sm"
-                                       href="/User/ChonBienThe/@item.ProductId" title="Mua">
+                                    <a class="btn btn-light btn-sm" href="/User/ChonBienThe/@item.ProductId" title="Mua">
                                         <i class="bi bi-cart"></i>
                                     </a>
                                     <button type="button" class="btn btn-light btn-sm add-to-cart"
                                             data-id="@item.ProductId"
                                             data-name="@item.ProductName"
-                                            data-price="@((int)(item.SalePrice ?? 0))"
+                                            data-price="@((int)showSale)"
                                             data-img="@item.ThumbnailImage"
                                             title="Thêm vào giỏ">
                                         <i class="bi bi-bag-plus"></i>
                                     </button>
-                                    <a class="btn btn-light btn-sm" href="#" title="Yêu thích">
-                                        <i class="bi bi-heart"></i>
-                                    </a>
-                                    <a class="btn btn-light btn-sm" href="#" title="Xem nhanh">
-                                        <i class="bi bi-search"></i>
-                                    </a>
+                                    <a class="btn btn-light btn-sm" href="#" title="Yêu thích"><i class="bi bi-heart"></i></a>
+                                    <a class="btn btn-light btn-sm" href="#" title="Xem nhanh"><i class="bi bi-search"></i></a>
                                 </div>
                             </div>
 
-                            <!-- Nội dung -->
                             <div class="card-body text-center">
                                 <a href="#" class="text-decoration-none text-dark d-block fw-medium mb-2 text-truncate" title="@item.ProductName">
                                     @item.ProductName
                                 </a>
-
                                 <div class="mb-2">
-                                    <span class="fw-bold text-danger">
-                                        @((item.SalePrice ?? 0).ToString("N0")) VNĐ
-                                    </span>
-                                    <small class="text-muted">
-                                        <del>@((item.OriginalPrice ?? 0).ToString("N0")) VNĐ</del>
-                                    </small>
+                                    <span class="fw-bold text-danger">@showSale.ToString("N0") VNĐ</span>
+                                    @if (showOrig > showSale && showOrig > 0)
+                                    {
+                                        <small class="text-muted"><del>@showOrig.ToString("N0") VNĐ</del></small>
+                                    }
                                 </div>
                             </div>
-
-                           
                         </div>
-                        <!-- /CARD -->
                     </div>
                 }
+
             }
             else
             {

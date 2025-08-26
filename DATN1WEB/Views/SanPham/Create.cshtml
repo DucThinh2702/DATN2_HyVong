@@ -30,31 +30,17 @@
 <div class="content-header">
     <h1 class="mb-4">Thêm sản phẩm mới</h1>
 
-    <!-- NOTE: bỏ toàn bộ invalid-feedback/asp-validation-for cũ để tránh trùng lỗi -->
     <form asp-action="Create" enctype="multipart/form-data" method="post" id="productForm" novalidate>
-        <!-- KHÔNG dùng summary lỗi phía trên nữa -->
         <!-- Tên sản phẩm -->
         <div class="mb-3">
             <label for="ProductName" class="form-label fw-bold">Tên sản phẩm <span class="text-danger">*</span></label>
-            <input asp-for="ProductName" class="form-control" placeholder=" Vui lòng nhập tên sản phẩm" />
+            <input asp-for="ProductName" class="form-control" placeholder="Vui lòng nhập tên sản phẩm" />
         </div>
 
         <!-- Mô tả -->
         <div class="mb-3">
             <label for="Description" class="form-label fw-bold">Mô tả sản phẩm <span class="text-danger">*</span></label>
             <textarea asp-for="Description" class="form-control" id="Description"></textarea>
-        </div>
-
-        <!-- Giá bán & Giá gốc -->
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="SalePrice" class="form-label fw-bold">Giá bán <span class="text-danger">*</span></label>
-                <input asp-for="SalePrice" class="form-control" placeholder="Vui lòng nhập giá bán" inputmode="decimal" data-type="currency" />
-            </div>
-            <div class="col-md-6 mb-3">
-                <label for="OriginalPrice" class="form-label fw-bold">Giá gốc <span class="text-danger">*</span></label>
-                <input asp-for="OriginalPrice" class="form-control" placeholder="Vui lòng nhập giá gốc" inputmode="decimal" data-type="currency" />
-            </div>
         </div>
 
         <!-- Danh mục & Trạng thái -->
@@ -65,7 +51,9 @@
             </div>
             <div class="col-md-6 mb-3">
                 <label for="Status" class="form-label fw-bold">Trạng thái <span class="text-danger">*</span></label>
-                <input asp-for="Status" class="form-control" value="Đang bán" />
+                <input type="hidden" asp-for="Status" value="Đang bán" />
+                <span class="form-control">Đang bán</span>
+
             </div>
         </div>
 
@@ -83,71 +71,50 @@
 
         <!-- Màu sắc và kích cỡ -->
         <div class="row">
-            <!-- MÀU -->
+            <!-- Màu -->
             <div class="col-md-6 mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label fw-bold mb-0">
-                        Chọn màu: <span class="text-danger">*</span>
-                    </label>
-
-                    <!-- THÊM MÀU: truyền returnUrl về trang Create sản phẩm -->
-                    <a asp-controller="Colors"
-                       asp-action="Create"
+                    <label class="form-label fw-bold mb-0">Chọn màu: <span class="text-danger">*</span></label>
+                    <a asp-controller="Colors" asp-action="Create"
                        asp-route-returnUrl="@Url.Action("Create","SanPham")"
                        class="btn btn-sm btn-outline-primary">
                         <i class="bi bi-plus-circle"></i> Thêm màu
                     </a>
                 </div>
-
                 <div class="checkbox-grid" id="colorsBox">
                     @foreach (DATN1WEB.Models.Color color in ViewBag.Colors)
                     {
                         <div class="form-check">
-                            <input type="checkbox"
-                                   class="form-check-input color-checkbox"
-                                   value="@color.ColorId"
-                                   id="color-@color.ColorId" />
-                            <label class="form-check-label" for="color-@color.ColorId">
-                                @color.ColorName
-                            </label>
+                            <input type="checkbox" class="form-check-input color-checkbox"
+                                   value="@color.ColorId" id="color-@color.ColorId" />
+                            <label class="form-check-label" for="color-@color.ColorId">@color.ColorName</label>
                         </div>
                     }
                 </div>
             </div>
 
-            <!-- KÍCH CỠ -->
+            <!-- Size -->
             <div class="col-md-6 mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label fw-bold mb-0">
-                        Chọn kích cỡ: <span class="text-danger">*</span>
-                    </label>
-
-                    <!-- THÊM KÍCH CỠ: truyền returnUrl về trang Create sản phẩm -->
-                    <a asp-controller="Sizes"
-                       asp-action="Create"
+                    <label class="form-label fw-bold mb-0">Chọn kích cỡ: <span class="text-danger">*</span></label>
+                    <a asp-controller="Sizes" asp-action="Create"
                        asp-route-returnUrl="@Url.Action("Create","SanPham")"
                        class="btn btn-sm btn-outline-primary">
                         <i class="bi bi-plus-circle"></i> Thêm kích cỡ
                     </a>
                 </div>
-
                 <div class="checkbox-grid" id="sizesBox">
                     @foreach (DATN1WEB.Models.Size size in ViewBag.Sizes)
                     {
                         <div class="form-check">
-                            <input type="checkbox"
-                                   class="form-check-input size-checkbox"
-                                   value="@size.SizeId"
-                                   id="size-@size.SizeId" />
-                            <label class="form-check-label" for="size-@size.SizeId">
-                                @size.SizeName
-                            </label>
+                            <input type="checkbox" class="form-check-input size-checkbox"
+                                   value="@size.SizeId" id="size-@size.SizeId" />
+                            <label class="form-check-label" for="size-@size.SizeId">@size.SizeName</label>
                         </div>
                     }
                 </div>
             </div>
         </div>
-
 
         <!-- Bảng biến thể -->
         <div class="mt-4">
@@ -169,8 +136,8 @@
             </table>
         </div>
 
-        <button type="submit" class="btn btn-primary"><i class="bi bi-save2 me-2"></i> Lưu sản phẩm</button>
-        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left-circle me-2"></i> Quay lại</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-save2 me-2"></i>Lưu sản phẩm</button>
+        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left-circle me-2"></i>Quay lại</a>
     </form>
 </div>
 
@@ -182,315 +149,172 @@
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
 
     <script>
-                $(function () {
-                    // ===== Summernote -> đồng bộ text để jQuery Validate đọc =====
-                    $('#Description').summernote({
-                        height: 200,
-                        callbacks: {
-                            onChange: function (contents) {
-                                // lưu plain text vào textarea gốc để validate
-                                $('#Description').val($('<div>').html(contents).text().trim()).trigger('keyup');
-                            }
-                        }
-                    });
-
-                    // ----- Custom methods -----
-                    $.validator.addMethod('onlyNumber', v => $.isNumeric(v) || v === '', 'Vui lòng nhập số (không nhập ký tự)');
-                    $.validator.addMethod('gt0', v => parseFloat(v) > 0, 'Vui lòng nhập số lớn hơn 0');
-                    $.validator.addMethod('geTo', function (v, el, sel) {
-                        const other = parseFloat($(sel).val());
-                        const cur = parseFloat(v);
-                        if (isNaN(other) || isNaN(cur)) return true;
-                        return cur >= other;
-                    }, 'Phải ≥ trường tham chiếu');
-                    $.validator.addMethod('fileSize', function (v, el, bytes) {
-                        if (!el.files || !el.files.length) return true;
-                        return el.files[0].size <= bytes;
-                    }, 'Tệp quá lớn');
-                    $.validator.addMethod('imageType', function (v, el) {
-                        if (!el.files || !el.files.length) return true;
-                        return ['image/jpeg', 'image/png', 'image/webp'].includes(el.files[0].type);
-                    }, 'Định dạng ảnh không hợp lệ');
-                    $.validator.addMethod('requireColor', () => $('.color-checkbox:checked').length > 0, 'Vui lòng chọn ít nhất 1 màu');
-                    $.validator.addMethod('requireSize',  () => $('.size-checkbox:checked').length  > 0, 'Vui lòng chọn ít nhất 1 size');
-
-                    // Hidden inputs cho group checkbox
-                    if ($('input[name="colorGroup"]').length === 0) $('<input>', { type: 'hidden', name: 'colorGroup' }).appendTo('#productForm');
-                    if ($('input[name="sizeGroup"]').length  === 0) $('<input>', { type: 'hidden', name: 'sizeGroup'  }).appendTo('#productForm');
-
-                    const $form = $('#productForm');
-                    $form.validate({
-                        ignore: [],
-                        onkeyup: function (el) { $(el).valid(); },
-                        onfocusout: function (el) { $(el).valid(); },
-                        errorElement: 'div',
-                        errorClass: 'invalid-feedback',
-                        highlight: function (el) { $(el).addClass('is-invalid'); },
-                        unhighlight: function (el) { $(el).removeClass('is-invalid'); },
-                        errorPlacement: function (err, el) {
-                            if (el.closest('td').length) err.appendTo(el.closest('td')); else err.insertAfter(el);
-                        },
-                        rules: {
-                            ProductName:   { required: true, minlength: 10 },
-                            Description:   { required: true, minlength: 10 },
-                            SalePrice:     { required: true, onlyNumber: true, gt0: true },
-                            OriginalPrice: { required: true, onlyNumber: true, gt0: true, geTo: '#SalePrice' },
-                            CategoryId:    { required: true },
-                            Status:        { required: true, minlength: 3 },
-                            Material:      { required: true, minlength: 3 },
-                            ImageFile:     { required: true, imageType: true, fileSize: 2 * 1024 * 1024 },
-                            colorGroup:    { requireColor: true },
-                            sizeGroup:     { requireSize: true }
-                        },
-                        messages: {
-                            ProductName:   { required: 'Vui lòng nhập tên sản phẩm', minlength: 'Ít nhất 10 ký tự' },
-                            Description:   { required: 'Vui lòng nhập mô tả', minlength: 'Ít nhất 10 ký tự' },
-                            SalePrice:     { required: 'Vui lòng nhập giá bán' },
-                            OriginalPrice: { required: 'Vui lòng nhập giá gốc', geTo: 'Giá gốc phải ≥ Giá bán' },
-                            CategoryId:    { required: 'Vui lòng chọn danh mục' },
-                            Status:        { required: 'Vui lòng nhập trạng thái' },
-                            Material:      { required: 'Vui lòng nhập chất liệu' },
-                            ImageFile:     { required: 'Vui lòng chọn ảnh (JPEG/PNG/WebP, ≤2MB)', imageType: 'Chỉ JPEG/PNG/WebP', fileSize: 'Tối đa 2MB' },
-                            colorGroup:    { requireColor: 'Vui lòng chọn ít nhất một màu' },
-                            sizeGroup:     { requireSize: 'Vui lòng chọn ít nhất một kích cỡ' }
-                        }
-                    });
-
-                    // ====== Generate variants ======
-                    function generateVariants() {
-                        const $colors = $('.color-checkbox:checked');
-                        const $sizes  = $('.size-checkbox:checked');
-                        const $tb = $('#variantTable tbody');
-                        $tb.empty();
-
-                        $('input[name="colorGroup"]').valid();
-                        $('input[name="sizeGroup"]').valid();
-
-                        if ($colors.length === 0 || $sizes.length === 0) return;
-
-                        let idx = 0;
-                        $sizes.each(function () {
-                            const sizeId = $(this).val();
-                            const sizeName = $(this).closest('.form-check').find('label').text().trim();
-                            $colors.each(function () {
-                                const colorId = $(this).val();
-                                const colorName = $(this).closest('.form-check').find('label').text().trim();
-
-                                const tr = $(`
-        <tr>
-          <td>${sizeName}<input type="hidden" name="ProductVariants[${idx}].SizeId" value="${sizeId}" /></td>
-          <td>${colorName}<input type="hidden" name="ProductVariants[${idx}].ColorId" value="${colorId}" /></td>
-          <td><input type="number" name="ProductVariants[${idx}].Stock" class="form-control v-stock" min="0" /></td>
-          <td><input type="text"   name="ProductVariants[${idx}].SalePrice" class="form-control v-sale" data-type="currency" /></td>
-          <td><input type="text"   name="ProductVariants[${idx}].OriginalPrice" class="form-control v-orig" data-type="currency" /></td>
-          <td>
-            <select name="ProductVariants[${idx}].Status" class="form-select v-status">
-              <option value="">-- Chọn trạng thái --</option>
-              <option value="Active" selected>Đang bán</option>
-              <option value="Inactive">Ngừng bán</option>
-            </select>
-          </td>
-          <td><input type="file" name="ProductVariants[${idx}].ImageFile" class="form-control v-img" accept="image/*" /></td>
-        </tr>`);
-                                $('#variantTable tbody').append(tr);
-
-                                // Validate cho từng input trong hàng
-                                const $sale = tr.find('.v-sale');
-                                const saleId = 'sale-' + Math.random().toString(36).slice(2);
-                                $sale.attr('id', saleId);
-
-                                tr.find('.v-stock').rules('add', { required: true, onlyNumber: true, min: 0, messages: { required: 'Nhập số lượng' } });
-                                // Giá là text (đã format) nên chỉ required, min sẽ xử lý khi submit (strip commas)
-                                $sale.rules('add', { required: true, messages: { required: 'Nhập giá bán' } });
-                                tr.find('.v-orig').rules('add', { required: true, messages: { required: 'Nhập giá gốc' } });
-                                tr.find('.v-status').rules('add', { required: true, messages: { required: 'Chọn trạng thái' } });
-                                tr.find('.v-img').rules('add', { imageType: true, fileSize: 2 * 1024 * 1024, messages: { imageType: 'JPEG/PNG/WebP', fileSize: '≤ 2MB' } });
-
-                                idx++;
-                            });
-                        });
-                    }
-                    $(document).on('change', '.color-checkbox, .size-checkbox', function(){
-                        generateVariants();
-                        // sau khi tạo lại bảng, gắn lại currency formatter
-                        bindCurrencyFormatter();
-                        // cố gắng khôi phục nháp (nếu có)
-                        restoreVariantValuesFromDraft();
-                    });
-
-                    // ================== ĐỊNH DẠNG TIỀN TỆ ==================
-                           function stripCurrencyBeforeSubmit() {
-          $('input[data-type="currency"]').each(function () {
-            this.value = money.normalize(this.value); // "1.200.000" -> "1200000"
+        $(function () {
+          // ===== Summernote -> đồng bộ plain text để jQuery Validate đọc =====
+          $('#Description').summernote({
+            height: 200,
+            callbacks: {
+              onChange: function (contents) {
+                $('#Description').val($('<div>').html(contents).text().trim()).trigger('keyup');
+              }
+            }
           });
-        }
-        $('#productForm').on('submit', function () {
-          stripCurrencyBeforeSubmit();
-          // … phần clearDraft của bạn giữ nguyên …
+
+          // ================== CUSTOM METHODS ==================
+          $.validator.addMethod('onlyNumber', v => $.isNumeric(v) || v === '', 'Vui lòng nhập số');
+          $.validator.addMethod('gt0', v => {
+            const n = parseFloat(v);
+            return v === '' || (!isNaN(n) && n > 0);
+          }, 'Phải > 0');
+
+          // Chấp nhận ảnh JPEG / PNG / WebP và giới hạn kích thước
+          $.validator.addMethod('imageType', function (v, el) {
+            if (!el.files || !el.files.length) return true;
+            return ['image/jpeg', 'image/png', 'image/webp'].includes(el.files[0].type);
+          }, 'Định dạng ảnh không hợp lệ');
+          $.validator.addMethod('fileSize', function (v, el, bytes) {
+            if (!el.files || !el.files.length) return true;
+            return el.files[0].size <= bytes;
+          }, 'Tệp quá lớn');
+
+          // Phải chọn ít nhất 1 màu / 1 size
+          $.validator.addMethod('requireColor', () => $('.color-checkbox:checked').length > 0, 'Vui lòng chọn ít nhất 1 màu');
+          $.validator.addMethod('requireSize',  () => $('.size-checkbox:checked').length > 0, 'Vui lòng chọn ít nhất 1 kích cỡ');
+
+          // ===== Tiền tệ: chuẩn hoá và validate =====
+          function normalizeMoney(val) {
+            if (val == null) return '';
+            return String(val).replace(/[^\d.-]/g, '');
+          }
+          $.validator.addMethod('money', function (v) {
+            const n = parseFloat(normalizeMoney(v));
+            return !isNaN(n);
+          }, 'Giá không hợp lệ');
+          $.validator.addMethod('gtMoney0', function (v) {
+            const n = parseFloat(normalizeMoney(v));
+            return !isNaN(n) && n > 0;
+          }, 'Phải > 0');
+          $.validator.addMethod('origGeSaleInRow', function (v, el) {
+            const $tr  = $(el).closest('tr');
+            const sale = parseFloat(normalizeMoney($tr.find('.v-sale').val()));
+            const orig = parseFloat(normalizeMoney(v));
+            if (isNaN(sale) || isNaN(orig)) return true;
+            return orig >= sale;
+          }, 'Giá gốc phải ≥ Giá bán');
+
+          // ================== HIDDEN INPUTS DÙNG CHO VALIDATE ==================
+          if ($('input[name="colorGroup"]').length === 0) $('<input>', { type: 'hidden', name: 'colorGroup' }).appendTo('#productForm');
+          if ($('input[name="sizeGroup"]').length === 0)  $('<input>', { type: 'hidden', name: 'sizeGroup'  }).appendTo('#productForm');
+
+          // ================== FORM VALIDATE ==================
+          const $form = $('#productForm');
+          $form.validate({
+            ignore: [],
+            onkeyup:   el => $(el).valid(),
+            onfocusout:el => $(el).valid(),
+            errorElement: 'div',
+            errorClass: 'invalid-feedback',
+            highlight:   el => $(el).addClass('is-invalid'),
+            unhighlight: el => $(el).removeClass('is-invalid'),
+            errorPlacement: (err, el) => { el.closest('td').length ? err.appendTo(el.closest('td')) : err.insertAfter(el); },
+            rules: {
+              ProductName: { required: true, minlength: 10 },
+              Description: { required: true, minlength: 10 },
+              CategoryId:  { required: true },
+              Status:      { required: true, minlength: 3 },
+              Material:    { required: true, minlength: 3 },
+              ImageFile:   { required: true, imageType: true, fileSize: 2 * 1024 * 1024 },
+              colorGroup:  { requireColor: true },
+              sizeGroup:   { requireSize: true }
+            },
+            messages: {
+              ProductName: { required: 'Vui lòng nhập tên sản phẩm', minlength: 'Ít nhất 10 ký tự' },
+              Description: { required: 'Vui lòng nhập mô tả', minlength: 'Ít nhất 10 ký tự' },
+              CategoryId:  { required: 'Vui lòng chọn danh mục' },
+              Status:      { required: 'Vui lòng nhập trạng thái' },
+              Material:    { required: 'Vui lòng nhập chất liệu' },
+              ImageFile:   { required: 'Vui lòng chọn ảnh (JPEG/PNG/WebP, ≤2MB)', imageType: 'Chỉ JPEG/PNG/WebP', fileSize: 'Tối đa 2MB' }
+            }
+          });
+
+          // ================== TẠO BẢNG BIẾN THỂ (ẨN TRẠNG THÁI) ==================
+          function generateVariants() {
+            const $colors = $('.color-checkbox:checked');
+            const $sizes  = $('.size-checkbox:checked');
+            const $tb = $('#variantTable tbody');
+            $tb.empty();
+
+            // ép validate chọn màu/size
+            $('input[name="colorGroup"]').valid();
+            $('input[name="sizeGroup"]').valid();
+
+            if ($colors.length === 0 || $sizes.length === 0) return;
+
+            let idx = 0;
+            $sizes.each(function () {
+              const sizeId   = $(this).val();
+              const sizeName = $(this).closest('.form-check').find('label').text().trim();
+              $colors.each(function () {
+                const colorId   = $(this).val();
+                const colorName = $(this).closest('.form-check').find('label').text().trim();
+
+                const tr = $(`
+                  <tr>
+                    <td>${sizeName}<input type="hidden" name="ProductVariants[${idx}].SizeId" value="${sizeId}" /></td>
+                    <td>${colorName}<input type="hidden" name="ProductVariants[${idx}].ColorId" value="${colorId}" /></td>
+                    <td><input type="number" name="ProductVariants[${idx}].Stock" class="form-control v-stock" min="0" /></td>
+                    <td><input type="text"   name="ProductVariants[${idx}].SalePrice" class="form-control v-sale"  data-type="currency" /></td>
+                    <td><input type="text"   name="ProductVariants[${idx}].OriginalPrice" class="form-control v-orig" data-type="currency" /></td>
+                           <td>
+          <!-- gửi giá trị thật lên server -->
+          <input type="hidden" name="ProductVariants[${idx}].Status" value="Active" />
+          <!-- hiển thị như input, không cho sửa -->
+          <input type="text" class="form-control" value="Đang bán" readonly style="color:#212529;" />
+        </td>
+
+                    <td><input type="file" name="ProductVariants[${idx}].ImageFile" class="form-control v-img" accept="image/*" /></td>
+                  </tr>`);
+
+                $tb.append(tr);
+
+                // ===== Rules cho từng input trong hàng =====
+                tr.find('.v-stock').rules('add', { required: true, onlyNumber: true, min: 0, messages: { required: 'Nhập số lượng' } });
+                tr.find('.v-sale').rules('add',  { required: true, money: true, gtMoney0: true, messages: { required: 'Nhập giá bán' } });
+                tr.find('.v-orig').rules('add',  { required: true, money: true, gtMoney0: true, origGeSaleInRow: true, messages: { required: 'Nhập giá gốc' } });
+                // KHÔNG thêm rule cho status vì đã cố định bằng hidden
+                tr.find('.v-img').rules('add',   { imageType: true, fileSize: 2 * 1024 * 1024, messages: { imageType: 'JPEG/PNG/WebP', fileSize: '≤ 2MB' } });
+
+                idx++;
+              });
+            });
+          }
+          $(document).on('change', '.color-checkbox, .size-checkbox', generateVariants);
+
+          // ================== ĐỊNH DẠNG TIỀN ==================
+          function formatCurrencyInput(el) {
+            let val = el.value || '';
+            if (!val) { el.value = ''; return; }
+            // giữ số & dấu . -
+            val = val.replace(/[^\d.-]/g, '');
+            // tách phần thập phân nếu có
+            const parts = val.split('.');
+            let intPart = parts[0].replace(/-/g,'');
+            const neg = val.startsWith('-');
+            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            el.value = (neg ? '-' : '') + intPart + (parts.length > 1 ? '.' + parts[1] : '');
+          }
+          $(document).on('keyup blur', 'input[data-type="currency"]', function(){ formatCurrencyInput(this); });
+
+          // Trước khi submit: gỡ dấu phẩy để server nhận số thuần
+          function stripCurrencyBeforeSubmit() {
+            $('input[data-type="currency"]').each(function () {
+              this.value = normalizeMoney(this.value); // "1,200,000" -> "1200000"
+            });
+          }
+          $form.on('submit', function () {
+            stripCurrencyBeforeSubmit();
+          });
         });
-                    function formatCurrencyInput(el, blur) {
-                        let val = el.value || '';
-                        if (!val) return;
-                        // bỏ mọi ký tự không phải số hoặc dấu phẩy
-                        val = val.replace(/[^\d,\.]/g, '');
-                        // không xử lý phần thập phân, chỉ cần nhóm nghìn
-                        val = formatNumber(val);
-                        el.value = val;
-                        // giữ caret tương đối (đơn giản hoá)
-                    }
-                    function bindCurrencyFormatter() {
-                        // cho input có data-type=currency
-                        $(document).off('keyup.currency blur.currency', 'input[data-type="currency"]');
-                        $(document).on('keyup.currency', 'input[data-type="currency"]', function(){ formatCurrencyInput(this); });
-                        $(document).on('blur.currency',  'input[data-type="currency"]', function(){ formatCurrencyInput(this, 'blur'); });
-                    }
-                    bindCurrencyFormatter();
-
-                    // Trước khi submit: gỡ dấu phẩy trong tất cả currency input để server nhận số thuần
-                    function stripCurrencyBeforeSubmit() {
-                        $('input[data-type="currency"]').each(function(){
-                            const raw = (this.value || '').toString().replace(/,/g, '');
-                            this.value = raw;
-                        });
-                    }
-
-                    // ================== NHỚ TẠM BẰNG sessionStorage ==================
-                    const DRAFT_KEY = 'productCreateDraft'; // session scope
-
-                    function readScalarFields() {
-                        return {
-                            ProductName: $('[name="ProductName"]').val() || '',
-                            Description:  $('[name="Description"]').val() || '',
-                            SalePrice:    $('[name="SalePrice"]').val() || '',
-                            OriginalPrice:$('[name="OriginalPrice"]').val() || '',
-                            CategoryId:   $('#CategoryId').val() || '',
-                            Status:       $('[name="Status"]').val() || '',
-                            Material:     $('[name="Material"]').val() || ''
-                        };
-                    }
-                    function setScalarFields(data) {
-                        if (!data) return;
-                        $('[name="ProductName"]').val(data.ProductName || '');
-                        // Summernote: render lại HTML từ text (giữ xuống dòng)
-                        if ($('#Description').next('.note-editor').length) {
-                            const html = (data.Description || '').replace(/\n/g,'<br/>');
-                            $('#Description').summernote('code', html);
-                            $('#Description').val(data.Description || '');
-                        } else {
-                            $('[name="Description"]').val(data.Description || '');
-                        }
-                        $('[name="SalePrice"]').val(data.SalePrice || '').trigger('keyup');
-                        $('[name="OriginalPrice"]').val(data.OriginalPrice || '').trigger('keyup');
-                        $('#CategoryId').val(data.CategoryId || '');
-                        $('[name="Status"]').val(data.Status || '');
-                        $('[name="Material"]').val(data.Material || '');
-                    }
-
-                    function readSelections() {
-                        const colors = $('.color-checkbox:checked').map((i,el)=> $(el).val()).get();
-                        const sizes  = $('.size-checkbox:checked').map((i,el)=> $(el).val()).get();
-                        return { colors, sizes };
-                    }
-                    function setSelections(sel) {
-                        if (!sel) return;
-                        $('.color-checkbox').prop('checked', false);
-                        $('.size-checkbox').prop('checked', false);
-                        (sel.colors || []).forEach(id => $('#color-'+id).prop('checked', true));
-                        (sel.sizes  || []).forEach(id => $('#size-'+id).prop('checked', true));
-                    }
-
-                    function readVariantValues() {
-                        const map = {};
-                        $('#variantTable tbody tr').each(function(){
-                            const $tr = $(this);
-                            const sizeId  = $tr.find('input[name*=".SizeId"]').val();
-                            const colorId = $tr.find('input[name*=".ColorId"]').val();
-                            const key = `${sizeId}-${colorId}`;
-                            map[key] = {
-                                Stock:         $tr.find('.v-stock').val() || '',
-                                SalePrice:     $tr.find('.v-sale').val() || '',
-                                OriginalPrice: $tr.find('.v-orig').val() || '',
-                                Status:        $tr.find('.v-status').val() || ''
-                            };
-                        });
-                        return map;
-                    }
-                    function setVariantValues(variantMap) {
-                        if (!variantMap) return;
-                        $('#variantTable tbody tr').each(function(){
-                            const $tr = $(this);
-                            const sizeId  = $tr.find('input[name*=".SizeId"]').val();
-                            const colorId = $tr.find('input[name*=".ColorId"]').val();
-                            const key = `${sizeId}-${colorId}`;
-                            const v = variantMap[key];
-                            if (!v) return;
-                            $tr.find('.v-stock').val(v.Stock || '');
-                            $tr.find('.v-sale').val(v.SalePrice || '').trigger('keyup');
-                            $tr.find('.v-orig').val(v.OriginalPrice || '').trigger('keyup');
-                            $tr.find('.v-status').val(v.Status || '').trigger('change');
-                        });
-                    }
-
-                    function saveDraft() {
-                        // đồng bộ summernote -> input text trước khi lưu
-                        if ($('#Description').next('.note-editor').length) {
-                            const contents = $('#Description').summernote('code');
-                            $('#Description').val($('<div>').html(contents).text().trim());
-                        }
-                        const draft = {
-                            fields: readScalarFields(),
-                            selections: readSelections(),
-                            variants: readVariantValues()
-                        };
-                        sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); // chỉ sống trong session/tab
-                    }
-                    function restoreDraft() {
-                        const raw = sessionStorage.getItem(DRAFT_KEY);
-                        if (!raw) return;
-                        let draft;
-                        try { draft = JSON.parse(raw); } catch { return; }
-
-                        setScalarFields(draft.fields);
-                        setSelections(draft.selections);
-
-                        // tạo lại bảng theo selections rồi bơm giá trị
-                        generateVariants();
-                        bindCurrencyFormatter();
-                        setVariantValues(draft.variants);
-
-                        // re-validate sau khi khôi phục
-                        $form.find('input,select,textarea').each(function(){ $(this).valid && $(this).valid(); });
-                    }
-                    function clearDraft() {
-                        sessionStorage.removeItem(DRAFT_KEY);
-                    }
-
-                    // Lưu nháp khi click đi tới trang thêm màu/size
-                    $(document).on('click', 'a.save-draft, a[href*="/Colors/Create"], a[href*="/Sizes/Create"]', function (e) {
-                        e.preventDefault();
-                        const href = $(this).attr('href');
-                        saveDraft();
-                        window.location.href = href;
-                    });
-
-                    // Tự lưu khi thay đổi
-                    let t;
-                    $form.on('input change', 'input, select, textarea', function(){
-                        clearTimeout(t);
-                        t = setTimeout(saveDraft, 300);
-                    });
-
-                    // Trước khi submit: gỡ dấu phẩy ở các input tiền + xoá nháp nếu submit
-                    $form.on('submit', function(){
-                        stripCurrencyBeforeSubmit();
-                        clearDraft();
-                    });
-
-                    // Khôi phục khi trang load
-                    restoreDraft();
-                });
     </script>
+
 }
-
-
-
