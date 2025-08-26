@@ -787,10 +787,6 @@ namespace DATNAPI1.Controllers
                     string.IsNullOrWhiteSpace(request.FullAddress))
                     return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin giao hàng." });
 
-                var appUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-                if (appUser == null)
-                    return Json(new { success = false, message = "Không tìm thấy thông tin người dùng." });
-
                 // ===== 2) Lấy giá & danh mục CHUẨN từ DB theo VariantId (không tin client) =====
                 var variantIds = request.Items.Select(i => i.VariantId).ToList();
 
@@ -928,9 +924,10 @@ namespace DATNAPI1.Controllers
                 );
                 if (!consume.ok)
                 {
-                    await transaction.RollbackAsync();
+                    await tx.RollbackAsync(); // ✅ đúng tên biến
                     return Json(new { success = false, message = consume.msg ?? "Một số sản phẩm không đủ hàng." });
                 }
+
 
                 // ===== 2) TẠO ĐƠN HÀNG =====
                 var order = new Order
@@ -1624,73 +1621,6 @@ namespace DATNAPI1.Controllers
         ");
             }
         }
-        // Huỷ đơn bằng form (TempData + Redirect)
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> CancelOrderSubmit(int id, string? reason)
-        //{
-        //    try
-        //    {
-        //        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //        if (string.IsNullOrEmpty(userId))
-        //        {
-        //            TempData["Error"] = "Vui lòng đăng nhập.";
-        //            return RedirectToAction(nameof(OrderDetail), new { id });
-        //        }
-
-        //        var order = await _context.Orders
-        //            .Include(o => o.OrderDetails)
-        //            .FirstOrDefaultAsync(o => o.OrderId == id && o.UserId == userId);
-
-        //        if (order == null)
-        //        {
-        //            TempData["Error"] = "Không tìm thấy đơn hàng.";
-        //            return RedirectToAction(nameof(OrderDetail), new { id });
-        //        }
-
-        //        var st = (order.OrderStatus ?? "").Trim().ToLowerInvariant();
-        //        var isPending = string.IsNullOrWhiteSpace(st) || st == "pending" || st == "chờ xác nhận";
-        //        if (!isPending)
-        //        {
-        //            TempData["Error"] = "Chỉ có thể huỷ khi đơn ở trạng thái Chờ xác nhận.";
-        //            return RedirectToAction(nameof(OrderDetail), new { id });
-        //        }
-
-        //        reason = (reason ?? "").Trim();
-        //        if (reason.Length < 5)
-        //        {
-        //            TempData["Error"] = "Lý do huỷ tối thiểu 5 ký tự.";
-        //            return RedirectToAction(nameof(OrderDetail), new { id });
-        //        }
-
-        //        using var tx = await _context.Database.BeginTransactionAsync();
-
-        //        // Hoàn kho
-        //        var lines = order.OrderDetails.Select(d => ((int)d.ProductVariantId, (int)(d.Quantity ?? 0)));
-        //        await RestockAsync(lines);
-
-        //        // Cập nhật trạng thái
-        //        order.OrderStatus = "Cancelled";
-        //        if (string.Equals(order.PaymentStatus, "Đã thanh toán", StringComparison.OrdinalIgnoreCase))
-        //            order.PaymentStatus = "Chờ hoàn tiền";
-
-        //        var prefix = $"[HUỶ BỞI KHÁCH {DateTime.Now:dd/MM/yyyy HH:mm}] ";
-        //        order.Note = string.IsNullOrWhiteSpace(order.Note)
-        //            ? (prefix + reason)
-        //            : (prefix + reason + "\n" + order.Note);
-
-        //        await _context.SaveChangesAsync();
-        //        await tx.CommitAsync();
-
-        //        TempData["Success"] = $"Đã huỷ đơn #{id} và hoàn lại tồn kho.";
-        //        return RedirectToAction(nameof(OrderDetail), new { id });
-        //    }
-        //    catch
-        //    {
-        //        TempData["Error"] = "Có lỗi xảy ra khi huỷ đơn.";
-        //        return RedirectToAction(nameof(OrderDetail), new { id });
-        //    }
-        //}
-
+       
     }
 }
