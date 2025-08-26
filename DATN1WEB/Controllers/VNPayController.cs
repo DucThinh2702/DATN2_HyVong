@@ -329,139 +329,224 @@ namespace DATNAPI1.Controllers
             }
         }
 
-
-
-        [HttpGet]
-        public async Task<IActionResult> VnPayReturn()
+[HttpGet]
+    public async Task<IActionResult> VnPayReturn()
+    {
+        try
         {
-            try
+            var vnpayData = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToString());
+
+            var vnp = new VnPayLibrary();
+            foreach (var (key, value) in vnpayData)
             {
-                var vnpayData = HttpContext.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToString());
-
-                var vnp = new VnPayLibrary();
-                foreach (var (key, value) in vnpayData)
+                if (!string.IsNullOrEmpty(value) && key.StartsWith("vnp_"))
                 {
-                    if (!string.IsNullOrEmpty(value) && key.StartsWith("vnp_"))
-                    {
-                        vnp.AddResponseData(key, value);
-                    }
-                }
-
-                var orderId = Convert.ToInt64(vnp.GetResponseData("vnp_TxnRef"));
-                var vnpayTranId = Convert.ToInt64(vnp.GetResponseData("vnp_TransactionNo"));
-                var vnp_ResponseCode = vnp.GetResponseData("vnp_ResponseCode");
-                var vnp_TransactionStatus = vnp.GetResponseData("vnp_TransactionStatus");
-                var vnp_SecureHash = HttpContext.Request.Query["vnp_SecureHash"];
-                var terminalID = HttpContext.Request.Query["vnp_TmnCode"];
-                var bankCode = HttpContext.Request.Query["vnp_BankCode"];
-                var amount = Convert.ToInt64(vnp.GetResponseData("vnp_Amount")) / 100;
-
-                bool checkSignature = vnp.ValidateSignature(vnp_SecureHash, _vnp_HashSecret);
-                if (!checkSignature)
-                {
-                    _logger.LogWarning("VNPay signature validation failed for order {orderId}", orderId);
-                    return Redirect("https://sandbox.vnpayment.vn/paymentv2/Transaction/PaymentResult?vnp_ResponseCode=97");
-                }
-
-                if (vnp_ResponseCode == "00" && vnp_TransactionStatus == "00")
-                {
-                    var sessionKey = $"PendingOrder_{orderId}";
-                    var orderDataJson = HttpContext.Session.GetString(sessionKey);
-
-                    if (!string.IsNullOrEmpty(orderDataJson))
-                    {
-                        var orderData = JsonSerializer.Deserialize<JsonElement>(orderDataJson);
-                        await SaveOrderAndPaymentWithPromotion(orderData, vnpayTranId, amount);
-                        HttpContext.Session.Remove(sessionKey);
-                    }
-
-                    _logger.LogInformation("VNPay payment successful for order {orderId}", orderId);
-                    return Redirect($"https://sandbox.vnpayment.vn/paymentv2/Transaction/PaymentResult?vnp_ResponseCode=00&vnp_TxnRef={orderId}&vnp_Amount={amount * 100}");
-                }
-                else
-                {
-                    _logger.LogWarning("VNPay payment failed for order {orderId}, response code: {responseCode}", orderId, vnp_ResponseCode);
-                    return Redirect($"https://sandbox.vnpayment.vn/paymentv2/Transaction/PaymentResult?vnp_ResponseCode={vnp_ResponseCode}&vnp_TxnRef={orderId}");
+                    vnp.AddResponseData(key, value);
                 }
             }
-            catch (Exception ex)
+
+            var orderId = Convert.ToInt64(vnp.GetResponseData("vnp_TxnRef"));
+            var vnpayTranId = Convert.ToInt64(vnp.GetResponseData("vnp_TransactionNo"));
+            var vnp_ResponseCode = vnp.GetResponseData("vnp_ResponseCode");
+            var vnp_TransactionStatus = vnp.GetResponseData("vnp_TransactionStatus");
+            var vnp_SecureHash = HttpContext.Request.Query["vnp_SecureHash"];
+            var bankCode = HttpContext.Request.Query["vnp_BankCode"].ToString();
+            var amount = Convert.ToInt64(vnp.GetResponseData("vnp_Amount")) / 100;
+
+            // (optional) vnp_PayDate (yyyyMMddHHmmss)
+            DateTime? paidAt = null;
+            var payDateStr = vnp.GetResponseData("vnp_PayDate");
+            if (!string.IsNullOrWhiteSpace(payDateStr) && DateTime.TryParseExact(payDateStr, "yyyyMMddHHmmss", null, System.Globalization.DateTimeStyles.None, out var t))
+                paidAt = t;
+
+            // Validate chữ ký
+            bool checkSignature = vnp.ValidateSignature(vnp_SecureHash, _vnp_HashSecret);
+            if (!checkSignature)
             {
-                _logger.LogError(ex, "VnPayReturn failed.");
-                return Redirect("https://sandbox.vnpayment.vn/paymentv2/Transaction/PaymentResult?vnp_ResponseCode=99");
+                var invalidSigModel = new PaymentResultViewModel
+                {
+                    Success = false,
+                    OrderId = orderId,
+                    TransactionId = vnpayTranId,
+                    Amount = amount,
+                    BankCode = bankCode,
+                    PaidAt = paidAt,
+                    ResponseCode = "97",
+                    Message = "Chữ ký VNPay không hợp lệ."
+                };
+                return View("VnPayResult", invalidSigModel);
+            }
+
+            if (vnp_ResponseCode == "00" && vnp_TransactionStatus == "00")
+            {
+                // Lấy dữ liệu đơn đã lưu tạm để ghi DB:
+                var sessionKey = $"PendingOrder_{orderId}";
+                var orderDataJson = HttpContext.Session.GetString(sessionKey);
+
+                if (!string.IsNullOrEmpty(orderDataJson))
+                {
+                    var orderData = JsonSerializer.Deserialize<JsonElement>(orderDataJson);
+                    await SaveOrderAndPaymentWithPromotion(orderData, vnpayTranId, amount);
+                    HttpContext.Session.Remove(sessionKey);
+                }
+
+                var okModel = new PaymentResultViewModel
+                {
+                    Success = true,
+                    OrderId = orderId,
+                    TransactionId = vnpayTranId,
+                    Amount = amount,
+                    BankCode = bankCode,
+                    PaidAt = paidAt,
+                    ResponseCode = vnp_ResponseCode,
+                    Message = "Thanh toán VNPay thành công."
+                };
+                return View("VnPayResult", okModel);
+            }
+            else
+            {
+                var failModel = new PaymentResultViewModel
+                {
+                    Success = false,
+                    OrderId = orderId,
+                    TransactionId = vnpayTranId,
+                    Amount = amount,
+                    BankCode = bankCode,
+                    PaidAt = paidAt,
+                    ResponseCode = vnp_ResponseCode,
+                    Message = "Thanh toán VNPay không thành công."
+                };
+                return View("VnPayResult", failModel);
             }
         }
-
-        [HttpGet]
-        public async Task<IActionResult> PaymentReturn()
+        catch (Exception ex)
         {
-            try
+            _logger.LogError(ex, "VnPayReturn failed.");
+            var errModel = new PaymentResultViewModel
             {
-                var vnp = new VnPayLibrary();
-                foreach (var (key, value) in Request.Query)
-                {
-                    if (key.StartsWith("vnp_") && !string.IsNullOrEmpty(value))
-                        vnp.AddResponseData(key, value!);
-                }
+                Success = false,
+                Message = "Có lỗi xảy ra khi xử lý kết quả thanh toán.",
+                ResponseCode = "99"
+            };
+            return View("VnPayResult", errModel);
+        }
+    }
 
-                var rawQuery = HttpContext.Request.QueryString.Value ?? string.Empty;
-                var vnp_SecureHash = Request.Query["vnp_SecureHash"].ToString();
-
-                if (string.IsNullOrEmpty(vnp_SecureHash))
-                {
-                    TempData["ErrorMessage"] = "Thiếu chữ ký xác thực từ VNPay.";
-                    return RedirectToAction("Index", "User");
-                }
-
-                var valid = VnPayLibrary.ValidateSignatureFromRaw(
-                    rawQuery, vnp_SecureHash, _vnp_HashSecret,
-                    out var rawForHash, out var myHashUpper);
-
-                _logger.LogInformation("VNPay callback rawForHash: {rawForHash}", rawForHash);
-                _logger.LogInformation("VNPay callback myHMAC(UpperHex): {myHashUpper}", myHashUpper);
-                _logger.LogInformation("VNPay callback their vnp_SecureHash: {their}", vnp_SecureHash);
-
-                if (!valid)
-                {
-                    TempData["ErrorMessage"] = "Chữ ký VNPay không hợp lệ.";
-                    return RedirectToAction("Index", "User");
-                }
-
-                var orderId = Convert.ToInt64(vnp.GetResponseData("vnp_TxnRef"));
-                var vnpayTranId = Convert.ToInt64(vnp.GetResponseData("vnp_TransactionNo"));
-                var responseCode = vnp.GetResponseData("vnp_ResponseCode");       // "00" = ok
-                var txnStatus = vnp.GetResponseData("vnp_TransactionStatus");   // "00" = ok
-                var amount = Convert.ToInt64(vnp.GetResponseData("vnp_Amount")) / 100;
-
-                if (responseCode == "00" && txnStatus == "00")
-                {
-                    var sessionKey = $"PendingOrder_{orderId}";
-                    var orderDataJson = HttpContext.Session.GetString(sessionKey);
-
-                    if (!string.IsNullOrEmpty(orderDataJson))
-                    {
-                        var orderData = JsonSerializer.Deserialize<JsonElement>(orderDataJson);
-                        await SaveOrderAndPaymentWithPromotion(orderData, vnpayTranId, amount);
-                        HttpContext.Session.Remove(sessionKey);
-                    }
-
-                    TempData["SuccessMessage"] = $"Thanh toán VNPay thành công. Mã GD: {vnpayTranId}.";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = $"Thanh toán không thành công (mã: {responseCode}).";
-                }
-
-                return RedirectToAction("Index", "User");
+    [HttpGet]
+    public async Task<IActionResult> PaymentReturn()
+    {
+        try
+        {
+            var vnp = new VnPayLibrary();
+            foreach (var (key, value) in Request.Query)
+            {
+                if (key.StartsWith("vnp_") && !string.IsNullOrEmpty(value))
+                    vnp.AddResponseData(key, value!);
             }
-            catch (Exception ex)
+
+            var rawQuery = HttpContext.Request.QueryString.Value ?? string.Empty;
+            var vnp_SecureHash = Request.Query["vnp_SecureHash"].ToString();
+            var bankCode = Request.Query["vnp_BankCode"].ToString();
+
+            if (string.IsNullOrEmpty(vnp_SecureHash))
             {
-                _logger.LogError(ex, "PaymentReturn failed.");
-                TempData["ErrorMessage"] = "Có lỗi xảy ra khi xử lý kết quả thanh toán.";
-                return RedirectToAction("Index", "User");
+                var noSig = new PaymentResultViewModel
+                {
+                    Success = false,
+                    Message = "Thiếu chữ ký xác thực từ VNPay.",
+                    ResponseCode = "97"
+                };
+                return View("VnPayResult", noSig);
+            }
+
+            var valid = VnPayLibrary.ValidateSignatureFromRaw(
+                rawQuery, vnp_SecureHash, _vnp_HashSecret,
+                out var rawForHash, out var myHashUpper);
+
+            var orderId = Convert.ToInt64(vnp.GetResponseData("vnp_TxnRef"));
+            var vnpayTranId = Convert.ToInt64(vnp.GetResponseData("vnp_TransactionNo"));
+            var responseCode = vnp.GetResponseData("vnp_ResponseCode");
+            var txnStatus = vnp.GetResponseData("vnp_TransactionStatus");
+            var amount = Convert.ToInt64(vnp.GetResponseData("vnp_Amount")) / 100;
+
+            // vnp_PayDate
+            DateTime? paidAt = null;
+            var payDateStr = vnp.GetResponseData("vnp_PayDate");
+            if (!string.IsNullOrWhiteSpace(payDateStr) && DateTime.TryParseExact(payDateStr, "yyyyMMddHHmmss", null, System.Globalization.DateTimeStyles.None, out var t))
+                paidAt = t;
+
+            if (!valid)
+            {
+                var invalidModel = new PaymentResultViewModel
+                {
+                    Success = false,
+                    OrderId = orderId,
+                    TransactionId = vnpayTranId,
+                    Amount = amount,
+                    BankCode = bankCode,
+                    PaidAt = paidAt,
+                    Message = "Chữ ký VNPay không hợp lệ.",
+                    ResponseCode = "97"
+                };
+                return View("VnPayResult", invalidModel);
+            }
+
+            if (responseCode == "00" && txnStatus == "00")
+            {
+                var sessionKey = $"PendingOrder_{orderId}";
+                var orderDataJson = HttpContext.Session.GetString(sessionKey);
+
+                if (!string.IsNullOrEmpty(orderDataJson))
+                {
+                    var orderData = JsonSerializer.Deserialize<JsonElement>(orderDataJson);
+                    await SaveOrderAndPaymentWithPromotion(orderData, vnpayTranId, amount);
+                    HttpContext.Session.Remove(sessionKey);
+                }
+
+                var okModel = new PaymentResultViewModel
+                {
+                    Success = true,
+                    OrderId = orderId,
+                    TransactionId = vnpayTranId,
+                    Amount = amount,
+                    BankCode = bankCode,
+                    PaidAt = paidAt,
+                    Message = "Thanh toán VNPay thành công.",
+                    ResponseCode = responseCode
+                };
+                return View("VnPayResult", okModel);
+            }
+            else
+            {
+                var failModel = new PaymentResultViewModel
+                {
+                    Success = false,
+                    OrderId = orderId,
+                    TransactionId = vnpayTranId,
+                    Amount = amount,
+                    BankCode = bankCode,
+                    PaidAt = paidAt,
+                    Message = $"Thanh toán không thành công (mã: {responseCode}).",
+                    ResponseCode = responseCode
+                };
+                return View("VnPayResult", failModel);
             }
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "PaymentReturn failed.");
+            var errModel = new PaymentResultViewModel
+            {
+                Success = false,
+                Message = "Có lỗi xảy ra khi xử lý kết quả thanh toán.",
+                ResponseCode = "99"
+            };
+            return View("VnPayResult", errModel);
+        }
+    }
 
-        private async Task SaveOrderAndPaymentWithPromotion(JsonElement orderData, long vnpayTranId, long amount)
+
+    private async Task SaveOrderAndPaymentWithPromotion(JsonElement orderData, long vnpayTranId, long amount)
         {
             using var transaction = await _db.Database.BeginTransactionAsync();
             try

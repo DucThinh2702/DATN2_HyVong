@@ -1,0 +1,168 @@
+﻿@model DATN1API.Models.Pay.PaymentResultViewModel
+@{
+    ViewData["Title"] = "Kết quả thanh toán - The Bag Studio";
+    Layout = "~/Views/Shared/_LayoutUser.cshtml";
+}
+
+@section Styles {
+    <style>
+        .result-icon {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .copy-btn {
+            cursor: pointer;
+        }
+
+        .kv {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px dashed rgba(0,0,0,.08);
+            padding: 8px 0;
+        }
+
+            .kv span:first-child {
+                color: #6c757d;
+            }
+
+            .kv strong {
+                font-weight: 600;
+            }
+    </style>
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-lg-5">
+
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="result-icon @((Model?.Success ?? false) ? "bg-success bg-opacity-10" : "bg-danger bg-opacity-10")">
+                            @if (Model?.Success ?? false)
+                            {
+                                <i class="bi bi-check-circle-fill text-success fs-1"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-x-circle-fill text-danger fs-1"></i>
+                            }
+                        </div>
+                        <div>
+                            <h4 class="mb-1">
+                                @(Model?.Success == true ? "Thanh toán VNPay thành công" : "Thanh toán VNPay thất bại")
+                            </h4>
+                            <div class="text-muted">
+                                @(Model?.Message ?? (Model?.Success == true ? "Giao dịch đã được ghi nhận." : "Vui lòng thử lại hoặc chọn phương thức khác."))
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border rounded p-3 p-lg-4 bg-light">
+                        <div class="kv">
+                            <span>Mã đơn hàng</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <strong id="orderId">@(Model?.OrderId > 0 ? Model.OrderId.ToString() : "—")</strong>
+                                @if ((Model?.OrderId ?? 0) > 0)
+                                {
+                                    <button class="btn btn-sm btn-outline-secondary copy-btn" data-copy="#orderId" title="Sao chép">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                        <div class="kv">
+                            <span>Mã giao dịch</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <strong id="txnId">@(Model?.TransactionId > 0 ? Model.TransactionId.ToString() : "—")</strong>
+                                @if ((Model?.TransactionId ?? 0) > 0)
+                                {
+                                    <button class="btn btn-sm btn-outline-secondary copy-btn" data-copy="#txnId" title="Sao chép">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                        <div class="kv">
+                            <span>Số tiền</span>
+                            <strong>@(((Model?.Amount ?? 0).ToString("N0"))) VNĐ</strong>
+                        </div>
+                        <div class="kv">
+                            <span>Ngân hàng</span>
+                            <strong>@(string.IsNullOrWhiteSpace(Model?.BankCode) ? "—" : Model.BankCode)</strong>
+                        </div>
+                        <div class="kv">
+                            <span>Thời gian</span>
+                            <strong>
+                                @((Model?.PaidAt.HasValue ?? false)
+                                                                ? Model!.PaidAt!.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                                                : DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"))
+                            </strong>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model?.ResponseCode))
+                        {
+                            <div class="kv">
+                                <span>Mã phản hồi</span>
+                                <strong>@Model.ResponseCode</strong>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        <a href="@Url.Action("Index", "User")" class="btn btn-outline-secondary">
+                            <i class="bi bi-house-door me-1"></i> Về trang chủ
+                        </a>
+                        @if (Model?.Success == true && (Model?.OrderId ?? 0) > 0)
+                        {
+                            <!-- Nếu bạn có trang chi tiết thành công riêng -->
+                            <a href="@Url.Action("Orders", "User")" class="btn btn-warning text-dark fw-semibold">
+                                <i class="bi bi-receipt me-1"></i> Xem đơn hàng
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("GioHang", "User")" class="btn btn-warning text-dark fw-semibold">
+                                <i class="bi bi-cart3 me-1"></i> Quay lại giỏ hàng
+                            </a>
+                        }
+                    </div>
+
+                    @if (Model?.Success == false)
+                    {
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <div class="fw-semibold mb-1">Gợi ý:</div>
+                            <ul class="mb-0">
+                                <li>Kiểm tra lại số dư / hạn mức thẻ, hoặc thử lại sau.</li>
+                                <li>Chọn phương thức khác (COD / Chuyển khoản ngân hàng).</li>
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.copy-btn').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            const sel = btn.getAttribute('data-copy');
+            const el = document.querySelector(sel);
+            if (!el) return;
+            const text = (el.textContent || '').trim();
+            if (!text || text === '—') return;
+            navigator.clipboard.writeText(text).then(function(){
+              btn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+              setTimeout(()=>btn.innerHTML = '<i class="bi bi-clipboard"></i>', 1200);
+            });
+          });
+        });
+    </script>
+}

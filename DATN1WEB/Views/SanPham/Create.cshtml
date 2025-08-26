@@ -50,10 +50,10 @@
                 @Html.DropDownListFor(model => model.CategoryId, (SelectList)ViewBag.Categories, "-- Chọn danh mục --", new { @class = "form-select", @id = "CategoryId" })
             </div>
             <div class="col-md-6 mb-3">
-                <label for="Status" class="form-label fw-bold">Trạng thái <span class="text-danger">*</span></label>
-                <input type="hidden" asp-for="Status" value="Đang bán" />
-                <span class="form-control">Đang bán</span>
-
+                <label asp-for="Status" class="form-label fw-bold">
+                    Trạng thái <span class="text-danger">*</span>
+                </label>
+                <input asp-for="Status" class="form-control" value="Đang bán" readonly />
             </div>
         </div>
 
