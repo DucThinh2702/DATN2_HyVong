@@ -48,6 +48,7 @@ namespace DATNAPI1.Controllers
         public IActionResult Payment() => View();
 
         // 👉 Tính tổng server-side + redirect VNPAY
+        // 👉 Tính tổng server-side + redirect VNPAY
         [HttpPost, Authorize]
         public async Task<IActionResult> CreatePaymentFromCart(string? orderNote = null, string? orderType = "other", string? promoCode = null)
         {
@@ -67,6 +68,7 @@ namespace DATNAPI1.Controllers
                     return RedirectToAction("GioHang", "User");
                 }
 
+                // ====== TÍNH TIỀN ======
                 var itemsSubtotal = cart.CartDetails.Sum(cd => (cd.ProductVariant.SalePrice ?? 0m) * (cd.Quantity ?? 1));
                 var discountAmount = 0m;
                 var shippingFee = 0m;
@@ -88,18 +90,19 @@ namespace DATNAPI1.Controllers
                         {
                             validatedPromoCode = promoCode;
 
-                            if (promo.PromoType?.ToLowerInvariant() == "phần trăm")
+                            var type = promo.PromoType?.Trim().ToLowerInvariant();
+                            if (type == "phần trăm")
                             {
                                 promotionType = "percentage";
                                 var pct = (decimal)(promo.DiscountValue ?? 0m);
                                 discountAmount = Math.Min(itemsSubtotal * pct / 100m, itemsSubtotal);
                             }
-                            else if (promo.PromoType?.ToLowerInvariant() == "số tiền cố định")
+                            else if (type == "số tiền cố định")
                             {
                                 promotionType = "amount";
                                 discountAmount = Math.Min((decimal)(promo.DiscountValue ?? 0m), itemsSubtotal);
                             }
-                            else if (promo.PromoType?.ToLowerInvariant() == "miễn phí vận chuyển")
+                            else if (type == "miễn phí vận chuyển")
                             {
                                 promotionType = "free_shipping";
                                 shippingFee = 0m;
@@ -157,9 +160,27 @@ namespace DATNAPI1.Controllers
                 _logger.LogInformation("CreatePaymentFromCart: userId={userId}, items={count}, subtotal={subtotal}, discount={discount}, shipping={shipping}, total={totalVnd}, orderId={orderId}, promoCode={promoCode}",
                     userId, cart.CartDetails.Count, itemsSubtotal, discountAmount, shippingFee, amountVnd, orderId, validatedPromoCode);
 
-                var vnp = new VnPayLibrary();
+                // ====== ✅ KIỂM TRA TỒN TRƯỚC KHI TẠO LINK VNPAY ======
+                var lines = cart.CartDetails
+                    .GroupBy(cd => cd.ProductVariantId)
+                    .Select(g => new { VariantId = (int)g.Key, Qty = g.Sum(x => x.Quantity ?? 1) })
+                    .ToList();
 
-                // Tham số bắt buộc
+                foreach (var l in lines)
+                {
+                    var v = await _db.ProductVariants.AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.VariantId == l.VariantId);
+                    if (v == null || (v.Stock ?? 0) < l.Qty)
+                    {
+                        TempData["Message"] = "Một số sản phẩm không đủ hàng. Vui lòng cập nhật giỏ hàng.";
+                        _logger.LogWarning("CreatePaymentFromCart: Out of stock before VNPay. VariantId={vid}, Need={need}, Stock={stock}",
+                            l.VariantId, l.Qty, v?.Stock);
+                        return RedirectToAction("GioHang", "User");
+                    }
+                }
+
+                // ====== TẠO URL VNPAY ======
+                var vnp = new VnPayLibrary();
                 vnp.AddRequestData("vnp_Version", VnPayLibrary.VERSION);
                 vnp.AddRequestData("vnp_Command", "pay");
                 vnp.AddRequestData("vnp_TmnCode", _vnp_TmnCode);
@@ -189,6 +210,7 @@ namespace DATNAPI1.Controllers
                 return RedirectToAction("GioHang", "User");
             }
         }
+
 
         // ========== THANH TOÁN VNPAY TỪ VIEW THANH TOÁN ==========
         [HttpPost, Authorize]
@@ -327,9 +349,25 @@ namespace DATNAPI1.Controllers
                 _logger.LogError(ex, "CreatePaymentFromCheckout failed.");
                 return Json(new { success = false, message = "Không thể tạo thanh toán. Vui lòng thử lại." });
             }
+            // ✅ Kiểm tra tồn trước khi tạo link thanh toán
+            var lines = request.Items
+                .GroupBy(i => i.VariantId)
+                .Select(g => new { VariantId = g.Key, Qty = g.Sum(x => x.Quantity) })
+                .ToList();
+
+            foreach (var l in lines)
+            {
+                var v = await _db.ProductVariants.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.VariantId == l.VariantId);
+                if (v == null || (v.Stock ?? 0) < l.Qty)
+                {
+                    return Json(new { success = false, message = "Một số sản phẩm không đủ hàng. Vui lòng cập nhật giỏ hàng." });
+                }
+            }
+
         }
 
-[HttpGet]
+        [HttpGet]
     public async Task<IActionResult> VnPayReturn()
     {
         try
@@ -546,8 +584,34 @@ namespace DATNAPI1.Controllers
     }
 
 
-    private async Task SaveOrderAndPaymentWithPromotion(JsonElement orderData, long vnpayTranId, long amount)
+        private async Task SaveOrderAndPaymentWithPromotion(JsonElement orderData, long vnpayTranId, long amount)
         {
+            // ===== Idempotency: đã ghi nhận giao dịch này trước đó? =====
+            var tranCode = vnpayTranId.ToString();
+            var existedPayment = await _db.Payments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p =>
+                    p.MethodName == "VNPay" &&
+                    p.BankTransactionCode == tranCode &&
+                    p.PaymentStatus == "Thành công");
+
+            if (existedPayment != null)
+            {
+                _logger.LogWarning("Skip duplicate VNPay callback. BankTransactionCode={tran}", tranCode);
+                return; // đã xử lý rồi
+            }
+
+            // ===== Parse items một lần =====
+            var itemsList = orderData.GetProperty("Items")
+                .EnumerateArray()
+                .Select(it => new
+                {
+                    VariantId = it.GetProperty("VariantId").GetInt32(),
+                    Quantity = it.GetProperty("Quantity").GetInt32(),
+                    Price = it.GetProperty("Price").GetDecimal()
+                })
+                .ToList();
+
             using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
@@ -557,22 +621,54 @@ namespace DATNAPI1.Controllers
                 var discountAmount = orderData.TryGetProperty("DiscountAmount", out var discountProp) ? discountProp.GetDecimal() : 0m;
                 var shippingFee = orderData.TryGetProperty("ShippingFee", out var shippingProp) ? shippingProp.GetDecimal() : 0m;
 
-                // ĐỌC PromoCode (int?)
+                // ===== ĐỌC PromoCode (int?) & nạp entity =====
                 int? promoId = null;
-                if (orderData.TryGetProperty("PromoCode", out var promoIdProp))
+                if (orderData.TryGetProperty("PromoCode", out var promoIdProp) &&
+                    promoIdProp.ValueKind == JsonValueKind.Number &&
+                    promoIdProp.TryGetInt32(out var tmp))
                 {
-                    if (promoIdProp.ValueKind == JsonValueKind.Number && promoIdProp.TryGetInt32(out var tmp))
-                        promoId = tmp;
+                    promoId = tmp;
                 }
 
-                // Nạp promotion nếu có
                 Promotion? promoEntity = null;
                 if (promoId.HasValue)
-                {
                     promoEntity = await _db.Promotions.FirstOrDefaultAsync(p => p.PromoCode == promoId.Value);
+
+                // ===== 1) TRỪ TỒN KHO — nguyên tử theo từng biến thể =====
+                var grouped = itemsList
+                    .GroupBy(x => x.VariantId)
+                    .Select(g => new { VariantId = g.Key, Qty = g.Sum(i => i.Quantity) })
+                    .ToList();
+
+                foreach (var g in grouped)
+                {
+                    var affected = await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                UPDATE ProductVariants
+                SET Stock = Stock - {g.Qty}
+                WHERE VariantId = {g.VariantId}
+                  AND COALESCE(Stock,0) >= {g.Qty};
+            ");
+
+                    if (affected == 0)
+                    {
+                        // Lấy label đẹp để báo lỗi/log
+                        var pv = await _db.ProductVariants
+                            .Include(v => v.Product).Include(v => v.Color).Include(v => v.Size)
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(v => v.VariantId == g.VariantId);
+
+                        var name = pv?.Product?.ProductName ?? $"Biến thể #{g.VariantId}";
+                        var color = pv?.Color?.ColorName;
+                        var size = pv?.Size?.SizeName;
+                        var label = (color == null && size == null) ? name
+                                   : $"{name} ({color}{(color != null && size != null ? " / " : "")}{size})";
+
+                        _logger.LogError("Out of stock during VNPay capture. VariantId={vid}, Need={need}", g.VariantId, g.Qty);
+                        throw new InvalidOperationException($"{label} không đủ hàng trong kho.");
+                    }
                 }
 
-                // Tạo Order — LƯU ID vào Order.PromoCode
+                // ===== 2) TẠO ORDER (đã thanh toán → Chờ nhận hàng) =====
                 var order = new Order
                 {
                     UserId = userId,
@@ -581,34 +677,33 @@ namespace DATNAPI1.Controllers
                     DeliveryAddress = orderData.GetProperty("FullAddress").GetString(),
                     OrderDate = DateTime.Now,
                     TotalAmount = orderData.GetProperty("Total").GetDecimal(),
-                    OrderStatus = "Chờ xác nhận",
+                    OrderStatus = "Chờ nhận hàng",   // đã thanh toán
                     PaymentStatus = "Đã thanh toán",
                     Note = orderData.TryGetProperty("OrderNote", out var noteProperty) ? noteProperty.GetString() : null,
 
-                    PromoCode = promoEntity?.PromoCode,        // <-- FK int?
+                    PromoCode = promoEntity?.PromoCode, // FK int?
                     PromotionPromoCode = promoEntity?.PromoCode,
                     ShippingFee = shippingFee,
+                    Quantity = itemsList.Sum(i => i.Quantity)
                 };
 
                 _db.Orders.Add(order);
                 await _db.SaveChangesAsync();
 
-                // OrderDetails
-                var items = orderData.GetProperty("Items").EnumerateArray();
-                foreach (var item in items)
+                // ===== 3) ORDER DETAILS =====
+                foreach (var it in itemsList)
                 {
-                    var orderDetail = new OrderDetail
+                    _db.OrderDetails.Add(new OrderDetail
                     {
                         OrderId = order.OrderId,
-                        ProductVariantId = item.GetProperty("VariantId").GetInt32(),
-                        Quantity = item.GetProperty("Quantity").GetInt32(),
-                        UnitPrice = item.GetProperty("Price").GetDecimal(),
-                        TotalPrice = item.GetProperty("Price").GetDecimal() * item.GetProperty("Quantity").GetInt32()
-                    };
-                    _db.OrderDetails.Add(orderDetail);
+                        ProductVariantId = it.VariantId,
+                        Quantity = it.Quantity,
+                        UnitPrice = it.Price,
+                        TotalPrice = it.Price * it.Quantity
+                    });
                 }
 
-                // Payment content (hiển thị mã người dùng quen)
+                // ===== 4) PAYMENT =====
                 var paymentContent = $"Thanh toán VNPay thành công. Mã giao dịch: {vnpayTranId}";
                 if (promoEntity != null)
                 {
@@ -627,13 +722,13 @@ namespace DATNAPI1.Controllers
                     PaymentDate = DateTime.Now,
                     Amount = amount,
                     PaymentStatus = "Thành công",
-                    BankTransactionCode = vnpayTranId.ToString(),
+                    BankTransactionCode = tranCode,
                     PaymentContent = paymentContent,
                     IsActive = true
                 };
                 _db.Payments.Add(payment);
 
-                // Tăng UsedQuantity nếu có mã
+                // ===== 5) Cập nhật dùng mã khuyến mại =====
                 if (promoEntity != null)
                 {
                     promoEntity.UsedQuantity = (promoEntity.UsedQuantity ?? 0) + 1;
@@ -651,11 +746,14 @@ namespace DATNAPI1.Controllers
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Xoá cart items
-                var cart = await _db.Carts.Include(c => c.CartDetails).FirstOrDefaultAsync(c => c.UserId == userId);
+                // ===== 6) XOÁ GIỎ HÀNG (ngoài transaction chính, như logic hiện tại) =====
+                var cart = await _db.Carts
+                    .Include(c => c.CartDetails)
+                    .FirstOrDefaultAsync(c => c.UserId == userId);
+
                 if (cart != null)
                 {
-                    var variantIds = items.Select(x => x.GetProperty("VariantId").GetInt32()).ToList();
+                    var variantIds = itemsList.Select(x => x.VariantId).ToList();
                     var toRemove = cart.CartDetails.Where(cd => variantIds.Contains((int)cd.ProductVariantId)).ToList();
                     _db.CartDetails.RemoveRange(toRemove);
                     await _db.SaveChangesAsync();
@@ -667,7 +765,7 @@ namespace DATNAPI1.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "Failed to save order and payment with promotion data");
+                _logger.LogError(ex, "Failed to save order and payment with promotion data (VNPay)");
                 throw;
             }
         }
@@ -767,5 +865,50 @@ namespace DATNAPI1.Controllers
             }
             return rip.ToString();
         }
+
+
+        private async Task<(bool ok, string? msg)> ConsumeStockAsync(IEnumerable<(int VariantId, int Qty)> lines)
+        {
+            var grouped = lines.GroupBy(x => x.VariantId).Select(g => new { VariantId = g.Key, Qty = g.Sum(i => i.Qty) });
+            foreach (var item in grouped)
+            {
+                var affected = await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            UPDATE ProductVariants
+            SET Stock = Stock - {item.Qty}
+            WHERE VariantId = {item.VariantId}
+              AND COALESCE(Stock,0) >= {item.Qty};
+        ");
+                if (affected == 0)
+                {
+                    var pv = await _db.ProductVariants
+                        .Include(v => v.Product).Include(v => v.Color).Include(v => v.Size)
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(v => v.VariantId == item.VariantId);
+
+                    var name = pv?.Product?.ProductName ?? $"Biến thể #{item.VariantId}";
+                    var color = pv?.Color?.ColorName;
+                    var size = pv?.Size?.SizeName;
+                    var label = (color == null && size == null) ? name
+                                : $"{name} ({color}{(color != null && size != null ? " / " : "")}{size})";
+
+                    return (false, $"{label} không đủ hàng trong kho.");
+                }
+            }
+            return (true, null);
+        }
+
+        private async Task RestockAsync(IEnumerable<(int VariantId, int Qty)> lines)
+        {
+            var grouped = lines.GroupBy(x => x.VariantId).Select(g => new { VariantId = g.Key, Qty = g.Sum(i => i.Qty) });
+            foreach (var item in grouped)
+            {
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            UPDATE ProductVariants
+            SET Stock = COALESCE(Stock,0) + {item.Qty}
+            WHERE VariantId = {item.VariantId};
+        ");
+            }
+        }
+
     }
 }

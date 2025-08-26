@@ -121,91 +121,7 @@
         </div>
     </div>
 </div>
-<!-- Security Settings -->
-<div class="row">
-    <div class="col-lg-6 mb-4">
-        <div class="card">
-            <div class="card-header bg-transparent">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-shield-alt me-2"></i>Bảo mật tài khoản
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h6 class="mb-1">Đổi mật khẩu</h6>
-                        <small class="text-muted">Cập nhật mật khẩu để bảo mật tài khoản</small>
-                    </div>
-                    <button class="btn btn-outline-warning btn-sm" onclick="changePassword()">
-                        <i class="fas fa-key me-1"></i>Đổi
-                    </button>
-                </div>
 
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h6 class="mb-1">Xác thực 2 bước</h6>
-                        <small class="text-muted">Tăng cường bảo mật với xác thực 2 bước</small>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="twoFactorAuth">
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1">Phiên đăng nhập</h6>
-                        <small class="text-muted">Quản lý các phiên đăng nhập</small>
-                    </div>
-                    <button class="btn btn-outline-danger btn-sm" onclick="viewSessions()">
-                        <i class="fas fa-list me-1"></i>Xem
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-6 mb-4">
-        <div class="card">
-            <div class="card-header bg-transparent">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-chart-line me-2"></i>Hoạt động gần đây
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="timeline">
-                    <div class="timeline-item">
-                        <div class="timeline-marker bg-success"></div>
-                        <div class="timeline-content">
-                            <h6 class="mb-1">Đăng nhập thành công</h6>
-                            <small class="text-muted">2 giờ trước</small>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-marker bg-info"></div>
-                        <div class="timeline-content">
-                            <h6 class="mb-1">Cập nhật sản phẩm #123</h6>
-                            <small class="text-muted">5 giờ trước</small>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-marker bg-warning"></div>
-                        <div class="timeline-content">
-                            <h6 class="mb-1">Thay đổi cài đặt hệ thống</h6>
-                            <small class="text-muted">1 ngày trước</small>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-marker bg-primary"></div>
-                        <div class="timeline-content">
-                            <h6 class="mb-1">Tạo báo cáo tháng</h6>
-                            <small class="text-muted">2 ngày trước</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <style>
     .timeline {
@@ -326,15 +242,6 @@
         // window.location.href = '@Url.Action("Index", "Profile")';
     }
 
-    function changePassword() {
-        // Open password change modal or redirect
-        showNotification('Chức năng đổi mật khẩu sẽ được triển khai!', 'info');
-    }
-
-    function viewSessions() {
-        showNotification('Chức năng quản lý phiên đăng nhập sẽ được triển khai!', 'info');
-    }
-
     function showNotification(message, type) {
         const alertClass = type === 'success' ? 'alert-success' :
                           type === 'error' ? 'alert-danger' : 'alert-info';
@@ -354,9 +261,4 @@
         }, 5000);
     }
 
-    // Two-factor authentication toggle
-    document.getElementById('twoFactorAuth').addEventListener('change', function() {
-        const message = this.checked ? 'Đã bật xác thực 2 bước' : 'Đã tắt xác thực 2 bước';
-        showNotification(message, 'success');
-    });
 </script>

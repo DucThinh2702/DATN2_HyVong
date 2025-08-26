@@ -1,282 +1,4 @@
-﻿@* @model List<DATN1WEB.Models.ViewModels.MyOrderListItemVM> *@
-@* @{ *@
-@*     ViewData["Title"] = "Đơn hàng của tôi"; *@
-@*     var page = (int)(ViewBag.Page ?? 1); *@
-@*     var totalPages = (int)(ViewBag.TotalPages ?? 1); *@
-@*     string status = ViewBag.Status as string ?? ""; *@
-@*     string q = ViewBag.Query as string ?? ""; *@
-@*     var statusOptions = ViewBag.StatusOptions as List<SelectListItem>; *@
-@*     Layout = "~/Views/Shared/_LayoutUser.cshtml"; *@
-@* } *@
-
-@* <div class="container py-4"> *@
-@*     <div class="d-flex align-items-center justify-content-between mb-3"> *@
-@*         <h4 class="mb-0">Đơn hàng của tôi</h4> *@
-@*         <a class="btn btn-outline-secondary" href="@Url.Action("Index","User")"> *@
-@*             <i class="bi bi-bag"></i> Tiếp tục mua sắm *@
-@*         </a> *@
-@*     </div> *@
-
-@*     <form class="row g-2 mb-3"> *@
-@*         <div class="col-md-3"> *@
-@*             <select name="status" class="form-select" onchange="this.form.submit()"> *@
-@*                 @foreach (var op in statusOptions) *@
-@*                 { *@
-@*                     <option value="@op.Value" selected="@(op.Value == status)">@op.Text</option> *@
-@*                 } *@
-@*             </select> *@
-@*         </div> *@
-@*         <div class="col-md-6"> *@
-@*             <input name="q" value="@q" class="form-control" placeholder="Tìm theo mã đơn, tên người nhận, SĐT, địa chỉ, ghi chú..." /> *@
-@*         </div> *@
-@*         <div class="col-md-3 d-grid"> *@
-@*             <button class="btn btn-primary"><i class="bi bi-search"></i> Lọc</button> *@
-@*         </div> *@
-@*     </form> *@
-
-@*     <div class="card shadow-sm"> *@
-@*         <div class="table-responsive"> *@
-@*             <table class="table table-hover align-middle mb-0"> *@
-@*                 <thead class="table-light"> *@
-@*                     <tr> *@
-@*                         <th>Mã đơn</th> *@
-@*                         <th>Ngày đặt</th> *@
-@*                         <th class="text-center">SL</th> *@
-@*                         <th class="text-end">Tổng tiền</th> *@
-@*                         <th>TT Thanh toán</th> *@
-@*                         <th>Trạng thái</th> *@
-@*                         <th>Người nhận</th> *@
-@*                         <th>Địa chỉ</th> *@
-@*                         <th class="text-end"></th> *@
-@*                     </tr> *@
-@*                 </thead> *@
-@*                 <tbody> *@
-@*                     @if (!Model.Any()) *@
-@*                     { *@
-@*                         <tr><td colspan="9" class="text-center py-4">Chưa có đơn hàng nào.</td></tr> *@
-@*                     } *@
-@*                     else *@
-@*                     { *@
-@*                         foreach (var o in Model) *@
-@*                         { *@
-@*                             var st = (o.OrderStatus ?? "").Trim().ToLower(); *@
-@*                             // Chỉ cho huỷ khi rỗng hoặc 'pending' / 'chờ xác nhận' *@
-@*                             var canCancel = string.IsNullOrWhiteSpace(st) || st == "pending" || st == "chờ xác nhận"; *@
-@*                             var isCancelled = st == "cancelled" || st == "canceled" || st == "đã huỷ" || st == "đã hủy"; *@
-
-@*                             <tr> *@
-@*                                 <td>#@o.OrderId</td> *@
-@*                                 <td>@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td> *@
-@*                                 <td class="text-center">@o.Quantity</td> *@
-@*                                 <td class="text-end">@o.TotalAmount.ToString("N0") VNĐ</td> *@
-@*                                 <td>@Html.Raw(BadgePayment(o.PaymentStatus))</td> *@
-@*                                 <td>@Html.Raw(BadgeOrder(o.OrderStatus))</td> *@
-@*                                 <td>@o.RecipientName<br /><small class="text-muted">@o.RecipientPhone</small></td> *@
-@*                                 <td class="text-truncate" style="max-width:260px" title="@o.DeliveryAddress">@o.DeliveryAddress</td> *@
-@*                                 <td class="text-end"> *@
-@*                                     <a class="btn btn-sm btn-outline-primary" href="@Url.Action("OrderDetail","User", new { id = o.OrderId })">Xem</a> *@
-
-@*                                     @if (canCancel) *@
-@*                                     { *@
-@*                                         <button type="button" *@
-@*                                                 class="btn btn-sm btn-outline-danger ms-1" *@
-@*                                                 data-bs-toggle="modal" *@
-@*                                                 data-bs-target="#cancelModal" *@
-@*                                                 data-order-id="@o.OrderId"> *@
-@*                                             Huỷ *@
-@*                                         </button> *@
-@*                                     } *@
-
-@*                                     @if (isCancelled) *@
-@*                                     { *@
-@*                                         <button type="button" *@
-@*                                                 class="btn btn-sm btn-outline-success ms-1" *@
-@*                                                 onclick="reorderOrder(@o.OrderId)"> *@
-@*                                             Đặt lại *@
-@*                                         </button> *@
-@*                                     } *@
-@*                                 </td> *@
-@*                             </tr> *@
-@*                         } *@
-@*                     } *@
-@*                 </tbody> *@
-@*             </table> *@
-@*         </div> *@
-
-@*         <div class="card-footer"> *@
-@*             <nav> *@
-@*                 <ul class="pagination mb-0 justify-content-end"> *@
-@*                     <li class="page-item @(page<=1?"disabled":"")"> *@
-@*                         <a class="page-link" href="@Url.Action("Orders", new { page = page-1, status, q })">«</a> *@
-@*                     </li> *@
-@*                     @for (int i = 1; i <= totalPages; i++) *@
-@*                     { *@
-@*                         <li class="page-item @(i==page?"active":"")"> *@
-@*                             <a class="page-link" href="@Url.Action("Orders", new { page = i, status, q })">@i</a> *@
-@*                         </li> *@
-@*                     } *@
-@*                     <li class="page-item @(page>=totalPages?"disabled":"")"> *@
-@*                         <a class="page-link" href="@Url.Action("Orders", new { page = page+1, status, q })">»</a> *@
-@*                     </li> *@
-@*                 </ul> *@
-@*             </nav> *@
-@*         </div> *@
-@*     </div> *@
-@* </div> *@
-
-@* <!-- Modal xác nhận huỷ + lý do --> *@
-@* <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true"> *@
-@*     <div class="modal-dialog modal-dialog-centered"> *@
-@*         <div class="modal-content"> *@
-@*             <div class="modal-header"> *@
-@*                 <h5 class="modal-title">Huỷ đơn hàng</h5> *@
-@*                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button> *@
-@*             </div> *@
-@*             <div class="modal-body"> *@
-@*                 <input type="hidden" id="cancelOrderId" /> *@
-@*                 <div class="mb-2"> *@
-@*                     <div class="alert alert-warning py-2 px-3"> *@
-@*                         Bạn đang yêu cầu huỷ đơn <strong id="cancelOrderCode">#</strong>. *@
-@*                         Huỷ chỉ áp dụng cho đơn <strong>Chờ xác nhận</strong>. *@
-@*                     </div> *@
-@*                 </div> *@
-@*                 <div class="mb-3"> *@
-@*                     <label class="form-label">Lý do huỷ đơn <span class="text-danger">*</span></label> *@
-@*                     <textarea id="cancelReason" class="form-control" rows="3" maxlength="500" *@
-@*                               placeholder="Ví dụ: Đặt nhầm sản phẩm, muốn đổi địa chỉ, đổi phương thức thanh toán..."></textarea> *@
-@*                     <div class="form-text">Tối đa 500 ký tự.</div> *@
-@*                 </div> *@
-@*             </div> *@
-@*             <div class="modal-footer"> *@
-@*                 <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button> *@
-@*                 <button id="btnConfirmCancel" class="btn btn-danger"> *@
-@*                     <i class="bi bi-x-circle"></i> Xác nhận huỷ *@
-@*                 </button> *@
-@*             </div> *@
-@*         </div> *@
-@*     </div> *@
-@* </div> *@
-
-@* @functions { *@
-@*     // Chuẩn hoá trạng thái đơn về VI *@
-@*     string CanonOrder(string s) *@
-@*     { *@
-@*         var x = (s ?? "").Trim().ToLowerInvariant(); *@
-@*         if (string.IsNullOrWhiteSpace(x)) return "Chờ xác nhận"; *@
-@*         return x switch *@
-@*         { *@
-@*             "pending" or "chờ xác nhận" => "Chờ xác nhận", *@
-@*             "processing" or "đang chuẩn bị" or "đang xử lý" or "chờ xử lý" => "Đang chuẩn bị", *@
-@*             "shipping" or "đang giao" => "Đang giao", *@
-@*             "delivered" or "completed" or "hoàn tất" => "Hoàn tất", *@
-@*             "cancelled" or "canceled" or "đã huỷ" or "đã hủy" => "Đã huỷ", *@
-@*             _ => "Chờ xác nhận" *@
-@*         }; *@
-@*     } *@
-
-@*     // Chuẩn hoá trạng thái thanh toán về VI *@
-@*     string CanonPay(string s) *@
-@*     { *@
-@*         var x = (s ?? "").Trim().ToLowerInvariant(); *@
-@*         return x switch *@
-@*         { *@
-@*             "paid" or "đã thanh toán" => "Đã thanh toán", *@
-@*             "pending" or "chờ thanh toán" => "Chờ thanh toán", *@
-@*             "failed" or "thất bại" => "Thanh toán thất bại", *@
-@*             "" or "unpaid" or "chưa thanh toán" => "Chưa thanh toán", *@
-@*             _ => "Chưa thanh toán" *@
-@*         }; *@
-@*     } *@
-
-@*     // Badge hiển thị theo trạng thái đã chuẩn hoá *@
-@*     string BadgeOrder(string s) *@
-@*     { *@
-@*         var v = CanonOrder(s); *@
-@*         return v switch *@
-@*         { *@
-@*             "Chờ xác nhận" => "<span class='badge bg-secondary'>Chờ xác nhận</span>", *@
-@*             "Đang chuẩn bị" => "<span class='badge bg-info text-dark'>Đang chuẩn bị</span>", *@
-@*             "Đang giao" => "<span class='badge bg-warning text-dark'>Đang giao</span>", *@
-@*             "Hoàn tất" => "<span class='badge bg-success'>Hoàn tất</span>", *@
-@*             "Đã huỷ" => "<span class='badge bg-danger'>Đã huỷ</span>", *@
-@*             _ => "<span class='badge bg-secondary'>Chờ xác nhận</span>" *@
-@*         }; *@
-@*     } *@
-
-@*     string BadgePayment(string s) *@
-@*     { *@
-@*         var v = CanonPay(s); *@
-@*         return v switch *@
-@*         { *@
-@*             "Đã thanh toán" => "<span class='badge bg-success'>Đã thanh toán</span>", *@
-@*             "Chờ thanh toán" => "<span class='badge bg-warning text-dark'>Chờ thanh toán</span>", *@
-@*             "Thanh toán thất bại" => "<span class='badge bg-danger'>Thanh toán thất bại</span>", *@
-@*             _ => "<span class='badge bg-warning text-dark'>Chưa thanh toán</span>" *@
-@*         }; *@
-@*     } *@
-@* } *@
-
-
-@* @section Scripts { *@
-@*     <script> *@
-@*         // Mở modal: gắn orderId vào hidden input *@
-@*         const cancelModalEl = document.getElementById('cancelModal'); *@
-@*         if (cancelModalEl) { *@
-@*             cancelModalEl.addEventListener('show.bs.modal', function (event) { *@
-@*                 const btn = event.relatedTarget; *@
-@*                 const orderId = btn?.getAttribute('data-order-id'); *@
-@*                 document.getElementById('cancelOrderId').value = orderId || ''; *@
-@*                 document.getElementById('cancelOrderCode').innerText = '#' + (orderId || ''); *@
-@*                 document.getElementById('cancelReason').value = ''; *@
-@*             }); *@
-@*         } *@
-
-@*         // Xác nhận huỷ (gửi lý do lên server) *@
-@*         document.getElementById('btnConfirmCancel')?.addEventListener('click', async () => { *@
-@*             const id = document.getElementById('cancelOrderId').value; *@
-@*             const reason = (document.getElementById('cancelReason').value || '').trim(); *@
-
-@*             if (!id) { alert('Thiếu mã đơn.'); return; } *@
-@*             if (!reason || reason.length < 5) { *@
-@*                 alert('Vui lòng nhập lý do huỷ (tối thiểu 5 ký tự).'); return; *@
-@*             } *@
-
-@*             try { *@
-@*                 const res = await fetch('/User/CancelOrder', { *@
-@*                     method: 'POST', *@
-@*                     headers: { 'Content-Type': 'application/json' }, *@
-@*                     body: JSON.stringify({ id: Number(id), reason }) *@
-@*                 }); *@
-@*                 const data = await res.json(); *@
-@*                 alert(data.message || ''); *@
-@*                 if (data.success) location.reload(); *@
-@*             } catch { *@
-@*                 alert('Không thể huỷ đơn lúc này.'); *@
-@*             } *@
-@*         }); *@
-
-@*         // Đặt lại đơn (chỉ hiển thị khi đơn đã huỷ) *@
-@*         async function reorderOrder(id) { *@
-@*             if (!confirm("Bạn muốn đặt lại đơn #" + id + " ?")) return; *@
-@*             try { *@
-@*                 const res = await fetch('/User/Reorder', { *@
-@*                     method: 'POST', *@
-@*                     headers: { 'Content-Type': 'application/json' }, *@
-@*                     body: JSON.stringify({ id }) *@
-@*                 }); *@
-@*                 const data = await res.json(); *@
-@*                 alert(data.message || ''); *@
-@*                 if (data.success) { *@
-@*                     if (data.redirectUrl) location.href = data.redirectUrl; *@
-@*                     else location.reload(); *@
-@*                 } *@
-@*             } catch { *@
-@*                 alert('Không thể đặt lại đơn lúc này.'); *@
-@*             } *@
-@*         } *@
-@*         window.reorderOrder = reorderOrder; // expose to inline onclick *@
-@*     </script> *@
-@* } *@
+﻿
 @model List<DATN1WEB.Models.ViewModels.MyOrderListItemVM>
 @using Microsoft.AspNetCore.Mvc.Rendering
 @{
@@ -495,11 +217,13 @@
             "pending" or "chờ xác nhận" => "Chờ xác nhận",
             "processing" or "đang chuẩn bị" or "đang xử lý" or "chờ xử lý" => "Đang chuẩn bị",
             "shipping" or "đang giao" => "Đang giao",
+            "awaiting_receipt" or "chờ nhận hàng" => "Chờ nhận hàng",   // ✅ thêm trạng thái mới
             "delivered" or "completed" or "hoàn tất" => "Hoàn tất",
             "cancelled" or "canceled" or "đã huỷ" or "đã hủy" => "Đã huỷ",
             _ => "Chờ xác nhận"
         };
     }
+
     string CanonPay(string s)
     {
         var x = (s ?? "").Trim().ToLowerInvariant();
@@ -512,6 +236,7 @@
             _ => "Chưa thanh toán"
         };
     }
+
     string BadgeOrder(string s)
     {
         var v = CanonOrder(s);
@@ -520,11 +245,13 @@
             "Chờ xác nhận" => "<span class='badge bg-secondary'>Chờ xác nhận</span>",
             "Đang chuẩn bị" => "<span class='badge bg-info text-dark'>Đang chuẩn bị</span>",
             "Đang giao" => "<span class='badge bg-warning text-dark'>Đang giao</span>",
+            "Chờ nhận hàng" => "<span class='badge bg-primary'>Chờ nhận hàng</span>", // ✅ thêm hiển thị badge
             "Hoàn tất" => "<span class='badge bg-success'>Hoàn tất</span>",
             "Đã huỷ" => "<span class='badge bg-danger'>Đã huỷ</span>",
             _ => "<span class='badge bg-secondary'>Chờ xác nhận</span>"
         };
     }
+
     string BadgePayment(string s)
     {
         var v = CanonPay(s);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -489,7 +490,6 @@ namespace DATNAPI1.Controllers
                 .Include(c => c.CartDetails)
                     .ThenInclude(cd => cd.ProductVariant)
                         .ThenInclude(pv => pv.Product)
-                              .ThenInclude(p => p.Category)   // ✅
                 .Include(c => c.CartDetails)
                     .ThenInclude(cd => cd.ProductVariant)
                         .ThenInclude(pv => pv.Color)
@@ -638,10 +638,12 @@ namespace DATNAPI1.Controllers
                 OrderDate = DateTime.Now,
                 Quantity = totalQuantity,
                 TotalAmount = totalAmount,
-                OrderStatus = "Chờ xác nhận",
+                // Nếu đã thanh toán thì mặc định = "Chờ nhận hàng"
+                OrderStatus = "Chờ nhận hàng",
                 PaymentStatus = "Đã thanh toán",
                 OrderDetails = new List<OrderDetail>()
             };
+
 
             foreach (var item in cart.CartDetails)
             {
@@ -769,7 +771,6 @@ namespace DATNAPI1.Controllers
         {
             try
             {
-                // ===== 0) Auth =====
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
                     return Json(new { success = false, message = "Vui lòng đăng nhập để tiếp tục." });
@@ -778,7 +779,6 @@ namespace DATNAPI1.Controllers
                 if (appUser == null)
                     return Json(new { success = false, message = "Không tìm thấy thông tin người dùng." });
 
-                // ===== 1) Validate input cơ bản =====
                 if (request == null || request.Items == null || !request.Items.Any())
                     return Json(new { success = false, message = "Không có sản phẩm được chọn." });
 
@@ -787,136 +787,61 @@ namespace DATNAPI1.Controllers
                     string.IsNullOrWhiteSpace(request.FullAddress))
                     return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin giao hàng." });
 
-                // ===== 2) Lấy giá & danh mục CHUẨN từ DB theo VariantId (không tin client) =====
-                var variantIds = request.Items.Select(i => i.VariantId).ToList();
+                // ======= TÍNH TIỀN / KHUYẾN MÃI: giữ y nguyên logic của bạn =======
+                decimal itemsSubtotal = request.Items.Sum(item => item.Price * item.Quantity);
+                decimal discountAmount = request.DiscountAmount.HasValue ? Math.Max(0m, request.DiscountAmount.Value) : 0m;
+                if (discountAmount > itemsSubtotal) discountAmount = itemsSubtotal;
+                decimal shippingFee = request.ShippingFee.HasValue ? Math.Max(0m, request.ShippingFee.Value) : 0m;
 
-                var variants = await _context.ProductVariants
-                    .Include(v => v.Product) // để lấy CategoryId
-                    .Where(v => variantIds.Contains(v.VariantId))
-                    .Select(v => new
-                    {
-                        v.VariantId,
-                        CategoryId = v.Product.CategoryId,
-                        UnitPrice = v.SalePrice ?? 0m,
-                        v.Stock
-                    })
-                    .ToListAsync();
-
-                // Check thiếu biến thể nào không
-                if (variants.Count != variantIds.Count)
-                    return Json(new { success = false, message = "Có sản phẩm không tồn tại hoặc đã ngừng kinh doanh." });
-
-                // (Tuỳ chọn) check tồn kho tối thiểu
-                if (request.Items.Any(i => variants.First(v => v.VariantId == i.VariantId).Stock < i.Quantity))
-                    return Json(new { success = false, message = "Một số sản phẩm không đủ số lượng trong kho." });
-
-                // Subtotal CHUẨN theo DB
-                decimal itemsSubtotal = request.Items.Sum(i =>
-                {
-                    var v = variants.First(x => x.VariantId == i.VariantId);
-                    return v.UnitPrice * i.Quantity;
-                });
-
-                int totalQty = request.Items.Sum(i => i.Quantity);
-
-                // ===== 3) Áp mã khuyến mãi (theo danh mục nếu có) =====
                 Promotion? promotion = null;
-                decimal discountAmount = 0m;
-                decimal shippingFee = Math.Max(0m, request.ShippingFee ?? 0m); // fee client gợi ý, server vẫn re-check
-
                 if (request.PromoCode.HasValue)
                 {
-                    promotion = await _context.Promotions
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(p => p.PromoCode == request.PromoCode.Value);
+                    int promoId = request.PromoCode.Value;
+                    promotion = await _context.Promotions.FirstOrDefaultAsync(p => p.PromoCode == promoId);
 
                     if (promotion != null)
                     {
-                        var now = DateTime.Now;
-
+                        DateTime now = DateTime.Now;
                         bool validDate = (promotion.StartDate ?? DateTime.MinValue) <= now &&
                                          (promotion.EndDate == null || promotion.EndDate >= now);
+                        bool notExceeded = !promotion.Quantity.HasValue || (promotion.UsedQuantity ?? 0) < promotion.Quantity.Value;
+                        bool meetMinOrder = (promotion.MinOrderAmount ?? 0m) <= itemsSubtotal;
 
-                        bool notExceeded = !promotion.Quantity.HasValue ||
-                                           (promotion.UsedQuantity ?? 0) < promotion.Quantity.Value;
-
-                        // CHUẨN HOÁ Status (tên danh mục) -> CategoryId thật, có trim + collation + fallback parse số
-                        int? requiredCategoryId = null;
-                        var statusNorm = (promotion.Status ?? "").Trim();
-
-                        if (!string.Equals(statusNorm, "Tất cả sản phẩm", StringComparison.OrdinalIgnoreCase))
+                        if (!validDate || !notExceeded || !meetMinOrder)
                         {
-                            // Ưu tiên map theo tên (bất chấp hoa/thường/dấu)
-                            requiredCategoryId = await _context.Categories
-                                .Where(c => EF.Functions.Collate(c.CategoryName, "SQL_Latin1_General_CP1_CI_AS") == statusNorm)
-                                .Select(c => (int?)c.CategoryId)
-                                .FirstOrDefaultAsync();
-
-                            // Fallback: nếu Status lưu… CategoryId dạng số
-                            if (!requiredCategoryId.HasValue && int.TryParse(statusNorm, out var cid))
-                            {
-                                requiredCategoryId = await _context.Categories
-                                    .Where(c => c.CategoryId == cid)
-                                    .Select(c => (int?)c.CategoryId)
-                                    .FirstOrDefaultAsync();
-                            }
-                        }
-
-                        // Tính eligibleSubtotal = tổng tiền CHỈ của các variant thuộc danh mục yêu cầu
-                        // Làm JOIN rõ ràng: ProductVariants -> Products (để lấy CategoryId)
-                        var qtyByVariant = request.Items.ToDictionary(x => x.VariantId, x => x.Quantity);
-
-                        var eligibleSubtotal = await (
-                            from pv in _context.ProductVariants.AsNoTracking()
-                            join p in _context.Products.AsNoTracking() on pv.ProductId equals p.ProductId
-                            where qtyByVariant.Keys.Contains(pv.VariantId)
-                               && (!requiredCategoryId.HasValue || p.CategoryId == requiredCategoryId.Value)
-                            select new { pv.VariantId, Price = pv.SalePrice ?? 0m }
-                        )
-                        .SumAsync(x => x.Price * qtyByVariant[x.VariantId]);
-
-                        // (Tuỳ chính sách) min order áp trên TỔNG giỏ hay chỉ phần hợp lệ?
-                        // Nếu muốn áp trên phần hợp lệ: dùng eligibleSubtotal thay cho itemsSubtotal:
-                        bool meetMinOrder = (promotion.MinOrderAmount ?? 0m) <= itemsSubtotal; // hoặc: <= eligibleSubtotal
-
-                        if (!validDate || !notExceeded || !meetMinOrder || eligibleSubtotal <= 0)
-                        {
-                            promotion = null; // Không áp được mã
+                            promotion = null; // không đủ điều kiện
                         }
                         else
                         {
-                            var type = (promotion.PromoType ?? "").Trim().ToLowerInvariant();
-
-                            if (type == "phần trăm")
+                            string dbType = (promotion.PromoType ?? "").Trim().ToLowerInvariant();
+                            if (dbType == "phần trăm")
                             {
-                                var pct = Math.Max(0m, promotion.DiscountValue ?? 0m);
-                                discountAmount = Math.Min(eligibleSubtotal, eligibleSubtotal * pct / 100m);
+                                decimal pct = Math.Max(0m, promotion.DiscountValue ?? 0m);
+                                decimal calc = itemsSubtotal * pct / 100m;
+                                discountAmount = Math.Clamp(calc, 0m, itemsSubtotal);
                             }
-                            else if (type == "số tiền cố định")
+                            else if (dbType == "số tiền cố định")
                             {
-                                var val = Math.Max(0m, promotion.DiscountValue ?? 0m);
-                                discountAmount = Math.Min(val, eligibleSubtotal);
+                                decimal val = Math.Max(0m, promotion.DiscountValue ?? 0m);
+                                discountAmount = Math.Clamp(val, 0m, itemsSubtotal);
                             }
-                            else if (type == "miễn phí vận chuyển")
+                            else if (dbType == "miễn phí vận chuyển")
                             {
                                 discountAmount = 0m;
                                 shippingFee = 0m;
                             }
                             else
                             {
-                                promotion = null; // loại không xác định
+                                promotion = null;
                             }
                         }
                     }
                 }
 
-
-                // ===== 4) Tổng cuối =====
                 decimal grandTotal = itemsSubtotal - discountAmount + shippingFee;
                 if (grandTotal < 0m) grandTotal = 0m;
 
-                // ===== 5) Tạo đơn + chi tiết trong transaction =====
-                using var tx = await _context.Database.BeginTransactionAsync();
+                using var transaction = await _context.Database.BeginTransactionAsync();
 
                 // ===== 1) TRỪ TỒN KHO TRƯỚC =====
                 var consume = await ConsumeStockAsync(
@@ -924,10 +849,9 @@ namespace DATNAPI1.Controllers
                 );
                 if (!consume.ok)
                 {
-                    await tx.RollbackAsync(); // ✅ đúng tên biến
+                    await transaction.RollbackAsync();
                     return Json(new { success = false, message = consume.msg ?? "Một số sản phẩm không đủ hàng." });
                 }
-
 
                 // ===== 2) TẠO ĐƠN HÀNG =====
                 var order = new Order
@@ -937,34 +861,32 @@ namespace DATNAPI1.Controllers
                     RecipientPhone = request.CustomerPhone,
                     DeliveryAddress = request.FullAddress,
                     OrderDate = DateTime.Now,
-                    Quantity = totalQty,
-                    ShippingFee = shippingFee,
-                    TotalAmount = grandTotal,             // tổng cuối
+                    TotalAmount = grandTotal,
+                    // Thanh toán COD thì giữ mặc định "Chờ xác nhận"
                     OrderStatus = "Chờ xác nhận",
                     PaymentStatus = "Chưa thanh toán",
-                    PromoCode = promotion?.PromoCode,     // lưu FK mã nếu có
+                    PromoCode = promotion?.PromoCode,
+                    ShippingFee = shippingFee,
                     Note = request.OrderNote
                 };
+
+
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
-                // Chi tiết đơn: dùng giá từ DB
                 foreach (var item in request.Items)
                 {
-                    var v = variants.First(x => x.VariantId == item.VariantId);
-
-                    var line = new OrderDetail
+                    var orderDetail = new OrderDetail
                     {
                         OrderId = order.OrderId,
                         ProductVariantId = item.VariantId,
                         Quantity = item.Quantity,
-                        UnitPrice = v.UnitPrice,
-                        TotalPrice = v.UnitPrice * item.Quantity
+                        UnitPrice = item.Price,
+                        TotalPrice = item.Price * item.Quantity
                     };
-                    _context.OrderDetails.Add(line);
+                    _context.OrderDetails.Add(orderDetail);
                 }
 
-                // Bản ghi thanh toán (COD)
                 var payment = new Payment
                 {
                     OrderId = order.OrderId,
@@ -977,13 +899,11 @@ namespace DATNAPI1.Controllers
                 };
                 _context.Payments.Add(payment);
 
-                // Tăng UsedQuantity nếu áp được mã
                 if (promotion != null)
                 {
                     promotion.UsedQuantity = (promotion.UsedQuantity ?? 0) + 1;
                     _context.Promotions.Update(promotion);
 
-                    // (tuỳ chọn) lưu vào session để frontend hiển thị
                     var lastUsedPromo = new
                     {
                         PromoId = promotion.PromoCode,
@@ -998,34 +918,28 @@ namespace DATNAPI1.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                await tx.CommitAsync();
+                await transaction.CommitAsync();
 
                 // Xoá các item đã đặt khỏi giỏ
-                // ===== 6) Xoá các item đã đặt khỏi giỏ hàng =====
                 var cart = await _context.Carts
                     .Include(c => c.CartDetails)
                     .FirstOrDefaultAsync(c => c.UserId == userId);
 
                 if (cart != null)
                 {
-                    var orderedVariantIds = request.Items.Select(i => i.VariantId).ToHashSet();
-                    var removeLines = cart.CartDetails.Where(cd => orderedVariantIds.Contains((int)cd.ProductVariantId)).ToList();
-                    _context.CartDetails.RemoveRange(removeLines);
+                    var orderVariantIds = request.Items.Select(i => i.VariantId).ToList();
+                    var cartItemsToRemove = cart.CartDetails
+                        .Where(cd => orderVariantIds.Contains((int)cd.ProductVariantId))
+                        .ToList();
+
+                    _context.CartDetails.RemoveRange(cartItemsToRemove);
                     await _context.SaveChangesAsync();
                 }
 
                 return Json(new
                 {
                     success = true,
-                    message = "Đặt hàng thành công! Đơn hàng sẽ được giao trong thời gian sớm nhất.",
-                    orderId = order.OrderId,
-                    totals = new
-                    {
-                        itemsSubtotal,
-                        discountAmount,
-                        shippingFee,
-                        grandTotal
-                    }
+                    message = "Đặt hàng thành công! Đơn hàng sẽ được giao trong thời gian sớm nhất."
                 });
             }
             catch
@@ -1125,7 +1039,7 @@ namespace DATNAPI1.Controllers
 
 
 
-        
+
         // API: huỷ đơn (chỉ khi Pending/Chờ xác nhận)
 
 
@@ -1205,89 +1119,112 @@ namespace DATNAPI1.Controllers
 
         // ==== Danh sách đơn của tôi (REPLACE action Orders cũ) ====
         [HttpGet]
-        public async Task<IActionResult> Orders(int page = 1, string? status = null, string? q = null)
+       public async Task<IActionResult> Orders(int page = 1, string? status = null, string? q = null)
+{
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userId)) return RedirectToAction("DangNhap");
+
+    const int pageSize = 10;
+
+    // ================== chuẩn hoá alias ==================
+    static List<string> StatusAliases(string? s)
+    {
+        var v = (s ?? "").Trim().ToLower();
+        return v switch
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId)) return RedirectToAction("DangNhap");
+            "chờ xác nhận" or "pending" 
+                => new() { "Chờ xác nhận", "pending", "" },
 
-            const int pageSize = 10;
+            "đang chuẩn bị" or "processing" or "đang xử lý" or "chờ xử lý"
+                => new() { "Đang chuẩn bị", "processing", "Đang xử lý", "Chờ xử lý" },
 
-            static List<string> StatusAliases(string? s)
-            {
-                var v = (s ?? "").Trim().ToLower();
-                return v switch
-                {
-                    "chờ xác nhận" or "pending" => new() { "Chờ xác nhận", "pending", "" },
-                    "đang chuẩn bị" or "processing" or "đang xử lý" or "chờ xử lý"
-                                                              => new() { "Đang chuẩn bị", "processing", "Đang xử lý", "Chờ xử lý" },
-                    "đang giao" or "shipping" => new() { "Đang giao", "shipping" },
-                    "hoàn tất" or "delivered" or "completed" => new() { "Hoàn tất", "delivered", "completed" },
-                    "đã huỷ" or "đã hủy" or "cancelled" => new() { "Đã huỷ", "Đã hủy", "cancelled" },
-                    _ => new()
-                };
-            }
+            "đang giao" or "shipping" 
+                => new() { "Đang giao", "shipping" },
 
-            var query = _context.Orders.Where(o => o.UserId == userId);
+            // ✅ thêm alias cho "Chờ nhận hàng"
+            "chờ nhận hàng" or "awaiting_receipt" 
+                => new() { "Chờ nhận hàng", "awaiting_receipt" },
 
-            if (!string.IsNullOrWhiteSpace(status))
-            {
-                var aliases = StatusAliases(status);
-                if (aliases.Count > 0)
-                {
-                    if (aliases.Contains("", StringComparer.OrdinalIgnoreCase))
-                        query = query.Where(o => o.OrderStatus == null || o.OrderStatus == "" || aliases.Contains(o.OrderStatus!));
-                    else
-                        query = query.Where(o => aliases.Contains(o.OrderStatus!));
-                }
-            }
+            "hoàn tất" or "delivered" or "completed" 
+                => new() { "Hoàn tất", "delivered", "completed" },
 
-            if (!string.IsNullOrWhiteSpace(q))
-            {
-                query = query.Where(o =>
-                    (o.RecipientName ?? "").Contains(q) ||
-                    (o.RecipientPhone ?? "").Contains(q) ||
-                    (o.DeliveryAddress ?? "").Contains(q) ||
-                    (o.Note ?? "").Contains(q) ||
-                    o.OrderId.ToString() == q);
-            }
+            "đã huỷ" or "đã hủy" or "cancelled" 
+                => new() { "Đã huỷ", "Đã hủy", "cancelled" },
 
-            var total = await query.CountAsync();
-            var orders = await query
-                .OrderByDescending(o => o.OrderDate)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(o => new MyOrderListItemVM
-                {
-                    OrderId = o.OrderId,
-                    OrderDate = o.OrderDate ?? DateTime.Now,
-                    Quantity = (o.Quantity ?? o.OrderDetails.Sum(d => (int?)d.Quantity) ?? 0),
-                    TotalAmount = o.TotalAmount ?? 0m,
-                    PaymentStatus = CanonPay(o.PaymentStatus),   // ✅ chuẩn hoá
-                    OrderStatus = CanonOrder(o.OrderStatus),   // ✅ chuẩn hoá
-                    RecipientName = o.RecipientName ?? "",
-                    RecipientPhone = o.RecipientPhone ?? "",
-                    DeliveryAddress = o.DeliveryAddress ?? "",
-                    Note = o.Note
-                })
-                .ToListAsync();
+            _ => new()
+        };
+    }
 
+    var query = _context.Orders.Where(o => o.UserId == userId);
 
-            ViewBag.Page = page;
-            ViewBag.TotalPages = (int)Math.Ceiling((double)total / pageSize);
-            ViewBag.Status = status;
-            ViewBag.Query = q;
+    // lọc theo trạng thái
+    if (!string.IsNullOrWhiteSpace(status))
+    {
+        var aliases = StatusAliases(status);
+        if (aliases.Count > 0)
+        {
+            if (aliases.Contains("", StringComparer.OrdinalIgnoreCase))
+                query = query.Where(o => o.OrderStatus == null || o.OrderStatus == "" || aliases.Contains(o.OrderStatus!));
+            else
+                query = query.Where(o => aliases.Contains(o.OrderStatus!));
+        }
+    }
 
-            ViewBag.StatusOptions = new List<SelectListItem> {
+    // lọc theo từ khoá
+    if (!string.IsNullOrWhiteSpace(q))
+    {
+        query = query.Where(o =>
+            (o.RecipientName ?? "").Contains(q) ||
+            (o.RecipientPhone ?? "").Contains(q) ||
+            (o.DeliveryAddress ?? "").Contains(q) ||
+            (o.Note ?? "").Contains(q) ||
+            o.OrderId.ToString() == q);
+    }
+
+    var total = await query.CountAsync();
+
+    // ================== ép hiển thị ==================
+    var orders = await query
+        .OrderByDescending(o => o.OrderDate)
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .Select(o => new MyOrderListItemVM
+        {
+            OrderId = o.OrderId,
+            OrderDate = o.OrderDate ?? DateTime.Now,
+            Quantity = (o.Quantity ?? o.OrderDetails.Sum(d => (int?)d.Quantity) ?? 0),
+            TotalAmount = o.TotalAmount ?? 0m,
+            PaymentStatus = CanonPay(o.PaymentStatus),
+            // ✅ Nếu đã thanh toán nhưng vẫn là "Chờ xác nhận" thì hiển thị thành "Chờ nhận hàng"
+            OrderStatus = (CanonPay(o.PaymentStatus) == "Đã thanh toán" && CanonOrder(o.OrderStatus) == "Chờ xác nhận")
+                            ? "Chờ nhận hàng"
+                            : CanonOrder(o.OrderStatus),
+            RecipientName = o.RecipientName ?? "",
+            RecipientPhone = o.RecipientPhone ?? "",
+            DeliveryAddress = o.DeliveryAddress ?? "",
+            Note = o.Note
+        })
+        .ToListAsync();
+
+    ViewBag.Page = page;
+    ViewBag.TotalPages = (int)Math.Ceiling((double)total / pageSize);
+    ViewBag.Status = status;
+    ViewBag.Query = q;
+
+    // ✅ thêm option lọc "Chờ nhận hàng"
+    ViewBag.StatusOptions = new List<SelectListItem> {
         new("Tất cả", ""),
         new("Chờ xác nhận", "Chờ xác nhận"),
         new("Đang chuẩn bị", "Đang chuẩn bị"),
         new("Đang giao", "Đang giao"),
+        new("Chờ nhận hàng", "Chờ nhận hàng"),
         new("Hoàn tất", "Hoàn tất"),
         new("Đã huỷ", "Đã huỷ"),
     };
 
-            return View("Orders", orders);
-        }
+    return View("Orders", orders);
+}
+
 
         // ==== Huỷ đơn: chỉ khi Chờ xác nhận ====
         // UserController.cs
@@ -1529,11 +1466,13 @@ namespace DATNAPI1.Controllers
                 "" or "pending" or "chờ xác nhận" => "Chờ xác nhận",
                 "processing" or "đang chuẩn bị" or "đang xử lý" or "chờ xử lý" => "Đang chuẩn bị",
                 "shipping" or "đang giao" => "Đang giao",
+                "awaiting_receipt" or "chờ nhận hàng" => "Chờ nhận hàng",   // ✅ thêm dòng này
                 "delivered" or "completed" or "hoàn tất" => "Hoàn tất",
                 "cancelled" or "canceled" or "đã huỷ" or "đã hủy" => "Đã huỷ",
                 _ => "Chờ xác nhận"
             };
         }
+
 
         private static string CanonPay(string? s)
         {
@@ -1621,6 +1560,73 @@ namespace DATNAPI1.Controllers
         ");
             }
         }
-       
+        // Huỷ đơn bằng form (TempData + Redirect)
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> CancelOrderSubmit(int id, string? reason)
+        //{
+        //    try
+        //    {
+        //        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //        if (string.IsNullOrEmpty(userId))
+        //        {
+        //            TempData["Error"] = "Vui lòng đăng nhập.";
+        //            return RedirectToAction(nameof(OrderDetail), new { id });
+        //        }
+
+        //        var order = await _context.Orders
+        //            .Include(o => o.OrderDetails)
+        //            .FirstOrDefaultAsync(o => o.OrderId == id && o.UserId == userId);
+
+        //        if (order == null)
+        //        {
+        //            TempData["Error"] = "Không tìm thấy đơn hàng.";
+        //            return RedirectToAction(nameof(OrderDetail), new { id });
+        //        }
+
+        //        var st = (order.OrderStatus ?? "").Trim().ToLowerInvariant();
+        //        var isPending = string.IsNullOrWhiteSpace(st) || st == "pending" || st == "chờ xác nhận";
+        //        if (!isPending)
+        //        {
+        //            TempData["Error"] = "Chỉ có thể huỷ khi đơn ở trạng thái Chờ xác nhận.";
+        //            return RedirectToAction(nameof(OrderDetail), new { id });
+        //        }
+
+        //        reason = (reason ?? "").Trim();
+        //        if (reason.Length < 5)
+        //        {
+        //            TempData["Error"] = "Lý do huỷ tối thiểu 5 ký tự.";
+        //            return RedirectToAction(nameof(OrderDetail), new { id });
+        //        }
+
+        //        using var tx = await _context.Database.BeginTransactionAsync();
+
+        //        // Hoàn kho
+        //        var lines = order.OrderDetails.Select(d => ((int)d.ProductVariantId, (int)(d.Quantity ?? 0)));
+        //        await RestockAsync(lines);
+
+        //        // Cập nhật trạng thái
+        //        order.OrderStatus = "Cancelled";
+        //        if (string.Equals(order.PaymentStatus, "Đã thanh toán", StringComparison.OrdinalIgnoreCase))
+        //            order.PaymentStatus = "Chờ hoàn tiền";
+
+        //        var prefix = $"[HUỶ BỞI KHÁCH {DateTime.Now:dd/MM/yyyy HH:mm}] ";
+        //        order.Note = string.IsNullOrWhiteSpace(order.Note)
+        //            ? (prefix + reason)
+        //            : (prefix + reason + "\n" + order.Note);
+
+        //        await _context.SaveChangesAsync();
+        //        await tx.CommitAsync();
+
+        //        TempData["Success"] = $"Đã huỷ đơn #{id} và hoàn lại tồn kho.";
+        //        return RedirectToAction(nameof(OrderDetail), new { id });
+        //    }
+        //    catch
+        //    {
+        //        TempData["Error"] = "Có lỗi xảy ra khi huỷ đơn.";
+        //        return RedirectToAction(nameof(OrderDetail), new { id });
+        //    }
+        //}
+
     }
 }

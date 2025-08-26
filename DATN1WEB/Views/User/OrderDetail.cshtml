@@ -3,15 +3,17 @@
     ViewData["Title"] = $"Đơn hàng #{Model.OrderId}";
     Layout = "~/Views/Shared/_LayoutUser.cshtml";
 
+    // ===== Map trạng thái tiếng Việt (hiển thị phần thông tin) =====
     string MapOrderVi(string s)
     {
         var x = (s ?? "").Trim().ToLower();
         if (string.IsNullOrWhiteSpace(x)) return "Chờ xác nhận";
         return x switch
         {
-            "pending" => "Chờ xác nhận",
+            "pending" or "chờ xác nhận" => "Chờ xác nhận",
             "processing" or "đang xử lý" or "chờ xử lý" or "đang chuẩn bị" => "Đang chuẩn bị",
             "shipping" or "đang giao" => "Đang giao",
+            "awaiting_receipt" or "chờ nhận hàng" => "Chờ nhận hàng",  // vẫn map để hiển thị chữ (nếu có)
             "delivered" or "completed" or "hoàn tất" => "Hoàn tất",
             "cancelled" or "đã huỷ" or "đã hủy" => "Đã huỷ",
             _ => "Chờ xác nhận"
@@ -22,31 +24,55 @@
         var x = (s ?? "").Trim().ToLower();
         return x switch
         {
-            "paid" => "Đã thanh toán",
+            "paid" or "đã thanh toán" => "Đã thanh toán",
+            "pending" or "chờ thanh toán" => "Chờ thanh toán",
+            "failed" or "thất bại" => "Thanh toán thất bại",
             "unpaid" or "" or "chưa thanh toán" => "Chưa thanh toán",
-            "pending" => "Chờ thanh toán",
-            "failed" => "Thanh toán thất bại",
             _ => "Chưa thanh toán"
         };
     }
-    int StepIndex(string s) => (s?.Trim().ToLower()) switch
+
+    // Hiển thị chữ trạng thái & thanh toán
+    var paymentVi = MapPaymentVi(Model.PaymentStatus);
+    var orderVi = MapOrderVi(Model.OrderStatus);
+
+    // ===== StepIndex cho STEPPER (chỉ 4 bước, KHÔNG có "Chờ nhận hàng") =====
+    int StepIndexByKey(string key) => (key ?? "").Trim().ToLower() switch
     {
-        null or "" or "pending" or "chờ xác nhận" => 0,
-        "processing" or "đang chuẩn bị" or "đang xử lý" or "chờ xử lý" => 1,
-        "shipping" or "đang giao" => 2,
-        "delivered" or "completed" or "hoàn tất" => 3,
+        "pending" => 0,
+        "processing" => 1,
+        "shipping" => 2,
+        "delivered" => 3,
         _ => 0
     };
+
+    // Quy về 1 trong 4 mốc step từ trạng thái hiện có
+    int CurrentStepIndex()
+    {
+        var v = (orderVi ?? "").ToLower();
+        return v switch
+        {
+            "chờ xác nhận" => 0,
+            "đang chuẩn bị" => 1,
+            "đang giao" => 2,
+            // "chờ nhận hàng" không có step riêng -> gán vào step "đang giao" cho hợp lý
+            "chờ nhận hàng" => 2,
+            "hoàn tất" => 3,
+            _ => 0
+        };
+    }
+
     string StepClass(string key)
     {
-        var cur = StepIndex(Model.OrderStatus);
-        var idx = StepIndex(key);
+        var cur = CurrentStepIndex();
+        var idx = StepIndexByKey(key);
         if (cur > idx) return "step done";
         if (cur == idx) return "step active";
         return "step";
     }
-    var st = (Model.OrderStatus ?? "").Trim().ToLower();
-    bool canEditOrCancel = st == "" || st == "pending" || st == "chờ xác nhận";
+
+    var stRaw = (Model.OrderStatus ?? "").Trim().ToLower();
+    bool canEditOrCancel = string.IsNullOrWhiteSpace(stRaw) || stRaw == "pending" || stRaw == "chờ xác nhận";
 }
 
 <style>
@@ -111,17 +137,14 @@
             </a>
             @if (canEditOrCancel)
             {
-                <button id="btnEdit" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal">
-                    <i class="bi bi-pencil-square"></i> Chỉnh sửa
-                </button>
-                <button class="btn btn-outline-danger"
-                        data-bs-toggle="modal" data-bs-target="#cancelModal">
+                <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
                     <i class="bi bi-x-circle"></i> Huỷ đơn
                 </button>
             }
         </div>
     </div>
 
+    <!-- Thông tin đơn -->
     <div class="card mb-3">
         <div class="card-body">
             <div class="row g-3">
@@ -131,8 +154,8 @@
                     <div><strong>Số lượng:</strong> @Model.Quantity</div>
                 </div>
                 <div class="col-md-4">
-                    <div><strong>Thanh toán:</strong> @MapPaymentVi(Model.PaymentStatus)</div>
-                    <div><strong>Trạng thái:</strong> @MapOrderVi(Model.OrderStatus)</div>
+                    <div><strong>Thanh toán:</strong> @paymentVi</div>
+                    <div><strong>Trạng thái:</strong> @orderVi</div>
                     @if (!string.IsNullOrWhiteSpace(Model.Note))
                     {
                         <div><strong>Ghi chú:</strong> @Model.Note</div>
@@ -145,6 +168,8 @@
                 </div>
             </div>
         </div>
+
+        <!-- Stepper 4 bước -->
         <div class="card-footer bg-light">
             <div class="stepper">
                 <div class="@(StepClass("pending"))"><div class="dot"></div><div class="label">Chờ xác nhận</div></div><div class="bar"></div>
@@ -155,6 +180,7 @@
         </div>
     </div>
 
+    <!-- Sản phẩm -->
     <div class="card shadow-sm">
         <div class="table-responsive">
             <table class="table align-middle mb-0">
@@ -177,7 +203,7 @@
                                     <div>@i.ProductName</div>
                                 </div>
                             </td>
-                            <td><small class="text-muted">Màu: @(i.ColorName ?? "-") &nbsp;·&nbsp; Size: @(i.SizeName ?? "-")</small></td>
+                            <td><small class="text-muted">Màu: @(i.ColorName ?? "-") · Size: @(i.SizeName ?? "-")</small></td>
                             <td class="text-center">@i.Quantity</td>
                             <td class="text-end">@i.UnitPrice.ToString("N0") VNĐ</td>
                             <td class="text-end">@i.TotalPrice.ToString("N0") VNĐ</td>
@@ -192,159 +218,44 @@
     </div>
 </div>
 
+<!-- Modal huỷ -->
 @if (canEditOrCancel)
 {
-    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Chỉnh sửa thông tin giao hàng</h5>
+                    <h5 class="modal-title">Huỷ đơn hàng</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
                 </div>
-
-                <!-- FORM POST TỚI UpdateOrderInfo -->
-                <form asp-controller="User" asp-action="UpdateOrderInfo" method="post" id="editForm">
-                    @Html.AntiForgeryToken()
-
-                    <div class="modal-body">
-                        <!-- OrderId để bind vào DTO -->
-                        <input type="hidden" name="OrderId" value="@Model.OrderId" />
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Tên người nhận</label>
-                                <input name="RecipientName" id="editName" class="form-control" value="@Model.RecipientName" />
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Số điện thoại</label>
-                                <input name="RecipientPhone" id="editPhone" class="form-control" value="@Model.RecipientPhone" />
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Địa chỉ</label>
-                                <input name="DeliveryAddress" id="editAddress" class="form-control" value="@Model.DeliveryAddress" />
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Ghi chú</label>
-                                <textarea name="Note" id="editNote" class="form-control" rows="3">@Model.Note</textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Đóng</button>
-                        <button class="btn btn-primary" type="submit" id="btnSaveEdit">Lưu thay đổi</button>
-                    </div>
-                </form>
+                <div class="modal-body">
+                    <p>Bạn có chắc muốn huỷ đơn hàng <strong>#@Model.OrderId</strong> không?</p>
+                </div>
+                <div class="modal-footer">
+                    <form asp-controller="User" asp-action="CancelOrder" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 }
 
-
 @section Scripts {
     <script>
-        // ===== Auto refresh trạng thái đơn mỗi 20s =====
+        // Tự làm mới trạng thái mỗi 20s
         setInterval(async () => {
           try {
             const res = await fetch(`/User/MyOrderStatus?id=@Model.OrderId`);
             const data = await res.json();
             if (data?.success) {
-              const current = "@Model.OrderStatus";
+              const current = "@orderVi";
               if (data.orderStatus && data.orderStatus !== current) location.reload();
             }
-          } catch { /* ignore */ }
+          } catch {}
         }, 20000);
-
-        // Không dùng localStorage cho thông báo
-        try { localStorage.removeItem("OrderMessage"); } catch {}
-
-        // Lấy Anti-forgery token từ LayoutUser
-        const AF_TOKEN = document.querySelector('meta[name="request-verification-token"]')?.content || '';
-
-        function closeModal(id){
-          const el = document.getElementById(id);
-          if (!el) return;
-          if (window.bootstrap){
-            const inst = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el);
-            inst.hide();
-          }else{
-            el.classList.remove("show"); el.style.display="none";
-            document.body.classList.remove("modal-open");
-            document.querySelectorAll(".modal-backdrop").forEach(e=>e.remove());
-          }
-        }
-
-        @if (canEditOrCancel)
-        {
-            <text>
-              // ===== Huỷ đơn =====
-              document.getElementById("btnCancel")?.addEventListener("click", async () => {
-                if (!confirm("Bạn có chắc muốn huỷ đơn #@Model.OrderId ?")) return;
-
-                let reason = prompt("Vui lòng nhập lý do huỷ (tối thiểu 5 ký tự):", "");
-                if (reason === null) return;
-                reason = (reason || "").trim();
-                if (reason.length < 5) { showToast("Lý do huỷ tối thiểu 5 ký tự.", "warning"); return; }
-
-                try{
-                  const res = await fetch(`/User/CancelOrder`, {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "RequestVerificationToken": AF_TOKEN
-                    },
-                    body: JSON.stringify({ id: @Model.OrderId, reason })
-                  });
-                  const data = await res.json();
-                  if (data.success){
-                    showToast(data.message || "Đã huỷ đơn.", "success");
-                    setTimeout(()=>location.reload(), 1200);
-                  }else{
-                    showToast(data.message || "Không thể huỷ đơn lúc này.", "danger");
-                  }
-                }catch{
-                  showToast("Không thể huỷ đơn lúc này.", "danger");
-                }
-              });
-
-              // ===== Lưu chỉnh sửa thông tin giao hàng =====
-              document.getElementById("btnSaveEdit")?.addEventListener("click", async () => {
-                const payload = {
-                  orderId: @Model.OrderId,
-                  recipientName: document.getElementById("editName").value.trim(),
-                  recipientPhone: document.getElementById("editPhone").value.trim(),
-                  deliveryAddress: document.getElementById("editAddress").value.trim(),
-                  note: document.getElementById("editNote").value
-                };
-
-                if (!payload.recipientName || !payload.recipientPhone || !payload.deliveryAddress) {
-                  showToast("Vui lòng nhập đủ Tên, SĐT, Địa chỉ.", "warning");
-                  return;
-                }
-
-                try{
-                  const res = await fetch("/User/UpdateOrderInfo", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "RequestVerificationToken": AF_TOKEN
-                    },
-                    body: JSON.stringify(payload)
-                  });
-                  const data = await res.json();
-
-                  if (data.success){
-                    closeModal("editModal");
-                    showToast(data.message || "Cập nhật thành công.", "success");
-                    setTimeout(()=>location.reload(), 1200);
-                  }else{
-                    showToast(data.message || "Cập nhật thất bại.", "danger");
-                  }
-                }catch{
-                  showToast("Không thể lưu thay đổi lúc này.", "danger");
-                }
-              });
-            </text>
-        }
     </script>
 }

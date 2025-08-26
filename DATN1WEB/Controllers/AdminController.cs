@@ -10,7 +10,7 @@ using System;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-
+using System.Collections.Generic;
 namespace DATN1API.Controllers
 {
     [Authorize(Roles = "Admin")]
@@ -24,26 +24,106 @@ namespace DATN1API.Controllers
             _context = context;
             _userManager = userManager;
         }
+        // using ...
+
+
+        [HttpGet]
+        public async Task<IActionResult> ChartData(int days = 7)
+        {
+            if (days != 7 && days != 30 && days != 90) days = 7;
+
+            // khoảng ngày [start; end)
+            var end = DateTime.Today.AddDays(1);            // hết ngày hôm nay (mở)
+            var start = end.AddDays(-days);                 // lùi "days" ngày
+
+            // Lấy tất cả đơn trong khoảng
+            var orders = await _context.Orders
+                .Where(o => o.OrderDate.HasValue
+                            && o.OrderDate.Value >= start
+                            && o.OrderDate.Value < end)
+                .Select(o => new
+                {
+                    Date = o.OrderDate!.Value.Date,
+                    Amount = (decimal)(o.TotalAmount ?? 0m),
+                    OrderStatus = o.OrderStatus,
+                    PaymentStatus = o.PaymentStatus
+                })
+                .ToListAsync();
+
+            // Doanh thu: CHỈ tính đơn đã thanh toán (Paid/Đã thanh toán) và KHÔNG tính Cancelled
+            var revenueByDate = orders
+                .Where(x => x.OrderStatus != "Cancelled"
+                            && (x.PaymentStatus == "Paid" || x.PaymentStatus == "Đã thanh toán"))
+                .GroupBy(x => x.Date)
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
+
+            // Số đơn: không tính Cancelled
+            var countByDate = orders
+                .Where(x => x.OrderStatus != "Cancelled")
+                .GroupBy(x => x.Date)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            // Build dãy liên tục theo ngày, điền 0 nếu thiếu
+            var labels = new List<string>();
+            var revenueSeries = new List<decimal>();
+            var orderSeries = new List<int>();
+
+            for (var d = start.Date; d < end.Date; d = d.AddDays(1))
+            {
+                labels.Add(d.ToString("dd/MM"));
+                revenueSeries.Add(revenueByDate.TryGetValue(d, out var rv) ? rv : 0m);
+                orderSeries.Add(countByDate.TryGetValue(d, out var ct) ? ct : 0);
+            }
+
+            return Json(new
+            {
+                labels,
+                // client đang hiển thị "triệu VNĐ", giữ nguyên cách chia 1,000,000 ở view
+                revenue = revenueSeries,
+                orders = orderSeries
+            });
+        }
 
         public async Task<IActionResult> Index()
         {
             var now = DateTime.Now;
             var startOfMonth = new DateTime(now.Year, now.Month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1); // giới hạn < đầu tháng sau
 
+            // Tính doanh thu tháng này (chỉ tính các đơn đã thanh toán và không bị huỷ)
+            var doanhThuThangNay = await _context.Orders
+                .Where(o => o.OrderDate.HasValue
+                            && o.OrderDate.Value >= startOfMonth
+                            && o.OrderDate.Value < endOfMonth
+                            && (o.PaymentStatus == "Paid" || o.PaymentStatus == "Đã thanh toán") // Chỉ tính đơn đã thanh toán
+                            && o.OrderStatus != "Cancelled") // Loại bỏ các đơn huỷ
+                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
+
+            // Tính tổng số sản phẩm trong kho
+            var tongSanPhamTrongKho = await _context.ProductVariants
+                .SumAsync(v => (int?)v.Stock) ?? 0;
+
+            // Lấy đơn hàng mới nhất trong ngày (chỉ lấy đơn hàng của ngày hôm nay)
+            var donHangMoi = await _context.Orders
+                .CountAsync(o => o.OrderDate.HasValue
+                                 && o.OrderDate.Value.Date == DateTime.Today.Date // Lọc đơn hàng trong ngày hôm nay
+                                 && o.OrderStatus != "Cancelled"); // Không tính đơn hàng bị huỷ
+
+            // Cập nhật thông tin model để gửi lên view
             var model = new DashboardViewModel
             {
-                DoanhThuThangNay = await _context.Orders
-                    .Where(o => o.OrderDate.HasValue && o.OrderDate.Value >= startOfMonth && o.OrderStatus == "Delivered")
-                    .SumAsync(o => (decimal?)o.TotalAmount) ?? 0,
+                DoanhThuThangNay = doanhThuThangNay,
+                TongSanPhamTrongKho = tongSanPhamTrongKho,
 
-                DonHangMoi = await _context.Orders
-                    .CountAsync(o => o.OrderDate.HasValue && o.OrderDate.Value >= DateTime.Today.AddDays(-7)),
+                // Lấy số lượng đơn hàng mới trong ngày hôm nay
+                DonHangMoi = donHangMoi,
 
-                // Lấy số lượng người dùng mới trong 7 ngày qua
+                // Lấy số lượng khách hàng mới
                 SoKhachHangMoi = await _userManager.Users
-                    .Where(u => u.UserName != null) // Tìm tất cả người dùng
+                    .Where(u => u.UserName != null)
                     .CountAsync(),
 
+                // Lấy 5 đơn hàng gần đây nhất
                 DonHangGanDay = await _context.Orders
                     .Include(o => o.User)
                     .Where(o => o.OrderDate.HasValue)
@@ -57,10 +137,11 @@ namespace DATN1API.Controllers
                         TrangThai = o.OrderStatus
                     }).ToListAsync(),
 
+                // Lấy 5 sản phẩm bán chạy nhất
                 SanPhamBanChay = await _context.OrderDetails
-                    .Include(od => od.ProductVariant) // Bao gồm ProductVariant
-                    .ThenInclude(pv => pv.Product)   // Sau đó bao gồm Product từ ProductVariant
-                    .ThenInclude(p => p.Category)    // Tiếp tục bao gồm Category từ Product
+                    .Include(od => od.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
+                    .ThenInclude(p => p.Category)
                     .GroupBy(od => new { od.ProductVariant.Product.ProductName, od.ProductVariant.Product.Category.CategoryName })
                     .Select(g => new SanPhamBanChayDto
                     {
@@ -73,36 +154,16 @@ namespace DATN1API.Controllers
                     .Take(5)
                     .ToListAsync(),
 
+                // Các nhãn cho biểu đồ doanh thu (hiện tại không sử dụng cho các ngày)
                 LabelsDoanhThu = Enumerable.Range(0, 7)
                     .Select(i => DateTime.Today.AddDays(-6 + i).ToString("dd/MM"))
                     .ToList()
             };
 
-            // 🛠 Fix chạy tuần tự (KHÔNG dùng Task.WhenAll)
-            var dataDoanhThu = new List<decimal>();
-            var dataDonHang = new List<int>();
-
-            for (int i = 0; i < 7; i++)
-            {
-                var date = DateTime.Today.AddDays(-6 + i);
-
-                var total = await _context.Orders
-                    .Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == date.Date && o.OrderStatus == "Delivered")
-                    .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
-
-                var count = await _context.Orders
-                    .Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == date.Date)
-                    .CountAsync();
-
-                dataDoanhThu.Add(total);
-                dataDonHang.Add(count);
-            }
-
-            model.DataDoanhThu = dataDoanhThu;
-            model.DataDonHang = dataDonHang;
-
+            // Trả về View với model đã được cập nhật
             return View(model);
         }
+
 
         public IActionResult DanhMuc()
         {

@@ -6,6 +6,7 @@
 }
 
 <style>
+
     .stat-card {
         border: none;
         border-radius: 16px;
@@ -120,6 +121,17 @@
                 background: rgba(255,193,7,0.05);
                 transform: scale(1.01);
             }
+    /* Ẩn thanh cuộn ngang */
+    .table-responsive {
+        overflow-x: auto;
+        -ms-overflow-style: none; /* IE, Edge */
+        scrollbar-width: none; /* Firefox */
+    }
+
+        .table-responsive::-webkit-scrollbar {
+            display: none; /* Chrome, Safari */
+        }
+
 
     .badge-status {
         padding: 0.5rem 1rem;
@@ -199,8 +211,7 @@
                 </ol>
             </nav>
         </div>
-        <div class="d-flex align-items-center gap-3">
-        </div>
+        <div class="d-flex align-items-center gap-3"></div>
     </div>
 </div>
 
@@ -228,7 +239,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="stat-label text-primary mb-2">Đơn hàng mới</div>
+                        <div class="stat-label text-primary mb-2">Đơn hàng mới trong ngày</div>
                         <div class="stat-value text-dark">@Model.DonHangMoi.ToString("N0")</div>
                         <small class="text-muted">Đơn hàng</small>
                     </div>
@@ -276,19 +287,14 @@
 </div>
 
 <!-- Charts and Activity Row -->
-<div class="row mb-4">
+<div class="container-fluid">
     <!-- Revenue Chart -->
-    <div class="col-xl-8 col-lg-7 mb-4">
+    <div class=" mb-4">
         <div class="card chart-card">
             <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-chart-line me-2 text-primary"></i>Doanh thu & Đơn hàng
                 </h5>
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary active">7 ngày</button>
-                    <button class="btn btn-outline-primary">30 ngày</button>
-                    <button class="btn btn-outline-primary">90 ngày</button>
-                </div>
             </div>
             <div class="card-body">
                 <div style="height: 350px;">
@@ -298,87 +304,19 @@
         </div>
     </div>
 
-    <!-- Recent Activity -->
-    <div class="col-xl-4 col-lg-5 mb-4">
-        <div class="card chart-card">
-            <div class="card-header bg-transparent">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-clock me-2 text-info"></i>Hoạt động gần đây
-                </h5>
-            </div>
-            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                <div class="activity-item">
-                    <div class="d-flex align-items-start">
-                        <div class="activity-icon bg-primary text-white me-3">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1">Đơn hàng mới #ORD-1247</h6>
-                            <p class="mb-1 text-muted small">Nguyễn Văn A đã đặt mua Túi xách da cao cấp</p>
-                            <small class="text-muted">2 phút trước</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="activity-item">
-                    <div class="d-flex align-items-start">
-                        <div class="activity-icon bg-success text-white me-3">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1">Khách hàng mới đăng ký</h6>
-                            <p class="mb-1 text-muted small">Trần Thị B vừa tạo tài khoản mới</p>
-                            <small class="text-muted">5 phút trước</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="activity-item">
-                    <div class="d-flex align-items-start">
-                        <div class="activity-icon bg-warning text-white me-3">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1">Sản phẩm sắp hết hàng</h6>
-                            <p class="mb-1 text-muted small">Balo du lịch chỉ còn 5 sản phẩm</p>
-                            <small class="text-muted">10 phút trước</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="activity-item">
-                    <div class="d-flex align-items-start">
-                        <div class="activity-icon bg-info text-white me-3">
-                            <i class="fas fa-credit-card"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1">Thanh toán thành công</h6>
-                            <p class="mb-1 text-muted small">Đơn hàng #ORD-1245 đã được thanh toán</p>
-                            <small class="text-muted">15 phút trước</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  
 </div>
 
-<!-- Data Tables Row -->
+<!-- Data Tables: FULL-WIDTH STACKED -->
 <div class="row">
-    <!-- Recent Orders -->
-    <div class="col-xl-6 mb-4">
+    <!-- Recent Orders (FULL WIDTH) -->
+    <div class="col-12 mb-4">
         <div class="card chart-card">
             <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-list-alt me-2 text-primary"></i>Đơn hàng gần đây
                 </h5>
                 <div>
-                    <button class="btn btn-outline-primary btn-sm me-2">
-                        <i class="fas fa-download me-1"></i>Xuất Excel
-                    </button>
-                    <button class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus me-1"></i>Thêm đơn hàng
-                    </button>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -390,7 +328,7 @@
                                 <th>Khách hàng</th>
                                 <th>Tổng tiền</th>
                                 <th>Trạng thái</th>
-                                <th>Thao tác</th>
+                                
                             </tr>
                         </thead>
                         <tbody>
@@ -401,19 +339,7 @@
                                     <td>@dh.TenKhachHang</td>
                                     <td><strong>@dh.TongTien.ToString("N0") VNĐ</strong></td>
                                     <td><span class="badge badge-status bg-info">@dh.TrangThai</span></td>
-                                    <td>
-                                        <div class="d-flex gap-1">
-                                            <button class="btn btn-action btn-outline-primary" title="Xem">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-action btn-outline-warning" title="Sửa">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-action btn-outline-danger" title="Xóa">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+                                    
                                 </tr>
                             }
                         </tbody>
@@ -423,20 +349,14 @@
         </div>
     </div>
 
-    <!-- Best Selling Products -->
-    <div class="col-xl-6 mb-4">
+    <!-- Best Selling Products (FULL WIDTH, BELOW) -->
+    <div class="col-12 mb-4">
         <div class="card chart-card">
             <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i class="fas fa-fire me-2 text-danger"></i>Sản phẩm bán chạy
                 </h5>
                 <div>
-                    <button class="btn btn-outline-primary btn-sm me-2">
-                        <i class="fas fa-chart-bar me-1"></i>Xem báo cáo
-                    </button>
-                    <button class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus me-1"></i>Thêm sản phẩm
-                    </button>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -448,7 +368,7 @@
                                 <th>Danh mục</th>
                                 <th>Đã bán</th>
                                 <th>Doanh thu</th>
-                                <th>Thao tác</th>
+                               
                             </tr>
                         </thead>
                         <tbody>
@@ -459,16 +379,7 @@
                                     <td><span class="badge bg-light text-dark">@sp.DanhMuc</span></td>
                                     <td><strong class="text-success">@sp.SoLuongBan</strong></td>
                                     <td><strong class="text-primary">@sp.DoanhThu.ToString("N0") VNĐ</strong></td>
-                                    <td>
-                                        <div class="d-flex gap-1">
-                                            <button class="btn btn-action btn-outline-primary" title="Xem">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-action btn-outline-warning" title="Sửa">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+                                   
                                 </tr>
                             }
                         </tbody>
@@ -481,15 +392,16 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Chart Configuration
     const ctx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(ctx, {
+
+    // Khởi tạo chart rỗng
+    const revenueChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: @Html.Raw(Json.Serialize(Model.LabelsDoanhThu)),
+            labels: [],
             datasets: [{
                 label: 'Doanh thu (triệu VNĐ)',
-                data: @Html.Raw(Json.Serialize(Model.DataDoanhThu.Select(x => Math.Round(x / 1000000M, 2)))),
+                data: [],
                 borderColor: '#ffc107',
                 backgroundColor: 'rgba(255,193,7,0.1)',
                 tension: 0.4,
@@ -497,11 +409,11 @@
                 pointBackgroundColor: '#ffc107',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8
+                pointRadius: 4,
+                pointHoverRadius: 6
             }, {
                 label: 'Đơn hàng',
-                data: @Html.Raw(Json.Serialize(Model.DataDonHang)),
+                data: [],
                 borderColor: '#0d6efd',
                 backgroundColor: 'rgba(13,110,253,0.1)',
                 tension: 0.4,
@@ -509,21 +421,15 @@
                 pointBackgroundColor: '#0d6efd',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8
+                pointRadius: 4,
+                pointHoverRadius: 6
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 20
-                    }
-                },
+                legend: { position: 'top', labels: { usePointStyle: true, padding: 20 } },
                 tooltip: {
                     backgroundColor: 'rgba(0,0,0,0.8)',
                     titleColor: '#fff',
@@ -535,30 +441,36 @@
                 }
             },
             scales: {
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        color: '#6c757d'
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    },
-                    ticks: {
-                        color: '#6c757d'
-                    }
-                }
+                x: { grid: { display: false }, ticks: { color: '#6c757d' } },
+                y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#6c757d' } }
             },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            }
+            interaction: { intersect: false, mode: 'index' }
         }
     });
+
+    async function loadChart(days) {
+        try {
+            const res = await fetch(`@Url.Action("ChartData", "Admin")?days=${days}`);
+            const json = await res.json();
+
+            if (!res.ok) {
+                throw new Error('Dữ liệu biểu đồ không hợp lệ');
+            }
+
+            revenueChart.data.labels = json.labels;
+            revenueChart.data.datasets[0].data = json.revenue.map(v => Math.round((v / 1_000_000) * 100) / 100);
+            revenueChart.data.datasets[1].data = json.orders;
+
+            revenueChart.update();
+        } catch (e) {
+            console.error(e);
+            alert(`Không tải được dữ liệu biểu đồ: ${e.message}`);
+        }
+    }
+
+
+    // tải mặc định 7 ngày khi vào trang
+    loadChart(7);
 
     // Logout function
     function logout() {
@@ -569,28 +481,20 @@
 
     // Add loading states to buttons
     document.querySelectorAll('.btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
+        btn.addEventListener('click', function() {
             if (this.getAttribute('data-bs-toggle') || this.onclick) return;
-
             const originalText = this.innerHTML;
             this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang xử lý...';
             this.disabled = true;
-
-            setTimeout(() => {
-                this.innerHTML = originalText;
-                this.disabled = false;
-            }, 2000);
+            setTimeout(() => { this.innerHTML = originalText; this.disabled = false; }, 2000);
         });
     });
 
-    // Auto refresh data every 30 seconds
+    // Auto refresh animation every 30 seconds
     setInterval(() => {
-        // Add subtle animation to indicate data refresh
         document.querySelectorAll('.stat-card').forEach(card => {
             card.style.transform = 'scale(1.02)';
-            setTimeout(() => {
-                card.style.transform = 'scale(1)';
-            }, 200);
+            setTimeout(() => { card.style.transform = 'scale(1)'; }, 200);
         });
     }, 30000);
 </script>

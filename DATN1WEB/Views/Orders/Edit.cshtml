@@ -4,7 +4,6 @@
     ViewData["Title"] = $"Sửa đơn hàng #{Model.OrderId}";
     var vi = CultureInfo.GetCultureInfo("vi-VN");
 
-    // Thanh toán -> VI
     string VNPayment(string? s) => (s ?? "").Trim().ToLowerInvariant() switch
     {
         "paid" => "Đã thanh toán",
@@ -13,23 +12,14 @@
         _ => "Không rõ"
     };
 
-    // Trạng thái đơn -> VI (đầy đủ, nhận cả EN/VI; rỗng = Chờ xác nhận)
     string VNOrder(string? s) => (s ?? "").Trim().ToLowerInvariant() switch
     {
         "" => "Chờ xác nhận",
         "pending" or "chờ xác nhận" => "Chờ xác nhận",
-
-        "processing" or "đang chuẩn bị" or "đang xử lý" or "chờ xử lý"
-                                      => "Đang chuẩn bị",
-
-        "shipping" or "đang giao" => "Đang giao",
-
-        "completed" or "delivered" or "hoàn tất" or "hoàn thành"
-                                      => "Hoàn tất",
-
-        "cancelled" or "canceled" or "đã huỷ" or "đã hủy"
-                                      => "Đã hủy",
-
+        "processing" or "đang chuẩn bị" or "đang xử lý" or "chờ xử lý" => "Đang chuẩn bị",
+        "shipping" or "đang giao" or "vận chuyển" => "Đang giao",
+        "completed" or "delivered" or "hoàn tất" or "hoàn thành" => "Hoàn tất",
+        "cancelled" or "canceled" or "đã huỷ" or "đã hủy" => "Đã hủy",
         _ => "Không rõ"
     };
 }
@@ -40,7 +30,6 @@
     @Html.AntiForgeryToken()
     <div asp-validation-summary="All" class="text-danger mb-2"></div>
 
-    <!-- OrderId phải gửi lên -->
     <input type="hidden" name="OrderId" value="@Model.OrderId" />
 
     <div class="row g-3 mb-4">
@@ -82,7 +71,8 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label">Trạng thái thanh toán</label>
-                        <select name="PaymentStatus" class="form-select">
+                        <!-- data-current để script biết payment hiện tại -->
+                        <select name="PaymentStatus" class="form-select" data-current="@Model.PaymentStatus">
                             <option value="Paid" selected="@(string.Equals(Model.PaymentStatus,"Paid",StringComparison.OrdinalIgnoreCase))">Đã thanh toán</option>
                             <option value="Unpaid" selected="@(string.Equals(Model.PaymentStatus,"Unpaid",StringComparison.OrdinalIgnoreCase))">Chưa thanh toán</option>
                         </select>
@@ -92,7 +82,6 @@
                     <div class="mb-3">
                         <label class="form-label">Trạng thái đơn</label>
                         <select name="OrderStatus" class="form-select">
-                            <!-- Mặc định chọn Pending nếu rỗng -->
                             <option value="Pending"
                                     selected="@(string.IsNullOrWhiteSpace(Model.OrderStatus) || string.Equals(Model.OrderStatus,"Pending",StringComparison.OrdinalIgnoreCase))">
                                 Chờ xác nhận
@@ -119,7 +108,6 @@
 
                     <div class="mb-1">
                         <label class="form-label">Phí vận chuyển</label>
-                        <!-- Gửi theo InvariantCulture: dấu chấm -->
                         <input name="ShippingFee" type="number" step="0.01" class="form-control"
                                value="@((Model.ShippingFee ?? 0m).ToString(CultureInfo.InvariantCulture))" />
                         <div class="form-text">Nhập số thập phân bằng dấu chấm (ví dụ: 15000.50)</div>
@@ -213,27 +201,102 @@
     .table-modern th {
         white-space: nowrap;
     }
+
+    /* Làm mờ các option bị vô hiệu hoá */
+    select.form-select option:disabled {
+        color: #6c757d;
+    }
+
+    /* Khi mọi lựa chọn hợp lệ đều bị khoá, làm mờ cả select */
+    .is-locked {
+        opacity: .65;
+        pointer-events: none;
+    }
 </style>
+
 <script>
     (function () {
-      const paySel   = document.querySelector('select[name="PaymentStatus"]');
-      const statSel  = document.querySelector('select[name="OrderStatus"]');
+      const paySel  = document.querySelector('select[name="PaymentStatus"]');
+      const statSel = document.querySelector('select[name="OrderStatus"]');
+
+      // Bậc của trạng thái đơn để chặn hạ cấp
+      const rank = { Pending: 0, Processing: 1, Shipping: 2, Completed: 3 };
+
+      // Lấy trạng thái đơn hiện tại từ server (fallback 'Pending' nếu null/empty)
+      const currentOrder = (('@Model.OrderStatus' || '').trim() || 'Pending');
+      let currentOrderNorm = normalizeOrder(currentOrder);
+
+      function normalizeOrder(s) {
+        const x = (s || '').toLowerCase();
+        if (!x || x === 'pending' || x === 'chờ xác nhận') return 'Pending';
+        if (['processing','đang chuẩn bị','đang xử lý','chờ xử lý'].includes(x)) return 'Processing';
+        if (['shipping','đang giao','vận chuyển'].includes(x)) return 'Shipping';
+        if (['completed','delivered','hoàn tất','hoàn thành'].includes(x)) return 'Completed';
+        if (['cancelled','canceled','đã huỷ','đã hủy'].includes(x)) return 'Cancelled';
+        return 'Pending';
+      }
+
+      function normalizePay(s) {
+        const x = (s || '').toLowerCase();
+        if (x === 'paid' || x === 'đã thanh toán' || x === 'da thanh toan') return 'Paid';
+        if (x === 'pending' || x === 'chờ thanh toán' || x === 'cho thanh toan') return 'Pending';
+        return 'Unpaid';
+      }
+
+      // Nếu payment hiện tại là Paid, khoá các option khác (UI – server vẫn là chốt)
+      const currentPay = normalizePay(paySel.dataset.current || paySel.value);
+      if (currentPay === 'Paid') {
+        [...paySel.options].forEach(opt => { if (opt.value !== 'Paid') opt.disabled = true; });
+        paySel.value = 'Paid';
+      }
 
       function enforce() {
-        const isPaid = (paySel.value || '').toLowerCase() === 'paid';
-        // tìm option Completed
+        const pay = normalizePay(paySel.value);
+        const isPaid = pay === 'Paid';
+
+        // 1) Completed chỉ bật khi đã thanh toán
         [...statSel.options].forEach(opt => {
           if (opt.value === 'Completed') {
             opt.disabled = !isPaid;
-            if (!isPaid && statSel.value === 'Completed') {
-              // nếu đang chọn Completed mà đổi sang chưa paid -> đẩy về Shipping hoặc giữ nguyên
-              const fallback = [...statSel.options].find(o => o.value === 'Shipping') ? 'Shipping' : 'Processing';
-              statSel.value = fallback;
-            }
           }
         });
+
+        // 2) Không cho hạ cấp trạng thái đơn (disable option có bậc < hiện tại)
+        const curRank = rank[currentOrderNorm] ?? 0;
+        [...statSel.options].forEach(opt => {
+          const val = opt.value;
+          if (val in rank) {
+            const r = rank[val];
+            if (r < curRank) opt.disabled = true;
+          }
+        });
+
+        // 3) Nếu đang chọn Completed nhưng payment không phải Paid, nảy về Shipping/Processing
+        if (!isPaid && statSel.value === 'Completed') {
+          const fallback = [...statSel.options].find(o => !o.disabled && (o.value === 'Shipping' || o.value === 'Processing'))?.value || 'Processing';
+          statSel.value = fallback;
+        }
+
+        // 4) Nếu mọi option hợp lệ đều disabled, khoá cả select để thể hiện không còn tương tác
+        const anyEnabled = [...statSel.options].some(o => !o.disabled);
+        statSel.classList.toggle('is-locked', !anyEnabled);
       }
+
+      // Khi người dùng cố chọn trạng thái thấp hơn hiện tại, tự động phục hồi về lựa chọn hợp lệ gần nhất
+      statSel.addEventListener('change', () => {
+        const val = statSel.value;
+        if (val in rank && (rank[val] < (rank[currentOrderNorm] ?? 0))) {
+          const fallback = [...statSel.options]
+            .map(o => o.value)
+            .filter(v => (v in rank) && rank[v] >= (rank[currentOrderNorm] ?? 0))
+            .sort((a,b) => rank[a] - rank[b])[0] || currentOrderNorm;
+          statSel.value = fallback;
+        }
+      });
+
       paySel.addEventListener('change', enforce);
-      enforce(); // áp dụng khi load
+
+      // Khởi tạo
+      enforce();
     })();
 </script>
