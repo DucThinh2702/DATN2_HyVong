@@ -4,10 +4,21 @@
 @{
     ViewData["Title"] = "Bài viết";
 
-    // lấy query filter
-    string q = Context.Request.Query["search"];
-    string hasImage = Context.Request.Query["hasImage"];
-    string authorId = Context.Request.Query["authorId"];
+    // query/filter
+    string q = (ViewBag.Search as string) ?? (string)Context.Request.Query["search"];
+    string hasImage = (ViewBag.HasImage as string) ?? (string)Context.Request.Query["hasImage"];
+
+    int page = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int pageSize = ViewBag.PageSize ?? 5;
+    int totalRecords = ViewBag.TotalRecords ?? 0;
+
+    // cửa sổ tối đa 5 nút
+    int window = 5;
+    int start = Math.Max(1, page - window / 2);
+    int end = Math.Min(totalPages, start + window - 1);
+    if (end - start + 1 < window) start = Math.Max(1, end - window + 1);
+
     string Img(string? p) => string.IsNullOrWhiteSpace(p)
         ? ""
         : (p!.StartsWith("~/") ? p : "~" + (p.StartsWith("/") ? p : "/" + p));
@@ -38,10 +49,6 @@
             <option value="no" selected="@(string.Equals(hasImage,"no", StringComparison.OrdinalIgnoreCase))">Không ảnh</option>
         </select>
 
-        <!-- (tuỳ chọn) lọc theo AuthorId đơn giản -->
-        <input name="authorId" value="@authorId"
-               class="form-control" style="width:140px" placeholder="Tác giả (ID)" />
-
         <button class="btn btn-outline-primary"><i class="fas fa-filter me-1"></i>Lọc</button>
 
         <a asp-controller="News" asp-action="Create" class="btn btn-primary">
@@ -63,6 +70,14 @@
 <div class="card mt-3">
     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
         <h5 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i>Danh sách bài viết</h5>
+        <small class="text-muted">
+            @if (totalRecords > 0)
+            {
+                var from = (page - 1) * pageSize + 1;
+                var to = Math.Min(page * pageSize, totalRecords);
+                @($"{from:N0}–{to:N0} / {totalRecords:N0}")
+            }
+        </small>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -72,7 +87,6 @@
                         <th>Ảnh</th>
                         <th>Tiêu đề</th>
                         <th>Ngày đăng</th>
-                        <th>Tác giả (ID)</th>
                         <th class="text-center">Hành động</th>
                     </tr>
                 </thead>
@@ -98,7 +112,6 @@
                                 </td>
                                 <td class="fw-semibold">@n.Title</td>
                                 <td>@(n.PostedDate?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
-                                <td>@(n.AuthorId?.ToString() ?? "-")</td>
                                 <td class="text-center">
                                     <div class="d-flex gap-1 justify-content-center">
                                         <a asp-action="Details" asp-route-id="@n.NewsId" class="btn btn-action btn-outline-info" title="Xem"><i class="fas fa-eye"></i></a>
@@ -112,12 +125,55 @@
                     else
                     {
                         <tr>
-                            <td colspan="5" class="text-center text-muted">Chưa có bài viết</td>
+                            <td colspan="4" class="text-center text-muted">Chưa có bài viết</td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+
+        @* PAGER COMPACT – canh giữa *@
+        @if (totalPages > 1)
+        {
+            <div class="d-flex justify-content-center py-2">
+                <nav aria-label="News pagination">
+                    <ul class="pagination pagination-sm pager-compact mb-0">
+
+                        <!-- Prev -->
+                        <li class="page-item @(page == 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(page - 1)"
+                               asp-route-search="@q"
+                               asp-route-hasImage="@hasImage"
+                               aria-label="Trang trước">&lsaquo;</a>
+                        </li>
+
+                        <!-- Numbers -->
+                        @for (int i = start; i <= end; i++)
+                        {
+                            <li class="page-item @(i == page ? "active" : "")">
+                                <a class="page-link"
+                                   asp-action="Index"
+                                   asp-route-page="@i"
+                                   asp-route-search="@q"
+                                   asp-route-hasImage="@hasImage">@i</a>
+                            </li>
+                        }
+
+                        <!-- Next -->
+                        <li class="page-item @(page == totalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               asp-action="Index"
+                               asp-route-page="@(page + 1)"
+                               asp-route-search="@q"
+                               asp-route-hasImage="@hasImage"
+                               aria-label="Trang sau">&rsaquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
     </div>
 </div>
 
@@ -148,5 +204,30 @@
 
         .news-thumb.placeholder {
             background: #f1f3f5;
+        }
+
+    /* PAGER COMPACT */
+    .pager-compact {
+        background: #f1f3f5;
+        border-radius: .6rem;
+        padding: .25rem .35rem;
+    }
+
+        .pager-compact .page-link {
+            border: 0;
+            margin: 0 .125rem;
+            border-radius: .4rem;
+            padding: .35rem .6rem;
+            color: #1a73e8;
+        }
+
+        .pager-compact .page-item.active .page-link {
+            background: #1a73e8;
+            color: #fff;
+        }
+
+        .pager-compact .page-item.disabled .page-link {
+            color: #6c757d;
+            background: transparent;
         }
 </style>

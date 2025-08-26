@@ -16,8 +16,9 @@ namespace DATN1WEB.Controllers
             _env = env;
         }
 
-        // ============ INDEX ============
-        public async Task<IActionResult> Index(string? search, string? hasImage)
+        // ============ INDEX (phân trang 5/sp) ============
+        [HttpGet]
+        public async Task<IActionResult> Index(string? search, string? hasImage, int? authorId, int page = 1, int pageSize = 5)
         {
             var q = _context.News.Include(n => n.Author).AsQueryable();
 
@@ -35,14 +36,36 @@ namespace DATN1WEB.Controllers
             else if (string.Equals(hasImage, "no", StringComparison.OrdinalIgnoreCase))
                 q = q.Where(n => string.IsNullOrEmpty(n.ThumbnailImage));
 
-            ViewBag.TotalCount = await _context.News.CountAsync();
-            ViewBag.WithImageCount = await _context.News.CountAsync(n => !string.IsNullOrEmpty(n.ThumbnailImage));
-            ViewBag.WithoutImageCount = await _context.News.CountAsync(n => string.IsNullOrEmpty(n.ThumbnailImage));
+            if (authorId.HasValue)
+                q = q.Where(n => n.AuthorId == authorId.Value);
 
-            var data = await q.OrderByDescending(n => n.PostedDate).ThenByDescending(n => n.NewsId).ToListAsync();
+            // Tổng sau khi áp bộ lọc
+            var totalRecords = await q.CountAsync();
+            if (pageSize <= 0) pageSize = 5;
+
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            if (totalPages == 0) totalPages = 1;
+            page = Math.Max(1, Math.Min(page, totalPages));
+
+            var data = await q
+                .OrderByDescending(n => n.PostedDate)
+                .ThenByDescending(n => n.NewsId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // ViewBags cho view
+            ViewBag.Page = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalRecords = totalRecords;
+
+            ViewBag.Search = search;
+            ViewBag.HasImage = hasImage;
+            ViewBag.AuthorId = authorId;
+
             return View(data);
         }
-
         // ============ CREATE ============
         [HttpGet]
         public IActionResult Create() => View();

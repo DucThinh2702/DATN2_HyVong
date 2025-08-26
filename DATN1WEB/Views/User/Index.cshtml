@@ -142,9 +142,14 @@
                 <form method="get" asp-action="Index" class="flex-grow-1 d-flex justify-content-center">
                     <div class="input-group" style="max-width:500px;">
                         <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm kiếm sản phẩm...">
+                        @if (ViewBag.SelectedCategoryId != null)
+                        {
+                            <input type="hidden" name="categoryId" value="@ViewBag.SelectedCategoryId" />
+                        }
                         <button class="btn btn-warning" type="submit"><i class="bi bi-search"></i></button>
                     </div>
                 </form>
+
 
                 <!-- Hotline -->
                 <div class="text-end">
@@ -456,124 +461,201 @@
         var catList = ViewBag.Categories as List<DATN1API.Models.Category> ?? new();
         var counts = ViewBag.CategoryCounts as Dictionary<int, int> ?? new();
         int perSlide = 4; // số item mỗi slide
+        int totalSlides = catList.Any() ? (int)Math.Ceiling((double)catList.Count / perSlide) : 1;
     }
 
-    <div class="container-fluid px-1 mt-4 mt-lg-5 pt-1">
-        <h2 class="fw-bold me-3 mb-0">THỂ LOẠI</h2>
-        <div class="flex-grow-1 border-bottom"></div>
-    </div>
+    <div id="catCarousel"
+         class="container-fluid px-3 px-md-4 mt-4 mt-lg-5 pt-1"
+         data-bs-ride="false"
+         data-bs-wrap="false"
+         data-bs-touch="true"
+         data-bs-interval="false">
 
-    <div id="catCarousel" class="carousel slide px-1" data-bs-ride="false" data-bs-wrap="false" data-bs-touch="true">
-        <div class="carousel-inner">
-            @if (catList.Any())
-            {
-                for (int i = 0; i < catList.Count; i += perSlide)
-                {
-                    var slice = catList.Skip(i).Take(perSlide).ToList();
-                    <div class="carousel-item @(i == 0 ? "active" : "")">
-                        <div class="row gx-3">
-                            @foreach (var cat in slice)
-                            {
-                                // ảnh
-                                var raw = (cat.CategoryImage ?? "").Replace("\\", "/").Trim();
-                                string imgUrl;
-                                if (!string.IsNullOrWhiteSpace(raw) && Uri.IsWellFormedUriString(raw, UriKind.Absolute))
-                                    imgUrl = raw;
-                                else
-                                {
-                                    var fileName = System.IO.Path.GetFileName(raw.TrimStart('/'));
-                                    imgUrl = !string.IsNullOrEmpty(fileName)
-                                    ? Url.Content($"~/hinh/{fileName}")
-                                    : Url.Content("~/images/placeholder-category.png");
-                                }
-                                // đếm
-                                var productCount = counts.TryGetValue(cat.CategoryId, out var c) ? c : 0;
-
-                                <div class="col-12 col-md-6 col-lg-3">
-                                    <a asp-controller="Products"
-                                       asp-action="Index"
-                                       asp-route-categoryId="@cat.CategoryId"
-                                       class="text-decoration-none">
-                                        <!-- card có border + shadow + hover -->
-                                        <div class="card h-100 border rounded-3 shadow-sm category-card">
-                                            <div class="card-body d-flex align-items-center gap-3">
-                                                <div class="ratio ratio-4x3" style="max-width: 120px;">
-                                                    <img src="@imgUrl" alt="@cat.CategoryName"
-                                                         class="img-fluid rounded-3 border object-fit-cover" />
-                                                </div>
-                                                <div class="min-w-0">
-                                                    <h6 class="mb-1 fw-semibold text-truncate">@cat.CategoryName</h6>
-                                                    <div class="small text-muted">@productCount sản phẩm</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="carousel-item active">
-                    <div class="alert alert-light mb-0">Không có thể loại nào được tìm thấy.</div>
-                </div>
-            }
+        <div class="mb-3 d-flex align-items-center">
+            <h2 class="fw-bold me-3 mb-0">THỂ LOẠI</h2>
+            <div class="flex-grow-1 border-bottom"></div>
         </div>
 
-        <!-- Nút điều hướng -->
-        <button class="carousel-control-prev" type="button"
-                data-bs-target="#catCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
-            <span class="visually-hidden">Trước</span>
-        </button>
-        <button class="carousel-control-next" type="button"
-                data-bs-target="#catCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
-            <span class="visually-hidden">Sau</span>
-        </button>
+        <!-- Indicators -->
+        <div class="d-flex justify-content-center mb-3">
+            <div class="carousel-indicators position-static gap-2 m-0">
+                @for (int s = 0; s < totalSlides; s++)
+                {
+                    <button type="button"
+                            data-bs-target="#catCarouselInner"
+                            data-bs-slide-to="@s"
+                            class="@(s == 0 ? "active" : "")"
+                            aria-label="Slide @(s + 1)">
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div id="catCarouselInner" class="carousel slide" data-bs-interval="false" data-bs-wrap="false" data-bs-touch="true">
+            <div class="carousel-inner">
+                @if (catList.Any())
+                {
+                    for (int i = 0; i < catList.Count; i += perSlide)
+                    {
+                        var slice = catList.Skip(i).Take(perSlide).ToList();
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <div class="row gx-3 ps-1 ps-md-2 ps-lg-3">
+                                @foreach (var cat in slice)
+                                {
+                                    var raw = (cat.CategoryImage ?? "").Replace("\\", "/").Trim();
+                                    string imgUrl;
+                                    if (!string.IsNullOrWhiteSpace(raw) && Uri.IsWellFormedUriString(raw, UriKind.Absolute))
+                                        imgUrl = raw;
+                                    else
+                                    {
+                                        var fileName = System.IO.Path.GetFileName(raw.TrimStart('/'));
+                                        imgUrl = !string.IsNullOrEmpty(fileName)
+                                        ? Url.Content($"~/hinh/{fileName}")
+                                        : Url.Content("~/images/placeholder-category.png");
+                                    }
+                                    var productCount = counts.TryGetValue(cat.CategoryId, out var c) ? c : 0;
+
+                                    <div class="col-12 col-md-6 col-lg-3">
+                                        <a asp-controller="User"
+                                           asp-action="Index"
+                                           asp-route-categoryId="@cat.CategoryId"
+                                           asp-fragment="recentProducts"
+                                           class="text-decoration-none">
+                                            <div class="card h-100 border rounded-3 shadow-sm category-card">
+                                                <div class="card-body d-flex align-items-center gap-3">
+                                                    <div class="ratio ratio-4x3" style="max-width:120px;">
+                                                        <img src="@imgUrl" alt="@cat.CategoryName"
+                                                             class="img-fluid rounded-3 border"
+                                                             style="object-fit:cover;" />
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <h6 class="mb-1 fw-semibold text-truncate title-text">@cat.CategoryName</h6>
+                                                        <div class="small text-muted">@productCount sản phẩm</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="carousel-item active">
+                        <div class="alert alert-light mb-0">Không có thể loại nào được tìm thấy.</div>
+                    </div>
+                }
+            </div>
+
+            <!-- Nút điều hướng -->
+            <button class="carousel-control-prev" type="button"
+                    data-bs-target="#catCarouselInner" data-bs-slide="prev" aria-label="Trước">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Trước</span>
+            </button>
+            <button class="carousel-control-next" type="button"
+                    data-bs-target="#catCarouselInner" data-bs-slide="next" aria-label="Sau">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Sau</span>
+            </button>
+        </div>
     </div>
-
-    <style>
-        /* Hover vàng cho card */
-        .category-card:hover {
-            border: 1px solid gold !important;
-            box-shadow: 0 .5rem 1rem rgba(255, 215, 0, .3) !important;
-            transition: .25s ease;
-        }
-    </style>
-
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const el = document.getElementById('catCarousel');
-            if (!el) return;
-            const prev = el.querySelector('.carousel-control-prev');
-            const next = el.querySelector('.carousel-control-next');
-            const items = el.querySelectorAll('.carousel-item');
-            let index = 0;
+            const wrapper = document.getElementById('catCarouselInner');
+            if (!wrapper) return;
 
-            function updateArrows() {
-                prev.classList.toggle('disabled', index === 0);
-                next.classList.toggle('disabled', index === items.length - 1);
+            const prevBtn = wrapper.querySelector('.carousel-control-prev');
+            const nextBtn = wrapper.querySelector('.carousel-control-next');
+            const items = wrapper.querySelectorAll('.carousel-item');
+            const indicators = document.querySelectorAll('.carousel-indicators [data-bs-target="#catCarouselInner"]');
+            const total = items.length;
+
+            const carousel = bootstrap.Carousel.getInstance(wrapper) || new bootstrap.Carousel(wrapper, {
+                interval: false, ride: false, wrap: false, touch: true, pause: false, keyboard: true
+            });
+
+            const getActiveIndex = () => Array.from(items).findIndex(i => i.classList.contains('active'));
+            function setBtnState(idx) {
+                const atStart = idx === 0, atEnd = idx === total - 1;
+                prevBtn.classList.toggle('disabled', atStart);
+                prevBtn.setAttribute('aria-disabled', atStart ? 'true' : 'false');
+                nextBtn.classList.toggle('disabled', atEnd);
+                nextBtn.setAttribute('aria-disabled', atEnd ? 'true' : 'false');
             }
 
-            el.addEventListener('slide.bs.carousel', function (e) {
-                index = e.to;
-                setTimeout(updateArrows, 400);
+            wrapper.addEventListener('slid.bs.carousel', () => {
+                const idx = getActiveIndex();
+                setBtnState(idx);
+                indicators.forEach((ind, i) => {
+                    ind.classList.toggle('active', i === idx);
+                    ind.setAttribute('aria-current', i === idx ? 'true' : 'false');
+                });
             });
-            updateArrows();
+            setBtnState(getActiveIndex());
+
+            indicators.forEach((ind, i) => ind.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (i !== getActiveIndex()) carousel.to(i);
+            }));
+
+            // Hover vàng
+            document.querySelectorAll('.category-card').forEach(card => {
+                const title = card.querySelector('.title-text');
+                card.addEventListener('mouseenter', () => {
+                    card.classList.add('border-warning','bg-warning-subtle','shadow');
+                    if (title) title.classList.add('text-warning');
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.classList.remove('border-warning','bg-warning-subtle','shadow');
+                    if (title) title.classList.remove('text-warning');
+                });
+            });
         });
+              <script>
+        // Pagination AJAX
+        document.addEventListener("click", async (e) => {
+          const a = e.target.closest(".page-ajax");
+          if (!a) return;
+          e.preventDefault();
+
+          const page = a.dataset.page;
+          if (!page) return;
+
+          const url = new URL("@Url.Action("Index", "User")", window.location.origin);
+          url.searchParams.set("page", page);
+
+          // giữ categoryId hiện tại
+          const selectedCategoryId = "@(ViewBag.SelectedCategoryId ?? "")";
+          if (selectedCategoryId) url.searchParams.set("categoryId", selectedCategoryId);
+
+          // giữ search hiện tại
+          const currentSearch = "@(ViewBag.Search ?? "")";
+          if (currentSearch) url.searchParams.set("search", currentSearch);
+
+          const html = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } }).then(r => r.text());
+          const dom = new DOMParser().parseFromString(html, "text/html");
+          const newContent = dom.querySelector("#productContainer");
+          if (newContent) document.querySelector("#productContainer").innerHTML = newContent.innerHTML;
+
+          const recent = document.querySelector("#recentProducts");
+          if (recent) recent.scrollIntoView({ behavior: "smooth" });
+        });
+
+        // Auto scroll khi vào bằng #recentProducts
+        if (window.location.hash === "#recentProducts") {
+          const target = document.querySelector(window.location.hash);
+          target?.scrollIntoView({ behavior: "smooth" });
+        }
     </script>
 
-    <style>
-        /* Hiệu ứng hover vàng cho card */
-        .category-card:hover {
-            border: 1px solid gold !important;
-            box-shadow: 0 .5rem 1rem rgba(255, 215, 0, .3) !important;
-        }
-    </style>
+    </script>
+
+
 
 
 

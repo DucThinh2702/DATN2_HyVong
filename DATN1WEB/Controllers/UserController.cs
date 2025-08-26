@@ -80,7 +80,7 @@ namespace DATNAPI1.Controllers
         //    return View(pagedProducts);
         //}
         [AllowAnonymous]
-        public async Task<IActionResult> Index(int? categoryId, int page = 1)
+        public async Task<IActionResult> Index(int? categoryId, int page = 1, string? search = null)
         {
             if (User.Identity?.IsAuthenticated == true)
                 ViewBag.UserName = User.Identity!.Name;
@@ -89,23 +89,26 @@ namespace DATNAPI1.Controllers
             var products = await _client.GetFromJsonAsync<List<Product>>("api/Product") ?? new();
             var categories = await _client.GetFromJsonAsync<List<Category>>("api/Categories") ?? new();
 
-            // 2) Đếm số sản phẩm theo CategoryId (XỬ LÝ CHO int?).
-            // Nếu Product.CategoryId là int (không nullable), dùng dòng bên dưới thay thế:
-            // var categoryCounts = products.GroupBy(p => p.CategoryId).ToDictionary(g => g.Key, g => g.Count());
+            // 2) Đếm số sản phẩm theo CategoryId
             var categoryCounts = products
-                .Where(p => p.CategoryId.HasValue)        // giữ sản phẩm có gán thể loại
-                .GroupBy(p => p.CategoryId!.Value)        // ép về int làm key
-                .ToDictionary(g => g.Key, g => g.Count()); // CategoryId -> Count
+                .Where(p => p.CategoryId.HasValue)
+                .GroupBy(p => p.CategoryId!.Value)
+                .ToDictionary(g => g.Key, g => g.Count());
 
             ViewBag.Categories = categories;
-            ViewBag.CategoryCounts = categoryCounts;   // Dictionary<int,int>
+            ViewBag.CategoryCounts = categoryCounts;
             ViewBag.SelectedCategoryId = categoryId;
+            ViewBag.Search = search;
 
-            // 3) Lọc theo category (nếu chọn)
+            // 3) Lọc theo category nếu có
             if (categoryId.HasValue)
                 products = products.Where(p => p.CategoryId == categoryId.Value).ToList();
 
-            // 4) Sắp xếp mới nhất trước
+            // 3b) Lọc theo từ khoá search
+            if (!string.IsNullOrWhiteSpace(search))
+                products = products.Where(p => p.ProductName.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            // 4) Sắp xếp mới nhất
             products = products
                 .OrderByDescending(p => p.CreatedDate ?? DateTime.MinValue)
                 .ToList();
@@ -125,7 +128,7 @@ namespace DATNAPI1.Controllers
             // 6) Top 4 theo bộ lọc hiện tại
             ViewBag.Top4Products = products.Take(4).ToList();
 
-            // 7) Thông tin phân trang
+            // 7) Info phân trang
             ViewBag.Page = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.PageSize = pageSize;
