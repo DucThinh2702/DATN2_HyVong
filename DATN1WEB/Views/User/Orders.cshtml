@@ -112,9 +112,35 @@
                                     <form asp-controller="User" asp-action="Reorder" method="post" class="d-inline">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@o.OrderId" />
-                                        <button type="submit" class="btn btn-sm btn-outline-success ms-1">
-                                            Đặt lại
-                                        </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success ms-1" data-bs-toggle="modal" data-bs-target="#confirmOrderModal">
+                                                Đặt lại
+                                            </button>
+                                            <!-- Modal xác nhận -->
+                                            <div class="modal fade" id="confirmOrderModal" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Xác nhận đặt hàng</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p class="m-0">Bạn có chắc chắn muốn đặt đơn hàng này không?</p>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                            <button id="btnConfirmOrder" class="btn btn-primary">Xác nhận</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <script>
+                                                document.getElementById('btnConfirmOrder')?.addEventListener('click', function () {
+                                                    document.getElementById('orderForm').submit(); // orderForm là id của form checkout
+                                                });
+                                            </script>
+
                                     </form>
                                 }
                             </td>

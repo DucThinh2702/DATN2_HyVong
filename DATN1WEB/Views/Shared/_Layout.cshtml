@@ -286,37 +286,32 @@
             }
 
         @@media (max-width: 768px) {
-            .sidebar
+            .sidebar {
+                width: var(--sidebar-collapsed);
+                transform: translateX(-100%);
+            }
 
-        {
-            width: var(--sidebar-collapsed);
-            transform: translateX(-100%);
+                .sidebar.show {
+                    transform: translateX(0);
+                }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle {
+                display: block;
+            }
+
+            :root {
+                --sidebar-offset: 0px;
+            }
         }
 
-        .sidebar.show {
-            transform: translateX(0);
-        }
-
-        .main-content {
-            margin-left: 0;
-        }
-
-        .sidebar-toggle {
-            display: block;
-        }
-
-        :root {
-            --sidebar-offset: 0px;
-        }
-
-        }
         @@media (min-width: 769px) {
-            .sidebar-toggle
-
-        {
-            display: none;
-        }
-
+            .sidebar-toggle {
+                display: none;
+            }
         }
 
         .profile-badge {
@@ -354,19 +349,16 @@
             font-weight: 600;
         }
 
-       @@keyframes slideIn {
-            from
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
 
-        {
-            opacity: 0;
-            transform: translateX(-20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .flash-container {
@@ -421,7 +413,7 @@
                     @if (currentUser != null)
                     {
                         <h6>@currentUser.FullName</h6>
-                        <small>@currentUser.Email</small>
+                        @* <small>@currentUser.Email</small> *@
                     }
                     else
                     {
@@ -460,7 +452,7 @@
                     <li class="nav-item">
                         <a class="nav-link position-relative" asp-controller="Orders" asp-action="Index">
                             <i class="fas fa-shopping-cart"></i> <span class="nav-text">Đơn hàng</span>
-                         
+
                         </a>
                     </li>
                     <li class="nav-item">
@@ -495,7 +487,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-danger" href="#" id="logoutLink">
+                        <form id="logoutForm" asp-controller="Account" asp-action="LogoutAdmin" method="post" class="d-none">
+                            @Html.AntiForgeryToken()
+                        </form>
+
+                        <a class="nav-link text-danger" href="javascript:void(0)" onclick="logoutAdmin()">
                             <i class="fas fa-sign-out-alt"></i> <span class="nav-text">Đăng xuất</span>
                         </a>
                     </li>
@@ -546,6 +542,17 @@
     </div>
 
     <script>
+                function logoutAdmin() {
+          if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+            document.getElementById('logoutForm').submit();
+          }
+        }
+
+        // Chặn BFCache khi back/forward
+        window.addEventListener('pageshow', function (e) {
+          const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+          if (e.persisted || (nav && nav.type === 'back_forward')) location.reload();
+        });
         // Cập nhật offset để toast canh theo sidebar
         function updateSidebarOffset() {
             const isMobile = window.innerWidth <= 768;
@@ -620,6 +627,18 @@
         setTimeout(() => {
             document.querySelectorAll('.flash-container .alert').forEach(a => bootstrap.Alert.getOrCreateInstance(a).close());
         }, 3000);
+
+
+              // Nếu trang được khôi phục từ BFCache khi back, buộc reload -> sẽ dính authorize và đẩy về Login
+              window.addEventListener('pageshow', function (e) {
+                if (e.persisted) location.reload();
+              });
+                      // Sau khi tới trang Login, đẩy history để back không quay lại trang trước đó
+        history.replaceState(null, document.title, location.href);
+        window.addEventListener('popstate', function () {
+          history.pushState(null, document.title, location.href);
+        });
+
     </script>
 </body>
 </html>

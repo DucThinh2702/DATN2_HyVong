@@ -150,24 +150,45 @@
 
     <script>
         $(function () {
-          // ===== Summernote -> đồng bộ plain text để jQuery Validate đọc =====
+          // ================== NHỚ TẠM TRONG PHIÊN (sessionStorage) ==================
+          const STORAGE_KEY = `draft:${location.pathname}:productForm`;
+
+          function isReload() {
+            const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+            if (nav && nav.type) return nav.type === 'reload';
+            return performance.navigation && performance.navigation.type === 1;
+          }
+          if (isReload()) { try { sessionStorage.removeItem(STORAGE_KEY); } catch {} }
+
+          function debounce(fn, wait){ let t; return function(){ clearTimeout(t); t=setTimeout(()=>fn.apply(this, arguments), wait); }; }
+          const saveDraft = debounce(function(){
+            const data = collectDraft();
+            try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+          }, 250);
+          function isFileInput(el){ return el.type === 'file'; }
+
+          // ================== SUMMERNOTE ==================
           $('#Description').summernote({
             height: 200,
             callbacks: {
+              onInit: function(){
+                restoreDraft(true); // Khôi phục phần mô tả trước, khi editor đã sẵn sàng
+              },
               onChange: function (contents) {
+                // đồng bộ plain text cho validate
                 $('#Description').val($('<div>').html(contents).text().trim()).trigger('keyup');
+                saveDraft();
               }
             }
           });
 
-          // ================== CUSTOM METHODS ==================
+          // ================== CUSTOM METHODS & VALIDATE ==================
           $.validator.addMethod('onlyNumber', v => $.isNumeric(v) || v === '', 'Vui lòng nhập số');
           $.validator.addMethod('gt0', v => {
             const n = parseFloat(v);
             return v === '' || (!isNaN(n) && n > 0);
           }, 'Phải > 0');
 
-          // Chấp nhận ảnh JPEG / PNG / WebP và giới hạn kích thước
           $.validator.addMethod('imageType', function (v, el) {
             if (!el.files || !el.files.length) return true;
             return ['image/jpeg', 'image/png', 'image/webp'].includes(el.files[0].type);
@@ -177,23 +198,12 @@
             return el.files[0].size <= bytes;
           }, 'Tệp quá lớn');
 
-          // Phải chọn ít nhất 1 màu / 1 size
           $.validator.addMethod('requireColor', () => $('.color-checkbox:checked').length > 0, 'Vui lòng chọn ít nhất 1 màu');
           $.validator.addMethod('requireSize',  () => $('.size-checkbox:checked').length > 0, 'Vui lòng chọn ít nhất 1 kích cỡ');
 
-          // ===== Tiền tệ: chuẩn hoá và validate =====
-          function normalizeMoney(val) {
-            if (val == null) return '';
-            return String(val).replace(/[^\d.-]/g, '');
-          }
-          $.validator.addMethod('money', function (v) {
-            const n = parseFloat(normalizeMoney(v));
-            return !isNaN(n);
-          }, 'Giá không hợp lệ');
-          $.validator.addMethod('gtMoney0', function (v) {
-            const n = parseFloat(normalizeMoney(v));
-            return !isNaN(n) && n > 0;
-          }, 'Phải > 0');
+          function normalizeMoney(val){ if(val==null)return''; return String(val).replace(/[^\d.-]/g,''); }
+          $.validator.addMethod('money',   v => !isNaN(parseFloat(normalizeMoney(v))), 'Giá không hợp lệ');
+          $.validator.addMethod('gtMoney0',v => { const n=parseFloat(normalizeMoney(v)); return !isNaN(n)&&n>0; }, 'Phải > 0');
           $.validator.addMethod('origGeSaleInRow', function (v, el) {
             const $tr  = $(el).closest('tr');
             const sale = parseFloat(normalizeMoney($tr.find('.v-sale').val()));
@@ -202,11 +212,9 @@
             return orig >= sale;
           }, 'Giá gốc phải ≥ Giá bán');
 
-          // ================== HIDDEN INPUTS DÙNG CHO VALIDATE ==================
           if ($('input[name="colorGroup"]').length === 0) $('<input>', { type: 'hidden', name: 'colorGroup' }).appendTo('#productForm');
           if ($('input[name="sizeGroup"]').length === 0)  $('<input>', { type: 'hidden', name: 'sizeGroup'  }).appendTo('#productForm');
 
-          // ================== FORM VALIDATE ==================
           const $form = $('#productForm');
           $form.validate({
             ignore: [],
@@ -237,14 +245,13 @@
             }
           });
 
-          // ================== TẠO BẢNG BIẾN THỂ (ẨN TRẠNG THÁI) ==================
+          // ================== TẠO BẢNG BIẾN THỂ ==================
           function generateVariants() {
             const $colors = $('.color-checkbox:checked');
             const $sizes  = $('.size-checkbox:checked');
             const $tb = $('#variantTable tbody');
             $tb.empty();
 
-            // ép validate chọn màu/size
             $('input[name="colorGroup"]').valid();
             $('input[name="sizeGroup"]').valid();
 
@@ -265,56 +272,214 @@
                     <td><input type="number" name="ProductVariants[${idx}].Stock" class="form-control v-stock" min="0" /></td>
                     <td><input type="text"   name="ProductVariants[${idx}].SalePrice" class="form-control v-sale"  data-type="currency" /></td>
                     <td><input type="text"   name="ProductVariants[${idx}].OriginalPrice" class="form-control v-orig" data-type="currency" /></td>
-                           <td>
-          <!-- gửi giá trị thật lên server -->
-          <input type="hidden" name="ProductVariants[${idx}].Status" value="Active" />
-          <!-- hiển thị như input, không cho sửa -->
-          <input type="text" class="form-control" value="Đang bán" readonly style="color:#212529;" />
-        </td>
-
+                    <td>
+                      <input type="hidden" name="ProductVariants[${idx}].Status" value="Active" />
+                      <input type="text" class="form-control" value="Đang bán" readonly style="color:#212529;" />
+                    </td>
                     <td><input type="file" name="ProductVariants[${idx}].ImageFile" class="form-control v-img" accept="image/*" /></td>
                   </tr>`);
 
-                $tb.append(tr);
+                tr.attr('data-key', `${sizeId}-${colorId}`);
+                $('#variantTable tbody').append(tr);
 
-                // ===== Rules cho từng input trong hàng =====
                 tr.find('.v-stock').rules('add', { required: true, onlyNumber: true, min: 0, messages: { required: 'Nhập số lượng' } });
                 tr.find('.v-sale').rules('add',  { required: true, money: true, gtMoney0: true, messages: { required: 'Nhập giá bán' } });
                 tr.find('.v-orig').rules('add',  { required: true, money: true, gtMoney0: true, origGeSaleInRow: true, messages: { required: 'Nhập giá gốc' } });
-                // KHÔNG thêm rule cho status vì đã cố định bằng hidden
                 tr.find('.v-img').rules('add',   { imageType: true, fileSize: 2 * 1024 * 1024, messages: { imageType: 'JPEG/PNG/WebP', fileSize: '≤ 2MB' } });
 
                 idx++;
               });
             });
           }
-          $(document).on('change', '.color-checkbox, .size-checkbox', generateVariants);
+          $(document).on('change', '.color-checkbox, .size-checkbox', function(){
+            generateVariants();
+            saveDraft();
+          });
 
           // ================== ĐỊNH DẠNG TIỀN ==================
           function formatCurrencyInput(el) {
             let val = el.value || '';
-            if (!val) { el.value = ''; return; }
-            // giữ số & dấu . -
+            if (!val) { el.value=''; return; }
             val = val.replace(/[^\d.-]/g, '');
-            // tách phần thập phân nếu có
             const parts = val.split('.');
             let intPart = parts[0].replace(/-/g,'');
             const neg = val.startsWith('-');
             intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            el.value = (neg ? '-' : '') + intPart + (parts.length > 1 ? '.' + parts[1] : '');
+            el.value = (neg?'-':'') + intPart + (parts.length>1?'.'+parts[1]:'');
           }
-          $(document).on('keyup blur', 'input[data-type="currency"]', function(){ formatCurrencyInput(this); });
+          $(document).on('keyup blur', 'input[data-type="currency"]', function(){
+            formatCurrencyInput(this);
+            saveDraft();
+          });
 
-          // Trước khi submit: gỡ dấu phẩy để server nhận số thuần
-          function stripCurrencyBeforeSubmit() {
-            $('input[data-type="currency"]').each(function () {
-              this.value = normalizeMoney(this.value); // "1,200,000" -> "1200000"
+          // ================== SUBMIT ==================
+          function stripCurrencyBeforeSubmit(){
+            $('input[data-type="currency"]').each(function(){
+              this.value = normalizeMoney(this.value);
             });
           }
-          $form.on('submit', function () {
+          $form.on('submit', function(){
             stripCurrencyBeforeSubmit();
+            try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+          });
+
+          // ================== LƯU/PHỤC HỒI NHÁP ==================
+          // Ghi nhận mọi thay đổi
+          $(document).on('input change', '#productForm input, #productForm select, #productForm textarea', function(){
+            // bỏ qua file
+            if (this.type === 'file') return;
+            saveDraft();
+          });
+
+          // Thu thập dữ liệu form
+          function collectDraft(){
+            const data = {
+              basics: {},      // tất cả input/select/textarea có name (trừ file, trừ mô tả – xử lý riêng)
+              radios: {},      // nhóm radio theo name -> value
+              checks: {},      // nhóm checkbox theo name -> [values]
+              colors: [],      // checkbox màu (không có name)
+              sizes: [],       // checkbox size (không có name)
+              variants: {},    // theo data-key -> {Stock, SalePrice, OriginalPrice, Status}
+              summernote: {}   // HTML mô tả
+            };
+
+            // 1) Summernote
+            if (typeof $('#Description').summernote === 'function' && $('#Description').next('.note-editor').length) {
+              data.summernote.Description = $('#Description').summernote('code') || '';
+            } else {
+              data.summernote.Description = $('#Description').val() || '';
+            }
+
+            // 2) Duyệt qua tất cả control có name, bỏ file
+            $('#productForm').find('input[name], select[name], textarea[name]').each(function(){
+              const el = this;
+              const $el = $(el);
+              if (isFileInput(el)) return;
+              if (el.id === 'Description') return; // đã xử lý trên
+
+              const name = $el.attr('name');
+              if (!$el.length || !name) return;
+
+              if (el.type === 'radio') {
+                if (!data.radios[name] && $el.is(':checked')) data.radios[name] = $el.val();
+                return;
+              }
+              if (el.type === 'checkbox') {
+                if (!(name in data.checks)) data.checks[name] = [];
+                if ($el.is(':checked')) data.checks[name].push($el.val());
+                return;
+              }
+              data.basics[name] = $el.val();
+            });
+
+            // 3) Checkbox màu/size (không có name)
+            data.colors = $('.color-checkbox:checked').map((_,x)=>$(x).val()).get();
+            data.sizes  = $('.size-checkbox:checked').map((_,x)=>$(x).val()).get();
+
+            // 4) Bảng biến thể
+            $('#variantTable tbody tr').each(function(){
+              const $tr = $(this);
+              const key = $tr.attr('data-key');
+              if (!key) return;
+              data.variants[key] = {
+                Stock:         $tr.find('.v-stock').val() || '',
+                SalePrice:     $tr.find('.v-sale').val()  || '',
+                OriginalPrice: $tr.find('.v-orig').val()  || '',
+                Status:        $tr.find('input[name*=".Status"]').val() || 'Active'
+              };
+            });
+
+            return data;
+          }
+
+          // Phục hồi
+          function restoreDraft(preferSummernoteInit=false){
+            const raw = sessionStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            let data; try { data = JSON.parse(raw); } catch { return; }
+
+            const $f = $('#productForm');
+
+            // A) Nếu ưu tiên Summernote (được gọi trong onInit)
+            if (preferSummernoteInit) {
+              if (data.summernote && typeof data.summernote.Description === 'string' && data.summernote.Description.trim() !== '') {
+                $('#Description').summernote('code', data.summernote.Description);
+                const plain = $('<div>').html(data.summernote.Description).text().trim();
+                $('#Description').val(plain).trigger('keyup');
+              }
+              return;
+            }
+
+            // B) Basics
+            if (data.basics) {
+              Object.entries(data.basics).forEach(([name,val])=>{
+                const $els = $f.find(`[name="${name}"]`);
+                if ($els.length) $els.val(val).trigger('change');
+              });
+            }
+
+            // C) Radio theo name
+            if (data.radios) {
+              Object.entries(data.radios).forEach(([name,val])=>{
+                const $els = $f.find(`[name="${name}"][type="radio"]`);
+                if ($els.length) $els.filter(`[value="${val}"]`).prop('checked', true).trigger('change');
+              });
+            }
+
+            // D) Checkbox theo name
+            if (data.checks) {
+              Object.entries(data.checks).forEach(([name,values])=>{
+                const set = new Set(values || []);
+                $f.find(`[name="${name}"][type="checkbox"]`).each(function(){
+                  $(this).prop('checked', set.has($(this).val())).trigger('change');
+                });
+              });
+            }
+
+            // E) Màu/Size (checkbox không có name)
+            if (Array.isArray(data.colors)) {
+              $('.color-checkbox').each(function(){
+                $(this).prop('checked', data.colors.includes($(this).val()));
+              });
+            }
+            if (Array.isArray(data.sizes)) {
+              $('.size-checkbox').each(function(){
+                $(this).prop('checked', data.sizes.includes($(this).val()));
+              });
+            }
+
+            // F) Sinh lại bảng biến thể theo màu/size
+            generateVariants();
+
+            // G) Điền lại giá trị biến thể theo data-key
+            if (data.variants) {
+              Object.entries(data.variants).forEach(([key, v])=>{
+                const $tr = $(`#variantTable tbody tr[data-key="${key}"]`);
+                if(!$tr.length) return;
+                if('Stock' in v)         $tr.find('.v-stock').val(v.Stock);
+                if('SalePrice' in v)     $tr.find('.v-sale').val(v.SalePrice).trigger('blur');
+                if('OriginalPrice' in v) $tr.find('.v-orig').val(v.OriginalPrice).trigger('blur');
+                if('Status' in v)        $tr.find('input[name*=".Status"]').val(v.Status);
+              });
+            }
+
+            // H) Phòng trường hợp onInit chưa kịp
+            if (data.summernote && typeof data.summernote.Description === 'string' && data.summernote.Description.trim() !== '') {
+              $('#Description').summernote('code', data.summernote.Description);
+              const plain = $('<div>').html(data.summernote.Description).text().trim();
+              $('#Description').val(plain).trigger('keyup');
+            }
+          }
+
+          // Khôi phục phần còn lại khi mở trang
+          restoreDraft(false);
+
+          // Nút xóa nháp (nếu có)
+          $(document).on('click', '#clearDraft', function(){
+            sessionStorage.removeItem(STORAGE_KEY);
+            alert('Đã xóa dữ liệu tạm.');
           });
         });
     </script>
-
 }
+

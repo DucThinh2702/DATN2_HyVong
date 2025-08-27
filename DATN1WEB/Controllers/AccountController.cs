@@ -164,15 +164,19 @@ namespace DATN1API.Controllers
                                                      // hoặc RedirectToAction("Login","Account", new { }, Request.Scheme);
         }
 
-
-        // Đăng xuất riêng phiên ADMIN
         [Authorize(Policy = "IsAdmin")]
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> LogoutAdmin()
         {
-            await HttpContext.SignOutAsync("AdminScheme"); // AdminAuthCookie
-            return RedirectToAction("Login", new { returnUrl = "/Admin" });
+            await HttpContext.SignOutAsync("AdminScheme");                      // cookie Admin
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme); // cookie User (nếu muốn)
+
+            // QUAN TRỌNG: LocalRedirect tới đường dẫn BẮT ĐẦU BẰNG "~/" (root),
+            // tránh bị dính tiền tố /api của context hiện tại
+            return LocalRedirect(Url.Content("~/Account/Login?returnUrl=%2FAdmin"));
         }
+
+
 
         // Đăng xuất cả hai (nếu cần 1 nút tổng)
         [Authorize]

@@ -1,25 +1,441 @@
-﻿@model DATN1API.Models.ProductVariant
+﻿@* @model DATN1API.Models.ProductVariant *@
+@* @{ *@
+@*     ViewData["Title"] = "Thêm biến thể"; *@
+@*     // Đếm lỗi ModelState (sau post-back) để quyết định ẩn/hiện alert *@
+@*     var errorCount = ViewData.ModelState?.Values.SelectMany(v => v.Errors).Count() ?? 0; *@
+@* } *@
+
+@* <div class="container py-3"> *@
+@*     <div class="card shadow-sm rounded-3"> *@
+@*         <div class="card-header bg-white border-0"> *@
+@*             <h2 class="h4 mb-0"> *@
+@*                 <i class="fas fa-sitemap me-2 text-primary"></i>@ViewData["Title"] *@
+@*             </h2> *@
+@*         </div> *@
+
+@*         <div class="card-body"> *@
+@*             <!-- Alert tổng quát: chỉ hiện khi có lỗi --> *@
+@*             <div id="modelSummary" *@
+@*                  class="alert alert-danger @(errorCount > 0 ? "" : "d-none")" *@
+@*                  role="alert" *@
+@*                  asp-validation-summary="All"> *@
+@*             </div> *@
+
+@*             <form id="variantForm" asp-action="Create" method="post" enctype="multipart/form-data" novalidate> *@
+@*                 @Html.AntiForgeryToken() *@
+
+@*                 <div class="row g-3"> *@
+@*                     <!-- Hàng 1 --> *@
+@*                     <div class="col-12 col-lg-6"> *@
+@*                         <label class="form-label">Sản phẩm <span class="text-danger">*</span></label> *@
+@*                         <select asp-for="ProductId" class="form-select" asp-items="ViewBag.Products"> *@
+@*                             <option value="">-- Chọn sản phẩm --</option> *@
+@*                         </select> *@
+@*                         <span asp-validation-for="ProductId" class="text-danger small"></span> *@
+@*                     </div> *@
+@*                     <div class="col-12 col-lg-6"> *@
+@*                         <label class="form-label">Màu <span class="text-danger">*</span></label> *@
+@*                         <select asp-for="ColorId" class="form-select" asp-items="ViewBag.Colors"> *@
+@*                             <option value="">-- Chọn màu --</option> *@
+@*                         </select> *@
+@*                         <span asp-validation-for="ColorId" class="text-danger small"></span> *@
+@*                     </div> *@
+
+@*                     <!-- Hàng 2 --> *@
+@*                     <div class="col-12 col-lg-6"> *@
+@*                         <label class="form-label">Kích cỡ <span class="text-danger">*</span></label> *@
+@*                         <select asp-for="SizeId" class="form-select" asp-items="ViewBag.Sizes"> *@
+@*                             <option value="">-- Chọn size --</option> *@
+@*                         </select> *@
+@*                         <span asp-validation-for="SizeId" class="text-danger small"></span> *@
+@*                     </div> *@
+@*                     <div class="col-12 col-lg-6"> *@
+@*                         <label class="form-label">SKU</label> *@
+@*                         <input type="hidden" asp-for="Sku" /> *@
+@*                         <span id="SkuPreview" class="form-control bg-light"></span> *@
+@*                     </div> *@
+
+@*                     <!-- Hàng 3 --> *@
+@*                     <div class="col-12 col-lg-6"> *@
+@*                         <label class="form-label">Tồn kho</label> *@
+@*                         <input asp-for="Stock" class="form-control" type="number" min="0" /> *@
+@*                         <span asp-validation-for="Stock" class="text-danger small"></span> *@
+@*                     </div> *@
+@*                     <div class="col-12 col-lg-6"> *@
+@*                         <label class="form-label">Trạng thái</label> *@
+@*                         <input type="hidden" asp-for="Status" value="Đang bán" /> *@
+@*                         <span class="form-control">Đang bán</span> *@
+
+@*                     </div> *@
+
+@*                     <!-- Hàng 4: giá có addon ₫ --> *@
+@*                     <div class="col-12 col-lg-6"> *@
+@*                         <label class="form-label">Giá gốc</label> *@
+@*                         <div class="input-group"> *@
+@*                             <input asp-for="OriginalPrice" class="form-control" type="text" data-type="currency" /> *@
+@*                             <span class="input-group-text">₫</span> *@
+@*                         </div> *@
+@*                         <span asp-validation-for="OriginalPrice" class="text-danger small"></span> *@
+@*                     </div> *@
+@*                     <div class="col-12 col-lg-6"> *@
+@*                         <label class="form-label">Giá bán</label> *@
+@*                         <div class="input-group"> *@
+@*                             <input asp-for="SalePrice" class="form-control" type="text" data-type="currency" /> *@
+@*                             <span class="input-group-text">₫</span> *@
+@*                         </div> *@
+@*                         <span asp-validation-for="SalePrice" class="text-danger small"></span> *@
+@*                     </div> *@
+
+@*                     <!-- Hàng 5: 6 | 3 | 3 --> *@
+@*                     <div class="col-12 col-lg-6"> *@
+@*                         <label class="form-label">Ảnh đại diện</label> *@
+@*                         <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" /> *@
+@*                         <small class="text-muted d-block mt-2">Để trống nếu không thay ảnh.</small> *@
+@*                         <span asp-validation-for="ImageFile" class="text-danger small"></span> *@
+@*                     </div> *@
+
+                    
+
+@*                     <!-- Cột 3: Xem trước ảnh mới --> *@
+@*                     <div class="col-12 col-lg-6"> *@
+@*                         <label class="form-label d-block">Xem trước ảnh đại diện mới</label> *@
+@*                         <div id="thumbPreview" class="d-none"> *@
+@*                             <div class="ratio ratio-1x1 bg-light rounded border" style="max-width: 180px;"> *@
+@*                                 <img id="thumbPreviewImg" class="w-100 h-100" style="object-fit: cover;" alt="Preview thumbnail"> *@
+@*                             </div> *@
+@*                         </div> *@
+@*                     </div> *@
+
+@*                 </div> *@
+
+@*                 <hr class="my-4" /> *@
+@*                 <div class="d-flex gap-2"> *@
+@*                     <button type="submit" class="btn btn-warning px-4"> *@
+@*                         <i class="fas fa-save me-1"></i> Lưu *@
+@*                     </button> *@
+@*                     <a asp-controller="SanPham" asp-action="Index" class="btn btn-secondary px-4">Hủy</a> *@
+@*                 </div> *@
+@*             </form> *@
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+
+@* @section Scripts { *@
+@*     @await Html.PartialAsync("_ValidationScriptsPartial") *@
+@*     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
+@*     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script> *@
+@*     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/localization/messages_vi.min.js"></script> *@
+
+@*     <script> *@
+@*         (function () { *@
+@*           // --- Việt hoá message của Unobtrusive (nếu bạn vẫn giữ data-val-required từ server) --- *@
+@*           const vi = { *@
+@*             ProductId:     'Vui lòng chọn sản phẩm', *@
+@*             ColorId:       'Vui lòng chọn màu', *@
+@*             SizeId:        'Vui lòng chọn kích cỡ', *@
+@*             Stock:         'Vui lòng nhập tồn kho', *@
+@*             SalePrice:     'Vui lòng nhập giá bán', *@
+@*             OriginalPrice: 'Vui lòng nhập giá gốc', *@
+@*             Status:        'Vui lòng nhập trạng thái' *@
+@*           }; *@
+@*           Object.keys(vi).forEach(function (name) { *@
+@*             const $el = $('[name="' + name + '"]'); *@
+@*             if (!$el.length) return; *@
+@*             if ($el.is('[data-val-required]')) $el.attr('data-val-required', vi[name]); *@
+@*             if ($el.is('[type="number"]'))     $el.attr('data-val-number', 'Vui lòng nhập số hợp lệ'); *@
+@*           }); *@
+@*           if ($.validator && $.validator.unobtrusive) { *@
+@*             $.validator.unobtrusive.parse('#variantForm'); // đọc lại message Việt *@
+@*           } *@
+@*         })(); *@
+
+@*         $(function () { *@
+@*           // ===== Custom methods ===== *@
+@*           $.validator.addMethod('onlyNumber', function (v, el) { *@
+@*             if (v === '') return true; *@
+@*             // chấp nhận "12,34" → số *@
+@*             const num = parseFloat((v + '').replace(',', '.')); *@
+@*             return !isNaN(num); *@
+@*           }, 'Vui lòng nhập số'); *@
+
+@*           $.validator.addMethod('gt0', function (v) { *@
+@*             if (v === '') return true; *@
+@*             const num = parseFloat((v + '').replace(',', '.')); *@
+@*             return !isNaN(num) && num > 0; *@
+@*           }, 'Vui lòng nhập số lớn hơn 0'); *@
+
+@*           // geTo: giá trị hiện tại ≥ giá trị của selector tham chiếu *@
+@*           $.validator.addMethod('geTo', function (v, el, sel) { *@
+@*             const other = parseFloat(($(sel).val() || '').replace(',', '.')); *@
+@*             const cur   = parseFloat((v || '').replace(',', '.')); *@
+@*             if (isNaN(other) || isNaN(cur)) return true; *@
+@*             return cur >= other; *@
+@*           }, 'Phải ≥ trường tham chiếu'); *@
+
+@*           $.validator.addMethod('fileSize', function (v, el, bytes) { *@
+@*             if (!el.files || !el.files.length) return true; *@
+@*             return el.files[0].size <= bytes; *@
+@*           }, 'Tệp quá lớn'); *@
+
+@*           $.validator.addMethod('imageType', function (v, el) { *@
+@*             if (!el.files || !el.files.length) return true; *@
+@*             const ok = ['image/jpeg','image/png','image/webp','image/gif']; *@
+@*             return ok.includes(el.files[0].type); *@
+@*           }, 'Định dạng ảnh không hợp lệ'); *@
+
+@*           $.validator.addMethod('fileSizeMulti', function (v, el, bytes) { *@
+@*             if (!el.files || !el.files.length) return true; *@
+@*             for (let f of el.files) { if (f.size > bytes) return false; } *@
+@*             return true; *@
+@*           }, 'Có tệp vượt quá dung lượng cho phép'); *@
+
+@*           $.validator.addMethod('imageTypeMulti', function (v, el) { *@
+@*             if (!el.files || !el.files.length) return true; *@
+@*             const ok = ['image/jpeg','image/png','image/webp','image/gif']; *@
+@*             for (let f of el.files) { if (!ok.includes(f.type)) return false; } *@
+@*             return true; *@
+@*           }, 'Có tệp không đúng định dạng ảnh'); *@
+
+@*           $.validator.addMethod('fileCountMax', function (v, el, cnt) { *@
+@*             if (!el.files) return true; *@
+@*             return el.files.length <= cnt; *@
+@*           }, 'Vượt quá số lượng tệp cho phép'); *@
+
+@*           const $form = $('#variantForm'); *@
+
+@*           // ===== Khởi tạo Validate ===== *@
+@*           $form.validate({ *@
+@*             ignore: [], *@
+@*             onkeyup:   function (el) { $(el).valid(); }, *@
+@*             onfocusout:function (el) { $(el).valid(); }, *@
+@*             errorElement: 'div', *@
+@*             errorClass: 'invalid-feedback', *@
+@*             highlight:   function (el) { $(el).addClass('is-invalid'); }, *@
+@*             unhighlight: function (el) { $(el).removeClass('is-invalid'); }, *@
+@*             errorPlacement: function (err, el) { *@
+@*               // nếu có input-group (₫) thì đặt sau group *@
+@*               const $el = $(el); *@
+@*               if ($el.parent('.input-group').length) { err.insertAfter($el.parent()); } *@
+@*               else { err.insertAfter($el); } *@
+@*             }, *@
+@*             invalidHandler: function () { *@
+@*               $('#modelSummary').removeClass('d-none').text('Vui lòng kiểm tra các trường được đánh dấu.'); *@
+@*             }, *@
+@*             rules: { *@
+@*               // ⚠️ Không đặt required cho các field đã có data-val-required để khỏi trùng (nếu bạn giữ Unobtrusive) *@
+@*               ProductId:     {}, *@
+@*               ColorId:       {}, *@
+@*               SizeId:        {}, *@
+
+@*               // Các trường còn lại dùng jQuery Validate *@
+@*               Stock:         { required: true, onlyNumber: true, min: 0 }, *@
+@*               SalePrice:     { required: true, onlyNumber: true, gt0: true }, *@
+@*               // OriginalPrice phải ≥ SalePrice *@
+@*               OriginalPrice: { required: true, onlyNumber: true, geTo: '#SalePrice' }, *@
+@*               Status:        { required: true, minlength: 3 }, *@
+
+@*               ImageFile:      { imageType: true, fileSize: 2 * 1024 * 1024 }, *@
+@*               'GalleryFiles': { imageTypeMulti: true, fileSizeMulti: 2 * 1024 * 1024, fileCountMax: 10 } *@
+@*             }, *@
+@*             messages: { *@
+@*               ProductId:     { required: 'Vui lòng chọn sản phẩm' }, *@
+@*               ColorId:       { required: 'Vui lòng chọn màu' }, *@
+@*               SizeId:        { required: 'Vui lòng chọn kích cỡ' }, *@
+@*               Stock:         { required: 'Vui lòng nhập tồn kho' }, *@
+@*               SalePrice:     { required: 'Vui lòng nhập giá bán' }, *@
+@*               OriginalPrice: { required: 'Vui lòng nhập giá gốc', geTo: 'Giá gốc phải ≥ Giá bán' }, *@
+@*               Status:        { required: 'Vui lòng nhập trạng thái', minlength: 'Tối thiểu 3 ký tự' }, *@
+@*               ImageFile:     { imageType: 'Chỉ chấp nhận JPEG/PNG/WebP/GIF', fileSize: 'Tối đa 2MB' }, *@
+@*               'GalleryFiles':{ *@
+@*                 imageTypeMulti: 'Chỉ chấp nhận JPEG/PNG/WebP/GIF', *@
+@*                 fileSizeMulti:  'Mỗi ảnh tối đa 2MB', *@
+@*                 fileCountMax:   'Bạn chỉ được chọn tối đa 10 ảnh' *@
+@*               } *@
+@*             } *@
+@*           }); *@
+
+@*           // ===== Chuẩn hoá số trước khi submit (dấu phẩy → chấm) ===== *@
+@*           $form.on('submit', function () { *@
+@*             ['SalePrice','OriginalPrice','Stock'].forEach(function (n) { *@
+@*               const $i = $('[name="'+n+'"]'); *@
+@*               $i.val(($i.val()+'').replace(',', '.')); *@
+@*             }); *@
+@*           }); *@
+@*         }); *@
+
+@*         // sinh mã sku *@
+@*                     $(function () { *@
+@*           // Bỏ dấu nhưng giữ nguyên khoảng trắng/chuỗi *@
+@*           function toAsciiKeepSpaces(s) { *@
+@*             if (!s) return ''; *@
+@*             return s *@
+@*               .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // bỏ dấu *@
+@*               .replace(/đ/g, 'd').replace(/Đ/g, 'D')           // đ → d *@
+@*               .replace(/\s+/g, ' ')                             // gộp nhiều space thành 1 *@
+@*               .trim(); *@
+@*           } *@
+
+@*           function generateSkuFromNames() { *@
+@*             const productId = $('#ProductId').val(); *@
+@*             const sizeText  = $('#SizeId option:selected').text().trim(); *@
+@*             const colorText = $('#ColorId option:selected').text().trim(); *@
+
+@*             if (productId && $('#SizeId').val() && $('#ColorId').val()) { *@
+@*               const sku = `BAG_${toAsciiKeepSpaces(sizeText)}_${toAsciiKeepSpaces(colorText)}_${productId}`; *@
+@*               $('[name="Sku"]').val(sku);   // hidden input gửi về server *@
+@*               $('#SkuPreview').text(sku);   // hiển thị cho người dùng *@
+@*             } else { *@
+@*               $('[name="Sku"]').val(''); *@
+@*               $('#SkuPreview').text('(Chưa đủ dữ liệu để sinh SKU)'); *@
+@*             } *@
+@*           } *@
+
+@*           $('#ProductId, #SizeId, #ColorId').on('change', generateSkuFromNames); *@
+@*           generateSkuFromNames(); *@
+@*         }); *@
+
+@*         // tiền tệ *@
+@*                 $(function () { *@
+@*           // === Helpers giống form Sản phẩm === *@
+@*           function normalizeMoney(val) { *@
+@*             if (val == null) return ''; *@
+@*             return String(val).replace(/[^\d.-]/g, ''); // "1,200,000" -> "1200000" *@
+@*           } *@
+
+@*           function formatCurrencyInput(el) { *@
+@*             let val = el.value || ''; *@
+@*             if (!val) { el.value = ''; return; } *@
+@*             // giữ số & dấu . - *@
+@*             val = val.replace(/[^\d.-]/g, ''); *@
+@*             const parts = val.split('.'); *@
+@*             let intPart = parts[0].replace(/-/g,''); *@
+@*             const neg = val.startsWith('-'); *@
+@*             intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ","); *@
+@*             el.value = (neg ? '-' : '') + intPart + (parts.length > 1 ? '.' + parts[1] : ''); *@
+@*           } *@
+
+@*           // === Thêm rule tiền tệ === *@
+@*           $.validator.addMethod('money', function (v) { *@
+@*             const n = parseFloat(normalizeMoney(v)); *@
+@*             return !isNaN(n); *@
+@*           }, 'Giá không hợp lệ'); *@
+
+@*           $.validator.addMethod('gtMoney0', function (v) { *@
+@*             const n = parseFloat(normalizeMoney(v)); *@
+@*             return !isNaN(n) && n > 0; *@
+@*           }, 'Phải > 0'); *@
+
+@*           // So sánh OriginalPrice ≥ SalePrice dựa trên giá đã normalize *@
+@*           $.validator.addMethod('origGeSale', function (v, el) { *@
+@*             const orig = parseFloat(normalizeMoney(v)); *@
+@*             const sale = parseFloat(normalizeMoney($('#SalePrice').val())); *@
+@*             if (isNaN(orig) || isNaN(sale)) return true; *@
+@*             return orig >= sale; *@
+@*           }, 'Giá gốc phải ≥ Giá bán'); *@
+
+@*           const $form = $('#variantForm'); *@
+
+@*           // === Cập nhật rules dùng money/gtMoney0/origGeSale === *@
+@*           $form.validate({ *@
+@*             ignore: [], *@
+@*             onkeyup:   el => $(el).valid(), *@
+@*             onfocusout:el => $(el).valid(), *@
+@*             errorElement: 'div', *@
+@*             errorClass: 'invalid-feedback', *@
+@*             highlight:   el => $(el).addClass('is-invalid'), *@
+@*             unhighlight: el => $(el).removeClass('is-invalid'), *@
+@*             errorPlacement: function (err, el) { *@
+@*               const $el = $(el); *@
+@*               if ($el.parent('.input-group').length) err.insertAfter($el.parent()); *@
+@*               else err.insertAfter($el); *@
+@*             }, *@
+@*             invalidHandler: function () { *@
+@*               $('#modelSummary').removeClass('d-none').text('Vui lòng kiểm tra các trường được đánh dấu.'); *@
+@*             }, *@
+@*             rules: { *@
+@*               ProductId: {}, *@
+@*               ColorId:   {}, *@
+@*               SizeId:    {}, *@
+
+@*               Stock:         { required: true, onlyNumber: true, min: 0 }, *@
+@*               SalePrice:     { required: true, money: true, gtMoney0: true }, *@
+@*               OriginalPrice: { required: true, money: true, gtMoney0: true, origGeSale: true }, *@
+@*               Status:        { required: true, minlength: 3 }, *@
+
+@*               ImageFile:      { imageType: true, fileSize: 2 * 1024 * 1024 }, *@
+@*               'GalleryFiles': { imageTypeMulti: true, fileSizeMulti: 2 * 1024 * 1024, fileCountMax: 10 } *@
+@*             }, *@
+@*             messages: { *@
+@*               ProductId:     { required: 'Vui lòng chọn sản phẩm' }, *@
+@*               ColorId:       { required: 'Vui lòng chọn màu' }, *@
+@*               SizeId:        { required: 'Vui lòng chọn kích cỡ' }, *@
+@*               Stock:         { required: 'Vui lòng nhập tồn kho' }, *@
+@*               SalePrice:     { required: 'Vui lòng nhập giá bán' }, *@
+@*               OriginalPrice: { required: 'Vui lòng nhập giá gốc', origGeSale: 'Giá gốc phải ≥ Giá bán' }, *@
+@*               Status:        { required: 'Vui lòng nhập trạng thái', minlength: 'Tối thiểu 3 ký tự' }, *@
+@*               ImageFile:     { imageType: 'Chỉ chấp nhận JPEG/PNG/WebP/GIF', fileSize: 'Tối đa 2MB' }, *@
+@*               'GalleryFiles':{ *@
+@*                 imageTypeMulti: 'Chỉ chấp nhận JPEG/PNG/WebP/GIF', *@
+@*                 fileSizeMulti:  'Mỗi ảnh tối đa 2MB', *@
+@*                 fileCountMax:   'Bạn chỉ được chọn tối đa 10 ảnh' *@
+@*               } *@
+@*             } *@
+@*           }); *@
+
+@*           // === Format khi gõ và khi blur === *@
+@*           $(document).on('keyup blur', 'input[data-type="currency"]', function () { *@
+@*             formatCurrencyInput(this); *@
+@*           }); *@
+
+@*           // Format sẵn nếu có giá trị từ server (edit / post-back lỗi) *@
+@*           $('input[data-type="currency"]').each(function(){ formatCurrencyInput(this); }); *@
+
+@*           // === Trước khi submit: gỡ dấu phẩy để server bind decimal === *@
+@*           $form.on('submit', function () { *@
+@*             $('input[data-type="currency"]').each(function () { *@
+@*               this.value = normalizeMoney(this.value); *@
+@*             }); *@
+@*           }); *@
+@*         }); *@
+@*         // Preview ảnh ngay khi chọn *@
+@*         function previewThumb_Create(input) { *@
+@*           const $wrap = $('#thumbPreview'); *@
+@*           const $img  = $('#thumbPreviewImg'); *@
+
+@*           if (!input.files || !input.files.length) { *@
+@*             $img.attr('src',''); $wrap.addClass('d-none'); return; *@
+@*           } *@
+@*           const f = input.files[0]; *@
+@*           if (!f.type.startsWith('image/')) { $img.attr('src',''); $wrap.addClass('d-none'); return; } *@
+
+@*           const url = URL.createObjectURL(f); *@
+@*           $img.attr('src', url).one('load', function () { URL.revokeObjectURL(url); }); *@
+@*           $wrap.removeClass('d-none'); *@
+@*         } *@
+
+@*         $(function () { *@
+@*           // bật preview khi chọn file *@
+@*           $('[name="ImageFile"]').on('change', function(){ previewThumb_Create(this); }); *@
+@*         }); *@
+
+@*     </script> *@
+@* } *@
+
+
+@model DATN1API.Models.ProductVariant
 @{
     ViewData["Title"] = "Thêm biến thể";
-    // Đếm lỗi ModelState (sau post-back) để quyết định ẩn/hiện alert
     var errorCount = ViewData.ModelState?.Values.SelectMany(v => v.Errors).Count() ?? 0;
 }
 
 <div class="container py-3">
     <div class="card shadow-sm rounded-3">
         <div class="card-header bg-white border-0">
-            <h2 class="h4 mb-0">
-                <i class="fas fa-sitemap me-2 text-primary"></i>@ViewData["Title"]
-            </h2>
+            <h2 class="h4 mb-0"><i class="fas fa-sitemap me-2 text-primary"></i>@ViewData["Title"]</h2>
         </div>
 
         <div class="card-body">
-            <!-- Alert tổng quát: chỉ hiện khi có lỗi -->
-            <div id="modelSummary"
-                 class="alert alert-danger @(errorCount > 0 ? "" : "d-none")"
-                 role="alert"
-                 asp-validation-summary="All">
-            </div>
+            <div id="modelSummary" class="alert alert-danger @(errorCount > 0 ? "" : "d-none")" role="alert" asp-validation-summary="All"></div>
 
             <form id="variantForm" asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
                 @Html.AntiForgeryToken()
@@ -65,37 +481,53 @@
                         <label class="form-label">Trạng thái</label>
                         <input type="hidden" asp-for="Status" value="Đang bán" />
                         <span class="form-control">Đang bán</span>
-
                     </div>
 
-                    <!-- Hàng 4: giá có addon ₫ -->
+                    <!-- Hàng 4: GIÁ – tách input hiển thị & input thật -->
                     <div class="col-12 col-lg-6">
                         <label class="form-label">Giá gốc</label>
                         <div class="input-group">
-                            <input asp-for="OriginalPrice" class="form-control" type="text" data-type="currency" />
+                            <input id="OriginalPrice_view" class="form-control currency-view" type="text" data-type="currency" />
                             <span class="input-group-text">₫</span>
                         </div>
-                        <span asp-validation-for="OriginalPrice" class="text-danger small"></span>
+                        <!-- input thật gửi server -->
+                        <input asp-for="OriginalPrice" type="hidden" />
+                        <span class="text-danger small" id="OriginalPrice_view_error"></span>
                     </div>
+
                     <div class="col-12 col-lg-6">
                         <label class="form-label">Giá bán</label>
                         <div class="input-group">
-                            <input asp-for="SalePrice" class="form-control" type="text" data-type="currency" />
+                            <input id="SalePrice_view" class="form-control currency-view" type="text" data-type="currency" />
                             <span class="input-group-text">₫</span>
                         </div>
-                        <span asp-validation-for="SalePrice" class="text-danger small"></span>
+                        <!-- input thật gửi server -->
+                        <input asp-for="SalePrice" type="hidden" />
+                        <span class="text-danger small" id="SalePrice_view_error"></span>
                     </div>
 
-                    <!-- Hàng 5: ảnh -->
+                    <!-- Hàng 5: 6 | 3 | 3 (ảnh) -->
                     <div class="col-12 col-lg-6">
                         <label class="form-label">Ảnh đại diện</label>
                         <input asp-for="ImageFile" type="file" class="form-control" accept="image/*" />
+                        <small class="text-muted d-block mt-2">Để trống nếu không thay ảnh.</small>
                         <span asp-validation-for="ImageFile" class="text-danger small"></span>
                     </div>
-                    <div class="col-12 col-lg-6">
-                        <label class="form-label">Ảnh chi tiết (nhiều)</label>
-                        <input name="GalleryFiles" type="file" class="form-control" accept="image/*" multiple />
-                        <small class="text-muted">Giữ Ctrl/Shift để chọn nhiều ảnh.</small>
+
+                    <div class="col-12 col-lg-3">
+                        <label class="form-label d-block">Ảnh đại diện hiện tại</label>
+                        <div class="ratio ratio-1x1 bg-light rounded border d-flex align-items-center justify-content-center" style="max-width:180px;">
+                            <span class="text-muted small">Chưa có ảnh.</span>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-3">
+                        <label class="form-label d-block">Xem trước ảnh đại diện mới</label>
+                        <div id="thumbPreview" class="d-none">
+                            <div class="ratio ratio-1x1 bg-light rounded border" style="max-width: 180px;">
+                                <img id="thumbPreviewImg" class="w-100 h-100" style="object-fit: cover;" alt="Preview thumbnail">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -118,278 +550,124 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/localization/messages_vi.min.js"></script>
 
     <script>
-        (function () {
-          // --- Việt hoá message của Unobtrusive (nếu bạn vẫn giữ data-val-required từ server) ---
-          const vi = {
-            ProductId:     'Vui lòng chọn sản phẩm',
-            ColorId:       'Vui lòng chọn màu',
-            SizeId:        'Vui lòng chọn kích cỡ',
-            Stock:         'Vui lòng nhập tồn kho',
-            SalePrice:     'Vui lòng nhập giá bán',
-            OriginalPrice: 'Vui lòng nhập giá gốc',
-            Status:        'Vui lòng nhập trạng thái'
+        // ---------- Helpers tiền tệ ----------
+        function normalizeMoney(val) {
+          if (val == null) return '';
+          return String(val).replace(/[^\d.-]/g, ''); // "1,200,000" -> "1200000"
+        }
+        function formatCurrencyInput(el) {
+          let v = el.value || '';
+          if (!v) { el.value = ''; return; }
+          v = v.replace(/[^\d.-]/g, '');
+          const neg = v.startsWith('-');
+          const parts = v.split('.');
+          let intPart = parts[0].replace(/-/g, '');
+          intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          el.value = (neg ? '-' : '') + intPart + (parts[1] ? '.' + parts[1] : '');
+        }
+        function syncPriceHidden() {
+          // đồng bộ input thật từ 2 ô hiển thị
+          $('[name="SalePrice"]').val( normalizeMoney($('#SalePrice_view').val()) );
+          $('[name="OriginalPrice"]').val( normalizeMoney($('#OriginalPrice_view').val()) );
+        }
+        function validatePricesClient() {
+          // validate đơn giản cho 2 ô hiển thị (show message dưới ô)
+          const sale = parseFloat(normalizeMoney($('#SalePrice_view').val()));
+          const orig = parseFloat(normalizeMoney($('#OriginalPrice_view').val()));
+          let ok = true;
+
+          $('#SalePrice_view_error').text('');
+          $('#OriginalPrice_view_error').text('');
+
+          if (isNaN(sale) || sale <= 0) {
+            $('#SalePrice_view_error').text('Vui lòng nhập giá bán hợp lệ (> 0)');
+            ok = false;
+          }
+          if (isNaN(orig) || orig <= 0) {
+            $('#OriginalPrice_view_error').text('Vui lòng nhập giá gốc hợp lệ (> 0)');
+            ok = false;
+          }
+          if (ok && orig < sale) {
+            $('#OriginalPrice_view_error').text('Giá gốc phải ≥ Giá bán');
+            ok = false;
+          }
+          return ok;
+        }
+
+        // ---------- jQuery Validate (các field khác) ----------
+        $(function () {
+          // Việt hoá mặc định số/required nếu còn data-val
+          const viMap = {
+            ProductId: 'Vui lòng chọn sản phẩm',
+            ColorId: 'Vui lòng chọn màu',
+            SizeId: 'Vui lòng chọn kích cỡ',
+            Stock: 'Vui lòng nhập tồn kho'
           };
-          Object.keys(vi).forEach(function (name) {
-            const $el = $('[name="' + name + '"]');
-            if (!$el.length) return;
-            if ($el.is('[data-val-required]')) $el.attr('data-val-required', vi[name]);
-            if ($el.is('[type="number"]'))     $el.attr('data-val-number', 'Vui lòng nhập số hợp lệ');
+          Object.keys(viMap).forEach(n => {
+            const $el = $('[name="'+n+'"]');
+            if ($el.is('[data-val-required]')) $el.attr('data-val-required', viMap[n]);
+            if ($el.is('[type="number"]')) $el.attr('data-val-number', 'Vui lòng nhập số hợp lệ');
           });
           if ($.validator && $.validator.unobtrusive) {
-            $.validator.unobtrusive.parse('#variantForm'); // đọc lại message Việt
+            $.validator.unobtrusive.parse('#variantForm');
           }
-        })();
 
-        $(function () {
-          // ===== Custom methods =====
-          $.validator.addMethod('onlyNumber', function (v, el) {
-            if (v === '') return true;
-            // chấp nhận "12,34" → số
-            const num = parseFloat((v + '').replace(',', '.'));
-            return !isNaN(num);
-          }, 'Vui lòng nhập số');
-
-          $.validator.addMethod('gt0', function (v) {
-            if (v === '') return true;
-            const num = parseFloat((v + '').replace(',', '.'));
-            return !isNaN(num) && num > 0;
-          }, 'Vui lòng nhập số lớn hơn 0');
-
-          // geTo: giá trị hiện tại ≥ giá trị của selector tham chiếu
-          $.validator.addMethod('geTo', function (v, el, sel) {
-            const other = parseFloat(($(sel).val() || '').replace(',', '.'));
-            const cur   = parseFloat((v || '').replace(',', '.'));
-            if (isNaN(other) || isNaN(cur)) return true;
-            return cur >= other;
-          }, 'Phải ≥ trường tham chiếu');
-
-          $.validator.addMethod('fileSize', function (v, el, bytes) {
-            if (!el.files || !el.files.length) return true;
-            return el.files[0].size <= bytes;
-          }, 'Tệp quá lớn');
-
-          $.validator.addMethod('imageType', function (v, el) {
-            if (!el.files || !el.files.length) return true;
-            const ok = ['image/jpeg','image/png','image/webp','image/gif'];
-            return ok.includes(el.files[0].type);
-          }, 'Định dạng ảnh không hợp lệ');
-
-          $.validator.addMethod('fileSizeMulti', function (v, el, bytes) {
-            if (!el.files || !el.files.length) return true;
-            for (let f of el.files) { if (f.size > bytes) return false; }
-            return true;
-          }, 'Có tệp vượt quá dung lượng cho phép');
-
-          $.validator.addMethod('imageTypeMulti', function (v, el) {
-            if (!el.files || !el.files.length) return true;
-            const ok = ['image/jpeg','image/png','image/webp','image/gif'];
-            for (let f of el.files) { if (!ok.includes(f.type)) return false; }
-            return true;
-          }, 'Có tệp không đúng định dạng ảnh');
-
-          $.validator.addMethod('fileCountMax', function (v, el, cnt) {
-            if (!el.files) return true;
-            return el.files.length <= cnt;
-          }, 'Vượt quá số lượng tệp cho phép');
-
-          const $form = $('#variantForm');
-
-          // ===== Khởi tạo Validate =====
-          $form.validate({
+          // Validate cho form (trừ 2 giá – ta tự xử lý client)
+          $('#variantForm').validate({
             ignore: [],
-            onkeyup:   function (el) { $(el).valid(); },
-            onfocusout:function (el) { $(el).valid(); },
-            errorElement: 'div',
-            errorClass: 'invalid-feedback',
-            highlight:   function (el) { $(el).addClass('is-invalid'); },
-            unhighlight: function (el) { $(el).removeClass('is-invalid'); },
-            errorPlacement: function (err, el) {
-              // nếu có input-group (₫) thì đặt sau group
-              const $el = $(el);
-              if ($el.parent('.input-group').length) { err.insertAfter($el.parent()); }
-              else { err.insertAfter($el); }
-            },
-            invalidHandler: function () {
-              $('#modelSummary').removeClass('d-none').text('Vui lòng kiểm tra các trường được đánh dấu.');
-            },
-            rules: {
-              // ⚠️ Không đặt required cho các field đã có data-val-required để khỏi trùng (nếu bạn giữ Unobtrusive)
-              ProductId:     {},
-              ColorId:       {},
-              SizeId:        {},
-
-              // Các trường còn lại dùng jQuery Validate
-              Stock:         { required: true, onlyNumber: true, min: 0 },
-              SalePrice:     { required: true, onlyNumber: true, gt0: true },
-              // OriginalPrice phải ≥ SalePrice
-              OriginalPrice: { required: true, onlyNumber: true, geTo: '#SalePrice' },
-              Status:        { required: true, minlength: 3 },
-
-              ImageFile:      { imageType: true, fileSize: 2 * 1024 * 1024 },
-              'GalleryFiles': { imageTypeMulti: true, fileSizeMulti: 2 * 1024 * 1024, fileCountMax: 10 }
-            },
-            messages: {
-              ProductId:     { required: 'Vui lòng chọn sản phẩm' },
-              ColorId:       { required: 'Vui lòng chọn màu' },
-              SizeId:        { required: 'Vui lòng chọn kích cỡ' },
-              Stock:         { required: 'Vui lòng nhập tồn kho' },
-              SalePrice:     { required: 'Vui lòng nhập giá bán' },
-              OriginalPrice: { required: 'Vui lòng nhập giá gốc', geTo: 'Giá gốc phải ≥ Giá bán' },
-              Status:        { required: 'Vui lòng nhập trạng thái', minlength: 'Tối thiểu 3 ký tự' },
-              ImageFile:     { imageType: 'Chỉ chấp nhận JPEG/PNG/WebP/GIF', fileSize: 'Tối đa 2MB' },
-              'GalleryFiles':{
-                imageTypeMulti: 'Chỉ chấp nhận JPEG/PNG/WebP/GIF',
-                fileSizeMulti:  'Mỗi ảnh tối đa 2MB',
-                fileCountMax:   'Bạn chỉ được chọn tối đa 10 ảnh'
-              }
-            }
-          });
-
-          // ===== Chuẩn hoá số trước khi submit (dấu phẩy → chấm) =====
-          $form.on('submit', function () {
-            ['SalePrice','OriginalPrice','Stock'].forEach(function (n) {
-              const $i = $('[name="'+n+'"]');
-              $i.val(($i.val()+'').replace(',', '.'));
-            });
-          });
-        });
-
-        // sinh mã sku
-                    $(function () {
-          // Bỏ dấu nhưng giữ nguyên khoảng trắng/chuỗi
-          function toAsciiKeepSpaces(s) {
-            if (!s) return '';
-            return s
-              .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // bỏ dấu
-              .replace(/đ/g, 'd').replace(/Đ/g, 'D')           // đ → d
-              .replace(/\s+/g, ' ')                             // gộp nhiều space thành 1
-              .trim();
-          }
-
-          function generateSkuFromNames() {
-            const productId = $('#ProductId').val();
-            const sizeText  = $('#SizeId option:selected').text().trim();
-            const colorText = $('#ColorId option:selected').text().trim();
-
-            if (productId && $('#SizeId').val() && $('#ColorId').val()) {
-              const sku = `BAG_${toAsciiKeepSpaces(sizeText)}_${toAsciiKeepSpaces(colorText)}_${productId}`;
-              $('[name="Sku"]').val(sku);   // hidden input gửi về server
-              $('#SkuPreview').text(sku);   // hiển thị cho người dùng
-            } else {
-              $('[name="Sku"]').val('');
-              $('#SkuPreview').text('(Chưa đủ dữ liệu để sinh SKU)');
-            }
-          }
-
-          $('#ProductId, #SizeId, #ColorId').on('change', generateSkuFromNames);
-          generateSkuFromNames();
-        });
-
-        // tiền tệ
-                $(function () {
-          // === Helpers giống form Sản phẩm ===
-          function normalizeMoney(val) {
-            if (val == null) return '';
-            return String(val).replace(/[^\d.-]/g, ''); // "1,200,000" -> "1200000"
-          }
-
-          function formatCurrencyInput(el) {
-            let val = el.value || '';
-            if (!val) { el.value = ''; return; }
-            // giữ số & dấu . -
-            val = val.replace(/[^\d.-]/g, '');
-            const parts = val.split('.');
-            let intPart = parts[0].replace(/-/g,'');
-            const neg = val.startsWith('-');
-            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            el.value = (neg ? '-' : '') + intPart + (parts.length > 1 ? '.' + parts[1] : '');
-          }
-
-          // === Thêm rule tiền tệ ===
-          $.validator.addMethod('money', function (v) {
-            const n = parseFloat(normalizeMoney(v));
-            return !isNaN(n);
-          }, 'Giá không hợp lệ');
-
-          $.validator.addMethod('gtMoney0', function (v) {
-            const n = parseFloat(normalizeMoney(v));
-            return !isNaN(n) && n > 0;
-          }, 'Phải > 0');
-
-          // So sánh OriginalPrice ≥ SalePrice dựa trên giá đã normalize
-          $.validator.addMethod('origGeSale', function (v, el) {
-            const orig = parseFloat(normalizeMoney(v));
-            const sale = parseFloat(normalizeMoney($('#SalePrice').val()));
-            if (isNaN(orig) || isNaN(sale)) return true;
-            return orig >= sale;
-          }, 'Giá gốc phải ≥ Giá bán');
-
-          const $form = $('#variantForm');
-
-          // === Cập nhật rules dùng money/gtMoney0/origGeSale ===
-          $form.validate({
-            ignore: [],
-            onkeyup:   el => $(el).valid(),
-            onfocusout:el => $(el).valid(),
-            errorElement: 'div',
-            errorClass: 'invalid-feedback',
-            highlight:   el => $(el).addClass('is-invalid'),
+            errorElement:'div',
+            errorClass:'invalid-feedback',
+            highlight: el => $(el).addClass('is-invalid'),
             unhighlight: el => $(el).removeClass('is-invalid'),
-            errorPlacement: function (err, el) {
-              const $el = $(el);
-              if ($el.parent('.input-group').length) err.insertAfter($el.parent());
-              else err.insertAfter($el);
+            errorPlacement: (err, el) => {
+              if ($(el).parent('.input-group').length) err.insertAfter($(el).parent());
+              else err.insertAfter(el);
             },
-            invalidHandler: function () {
-              $('#modelSummary').removeClass('d-none').text('Vui lòng kiểm tra các trường được đánh dấu.');
-            },
+            invalidHandler: () => $('#modelSummary').removeClass('d-none').text('Vui lòng kiểm tra các trường được đánh dấu.'),
             rules: {
-              ProductId: {},
-              ColorId:   {},
-              SizeId:    {},
-
-              Stock:         { required: true, onlyNumber: true, min: 0 },
-              SalePrice:     { required: true, money: true, gtMoney0: true },
-              OriginalPrice: { required: true, money: true, gtMoney0: true, origGeSale: true },
-              Status:        { required: true, minlength: 3 },
-
-              ImageFile:      { imageType: true, fileSize: 2 * 1024 * 1024 },
-              'GalleryFiles': { imageTypeMulti: true, fileSizeMulti: 2 * 1024 * 1024, fileCountMax: 10 }
-            },
-            messages: {
-              ProductId:     { required: 'Vui lòng chọn sản phẩm' },
-              ColorId:       { required: 'Vui lòng chọn màu' },
-              SizeId:        { required: 'Vui lòng chọn kích cỡ' },
-              Stock:         { required: 'Vui lòng nhập tồn kho' },
-              SalePrice:     { required: 'Vui lòng nhập giá bán' },
-              OriginalPrice: { required: 'Vui lòng nhập giá gốc', origGeSale: 'Giá gốc phải ≥ Giá bán' },
-              Status:        { required: 'Vui lòng nhập trạng thái', minlength: 'Tối thiểu 3 ký tự' },
-              ImageFile:     { imageType: 'Chỉ chấp nhận JPEG/PNG/WebP/GIF', fileSize: 'Tối đa 2MB' },
-              'GalleryFiles':{
-                imageTypeMulti: 'Chỉ chấp nhận JPEG/PNG/WebP/GIF',
-                fileSizeMulti:  'Mỗi ảnh tối đa 2MB',
-                fileCountMax:   'Bạn chỉ được chọn tối đa 10 ảnh'
-              }
+              ProductId: {}, ColorId: {}, SizeId: {},
+              Stock: { required: true, number: true, min: 0 },
+              ImageFile: { extension: "jpg|jpeg|png|webp|gif" }
             }
           });
 
-          // === Format khi gõ và khi blur ===
-          $(document).on('keyup blur', 'input[data-type="currency"]', function () {
+          // Format + sync khi gõ hai ô giá hiển thị
+          $(document).on('keyup blur', '#SalePrice_view, #OriginalPrice_view', function(){
             formatCurrencyInput(this);
+            syncPriceHidden();
+            validatePricesClient();
           });
 
-          // Format sẵn nếu có giá trị từ server (edit / post-back lỗi)
-          $('input[data-type="currency"]').each(function(){ formatCurrencyInput(this); });
+          // Preview ảnh
+          $('[name="ImageFile"]').on('change', function(){
+            const $wrap = $('#thumbPreview'), $img = $('#thumbPreviewImg');
+            if (!this.files || !this.files.length || !this.files[0].type.startsWith('image/')){
+              $img.attr('src',''); $wrap.addClass('d-none'); return;
+            }
+            const url = URL.createObjectURL(this.files[0]);
+            $img.attr('src', url).one('load', () => URL.revokeObjectURL(url));
+            $wrap.removeClass('d-none');
+          });
 
-          // === Trước khi submit: gỡ dấu phẩy để server bind decimal ===
-          $form.on('submit', function () {
-            $('input[data-type="currency"]').each(function () {
-              this.value = normalizeMoney(this.value);
-            });
+          // SKU tự sinh
+          function toAsciiKeepSpaces(s){ return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/\s+/g,' ').trim(); }
+          function genSku(){
+            const pid=$('#ProductId').val(), size=$('#SizeId option:selected').text().trim(), color=$('#ColorId option:selected').text().trim();
+            if(pid && $('#SizeId').val() && $('#ColorId').val()){
+              const sku=`BAG_${toAsciiKeepSpaces(size)}_${toAsciiKeepSpaces(color)}_${pid}`;
+              $('[name="Sku"]').val(sku); $('#SkuPreview').text(sku);
+            } else { $('[name="Sku"]').val(''); $('#SkuPreview').text('(Chưa đủ dữ liệu để sinh SKU)'); }
+          }
+          $('#ProductId,#SizeId,#ColorId').on('change',genSku); genSku();
+
+          // Submit: đồng bộ lần cuối & chặn nếu 2 giá không hợp lệ
+          $('#variantForm').on('submit', function(e){
+            syncPriceHidden();
+            if(!validatePricesClient()){
+              e.preventDefault();
+              $('#modelSummary').removeClass('d-none').text('Vui lòng kiểm tra giá bán / giá gốc.');
+            }
           });
         });
-
     </script>
 }
-
-

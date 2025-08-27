@@ -986,7 +986,6 @@ namespace DATNAPI1.Controllers
 
         // theo doi don hàng
 
-
         [HttpGet]
         public async Task<IActionResult> OrderDetail(int id)
         {
@@ -1003,18 +1002,44 @@ namespace DATNAPI1.Controllers
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.ProductVariant)
                         .ThenInclude(pv => pv.Size)
+                .Include(o => o.Promotion) // load khuyến mãi (để hiển thị mã/tên)
                 .FirstOrDefaultAsync(o => o.OrderId == id && o.UserId == userId);
 
             if (order == null) return NotFound();
 
+            // Promotion chỉ dùng để show label
+            Promotion? promo = order.Promotion;
+            if (promo == null && order.PromoCode.HasValue)
+            {
+                promo = await _context.Promotions.AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.PromoCode == order.PromoCode.Value);
+            }
+
+            // ====== TÍNH TOÁN THEO DỮ LIỆU ĐƠN HÀNG ======
+            decimal itemsSubtotal = order.OrderDetails.Sum(d => (d.UnitPrice ?? 0m) * (d.Quantity ?? 0));
+            decimal shipping = Math.Max(0m, order.ShippingFee ?? 0m);
+            decimal grandTotal = Math.Max(0m, order.TotalAmount ?? 0m);
+
+            // Số tiền giảm THỰC TẾ đã áp dụng khi đặt hàng
+            decimal discountApplied = itemsSubtotal + shipping - grandTotal;
+            if (discountApplied < 0m) discountApplied = 0m;
+
+            // Đưa thông tin sang View
+            ViewBag.PromoName = promo?.PromoName;
+            ViewBag.PromoNameCode = promo?.PromoNameCode;
+            ViewBag.ItemsSubtotal = itemsSubtotal;
+            ViewBag.ShippingFee = shipping;
+            ViewBag.DiscountAmount = discountApplied;
+
+            // ====== ViewModel như cũ ======
             var vm = new MyOrderDetailVM
             {
                 OrderId = order.OrderId,
                 OrderDate = order.OrderDate ?? DateTime.Now,
                 Quantity = (int)(order.Quantity ?? order.OrderDetails.Sum(d => d.Quantity)),
                 TotalAmount = order.TotalAmount ?? 0m,
-                PaymentStatus = CanonPay(order.PaymentStatus),   // ✅
-                OrderStatus = CanonOrder(order.OrderStatus),   // ✅
+                PaymentStatus = CanonPay(order.PaymentStatus),
+                OrderStatus = CanonOrder(order.OrderStatus),
                 RecipientName = order.RecipientName ?? "",
                 RecipientPhone = order.RecipientPhone ?? "",
                 DeliveryAddress = order.DeliveryAddress ?? "",
@@ -1032,9 +1057,9 @@ namespace DATNAPI1.Controllers
                 }).ToList()
             };
 
-
             return View("OrderDetail", vm);
         }
+
 
 
 

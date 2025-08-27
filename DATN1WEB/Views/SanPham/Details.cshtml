@@ -7,11 +7,9 @@
     {
         if (string.IsNullOrWhiteSpace(s)) return "—";
         var t = s.Trim();
-        if (t.Equals("Active", StringComparison.OrdinalIgnoreCase) || t.Equals("Đang bán", StringComparison.OrdinalIgnoreCase))
-            return "Đang bán";
-        if (t.Equals("Inactive", StringComparison.OrdinalIgnoreCase) || t.Equals("Ngừng bán", StringComparison.OrdinalIgnoreCase))
-            return "Ngừng bán";
-        return t; // fallback: giữ nguyên nếu có giá trị khác
+        if (t.Equals("Active", StringComparison.OrdinalIgnoreCase) || t.Equals("Đang bán", StringComparison.OrdinalIgnoreCase)) return "Đang bán";
+        if (t.Equals("Inactive", StringComparison.OrdinalIgnoreCase) || t.Equals("Ngừng bán", StringComparison.OrdinalIgnoreCase)) return "Ngừng bán";
+        return t;
     }
     string StatusBadgeClass(string? s)
     {
@@ -21,11 +19,30 @@
              : "badge bg-light text-dark";
     }
 }
-<div class="content-header">
 
+<style>
+    /* ===== Clamp siêu gọn (6 dòng CSS) ===== */
+    .clamp {
+        overflow: hidden
+    }
+
+    .desc-fade {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2.5rem;
+        background: linear-gradient(to bottom, rgba(255,255,255,0), #fff)
+    }
+
+    .expanded .desc-fade {
+        display: none !important
+    }
+</style>
+
+<div class="content-header">
     <h1 class="mb-4">Chi tiết sản phẩm</h1>
 
-    <!-- Thông tin sản phẩm -->
     <div class="card mb-3 shadow-sm">
         <div class="row g-0">
             <div class="col-md-4 text-center">
@@ -42,14 +59,21 @@
             <div class="col-md-8">
                 <div class="card-body">
                     <h4 class="card-title">@Model.ProductName</h4>
-                    <p class="card-text">
-                        <strong>Mô tả:</strong><br /> @Html.Raw(Model.Description)
-                    </p>
-                    @* <p class="card-text"> *@
-                    @*     <strong>Giá bán:</strong> @(Model.SalePrice?.ToString("N0") ?? "Chưa có") ₫ <br /> *@
-                    @*     <strong>Giá gốc:</strong> @(Model.OriginalPrice?.ToString("N0") ?? "Chưa có") ₫ *@
-                    @* </p> *@
-                    <p class="card-text">
+
+                    <!-- MÔ TẢ có "xem thêm/thu gọn" -->
+                    <p class="card-text mb-1"><strong>Mô tả:</strong></p>
+                    <div id="descWrap" class="position-relative">
+                        <div id="desc" class="clamp">@Html.Raw(Model.Description)</div>
+                        <div id="descFade" class="desc-fade d-none"></div>
+                    </div>
+                    <button id="descBtn" type="button" class="btn btn-link px-0 mt-1 d-none">Xem thêm</button>
+
+                    @* <p class="card-text">
+                        <strong>Giá bán:</strong> @(Model.SalePrice?.ToString("N0") ?? "Chưa có") ₫ <br />
+                        <strong>Giá gốc:</strong> @(Model.OriginalPrice?.ToString("N0") ?? "Chưa có") ₫
+                    </p> *@
+
+                    <p class="card-text mt-2">
                         <strong>Chất liệu:</strong> @Model.Material <br />
                         <strong>Danh mục:</strong> @Model.Category?.CategoryName <br />
                         <strong>Trạng thái:</strong>
@@ -74,13 +98,9 @@
     </div>
 
     <!-- Danh sách biến thể -->
-    <!-- Danh sách biến thể -->
     <div class="d-flex align-items-center justify-content-between mt-4 mb-2">
         <h4 class="m-0">Các biến thể của sản phẩm</h4>
-        <a asp-controller="ProductVariants"
-           asp-action="Create"
-           asp-route-productId="@Model.ProductId"
-           class="btn btn-primary">
+        <a asp-controller="ProductVariants" asp-action="Create" asp-route-productId="@Model.ProductId" class="btn btn-primary">
             <i class="fa-solid fa-plus me-1"></i> Thêm biến thể
         </a>
     </div>
@@ -150,3 +170,75 @@
     }
 </div>
 
+<script>
+    /* ===== JS clamp: tự đo line-height, ẩn/hiện nút, gần như không cần CSS ===== */
+    (function () {
+        const wrap = document.getElementById('descWrap');
+        const desc = document.getElementById('desc');
+        const fade = document.getElementById('descFade');
+        const btn  = document.getElementById('descBtn');
+        if (!wrap || !desc || !btn || !fade) return;
+
+        const LINES = 5; // số dòng khi rút gọn
+
+        function getLineHeightPx(el){
+            const cs = window.getComputedStyle(el);
+            let lh = cs.lineHeight;
+            if (lh === 'normal') {
+                // 1.4–1.6 x font-size: chọn 1.5
+                lh = (parseFloat(cs.fontSize) * 1.5) + 'px';
+            }
+            return parseFloat(lh);
+        }
+
+        function clampInit(){
+            // reset về trạng thái rút gọn để đo
+            wrap.classList.remove('expanded');
+            desc.style.maxHeight = '';
+            desc.style.overflow  = '';
+            fade.classList.add('d-none');
+            btn.classList.add('d-none');
+            btn.textContent = 'Xem thêm';
+
+            const line = getLineHeightPx(desc);
+            const maxH = Math.round(line * LINES);
+
+            desc.style.maxHeight = maxH + 'px';
+            desc.style.overflow  = 'hidden';
+
+            // Nếu thật sự bị tràn thì hiện nút + fade
+            const needClamp = desc.scrollHeight > desc.clientHeight + 2;
+            if (needClamp){
+                btn.classList.remove('d-none');
+                fade.classList.remove('d-none');
+            } else {
+                // Không tràn: coi như expanded để tắt fade hoàn toàn
+                wrap.classList.add('expanded');
+                desc.style.maxHeight = '';
+                desc.style.overflow  = '';
+            }
+        }
+
+        btn.addEventListener('click', function(){
+            const expanded = wrap.classList.toggle('expanded');
+            if (expanded){
+                desc.style.maxHeight = '';
+                desc.style.overflow  = '';
+                btn.textContent = 'Thu gọn';
+            } else {
+                clampInit(); // quay lại trạng thái clamp
+            }
+        });
+
+        // Khởi tạo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', clampInit);
+        } else {
+            clampInit();
+        }
+        window.addEventListener('load', clampInit);
+        window.addEventListener('resize', function(){
+            if (!wrap.classList.contains('expanded')) clampInit();
+        });
+    })();
+</script>

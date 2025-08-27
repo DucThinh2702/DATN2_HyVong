@@ -3,22 +3,7 @@
     ViewData["Title"] = $"Đơn hàng #{Model.OrderId}";
     Layout = "~/Views/Shared/_LayoutUser.cshtml";
 
-    // ===== Map trạng thái tiếng Việt (hiển thị phần thông tin) =====
-    string MapOrderVi(string s)
-    {
-        var x = (s ?? "").Trim().ToLower();
-        if (string.IsNullOrWhiteSpace(x)) return "Chờ xác nhận";
-        return x switch
-        {
-            "pending" or "chờ xác nhận" => "Chờ xác nhận",
-            "processing" or "đang xử lý" or "chờ xử lý" or "đang chuẩn bị" => "Đang chuẩn bị",
-            "shipping" or "đang giao" => "Đang giao",
-            "awaiting_receipt" or "chờ nhận hàng" => "Chờ nhận hàng",  // vẫn map để hiển thị chữ (nếu có)
-            "delivered" or "completed" or "hoàn tất" => "Hoàn tất",
-            "cancelled" or "đã huỷ" or "đã hủy" => "Đã huỷ",
-            _ => "Chờ xác nhận"
-        };
-    }
+    // ===== Map TT thanh toán (hiển thị) =====
     string MapPaymentVi(string s)
     {
         var x = (s ?? "").Trim().ToLower();
@@ -32,21 +17,56 @@
         };
     }
 
-    // Hiển thị chữ trạng thái & thanh toán
-    var paymentVi = MapPaymentVi(Model.PaymentStatus);
-    var orderVi = MapOrderVi(Model.OrderStatus);
+    // ===== Map trạng thái ĐƠN (đã thêm "shipping"/Đang giao) =====
+    // Quy tắc:
+    // - Nếu đã thanh toán và còn ở pending => ép về "processing"
+    // - Giữ nguyên "shipping" khi có
+    string MapOrderViWithRule(string orderStatus, string paymentStatus)
+    {
+        var os = (orderStatus ?? "").Trim().ToLower();
+        var pay = MapPaymentVi(paymentStatus);
 
-    // ===== StepIndex cho STEPPER (chỉ 4 bước, KHÔNG có "Chờ nhận hàng") =====
+        string Canon(string s) => (s ?? "").Trim().ToLower() switch
+        {
+            "pending" or "chờ xác nhận" => "pending",
+            "processing" or "đang xử lý" or "chờ xử lý" or "đang chuẩn bị" => "processing",
+            "shipping" or "đang giao" or "awaiting_receipt" or "chờ nhận hàng" => "shipping",
+            "delivered" or "completed" or "hoàn tất" => "completed",
+            "cancelled" or "đã huỷ" or "đã hủy" => "cancelled",
+            _ => "pending"
+        };
+
+        var canon = Canon(os);
+
+        // Ưu tiên: đã thanh toán ở pending -> chuyển sang processing
+        if (pay == "Đã thanh toán" && canon == "pending")
+            canon = "processing";
+
+        return canon switch
+        {
+            "pending" => "Chờ xác nhận",
+            "processing" => "Đang chuẩn bị",
+            "shipping" => "Đang giao",
+            "completed" => "Hoàn tất",
+            "cancelled" => "Đã huỷ",
+            _ => "Chờ xác nhận"
+        };
+    }
+
+    // Hiển thị chữ
+    var paymentVi = MapPaymentVi(Model.PaymentStatus);
+    var orderVi = MapOrderViWithRule(Model.OrderStatus, Model.PaymentStatus);
+
+    // ===== Stepper 4 bước (đã thêm "shipping") =====
     int StepIndexByKey(string key) => (key ?? "").Trim().ToLower() switch
     {
         "pending" => 0,
         "processing" => 1,
         "shipping" => 2,
-        "delivered" => 3,
+        "completed" => 3,
         _ => 0
     };
 
-    // Quy về 1 trong 4 mốc step từ trạng thái hiện có
     int CurrentStepIndex()
     {
         var v = (orderVi ?? "").ToLower();
@@ -55,9 +75,8 @@
             "chờ xác nhận" => 0,
             "đang chuẩn bị" => 1,
             "đang giao" => 2,
-            // "chờ nhận hàng" không có step riêng -> gán vào step "đang giao" cho hợp lý
-            "chờ nhận hàng" => 2,
             "hoàn tất" => 3,
+            "đã huỷ" => 0,
             _ => 0
         };
     }
@@ -72,7 +91,13 @@
     }
 
     var stRaw = (Model.OrderStatus ?? "").Trim().ToLower();
-    bool canEditOrCancel = string.IsNullOrWhiteSpace(stRaw) || stRaw == "pending" || stRaw == "chờ xác nhận";
+    bool canEditOrCancel = (
+    string.IsNullOrWhiteSpace(stRaw)
+    || stRaw == "pending"
+    || stRaw == "chờ xác nhận"
+        )
+        && paymentVi != "Đã thanh toán";
+
 }
 
 <style>
@@ -118,7 +143,7 @@
         }
 
     .bar {
-        width: 72px;
+        width: 100px;
         height: 2px;
         background: #dee2e6
     }
@@ -151,8 +176,23 @@
                 <div class="col-md-4">
                     <div><strong>Ngày đặt:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
                     <div><strong>Tổng tiền:</strong> @Model.TotalAmount.ToString("N0") VNĐ</div>
+
+                    @{
+                        var discount = (ViewBag.DiscountAmount as decimal?) ?? 0m;
+                        var shipFee = (ViewBag.ShippingFee as decimal?) ?? 0m;
+                    }
+                    @if (discount > 0)
+                    {
+                        <div><strong>Số tiền giảm:</strong> @discount.ToString("N0") VNĐ</div>
+                    }
+                    @if (shipFee > 0)
+                    {
+                        <div><strong>Phí vận chuyển:</strong> @shipFee.ToString("N0") VNĐ</div>
+                    }
+
                     <div><strong>Số lượng:</strong> @Model.Quantity</div>
                 </div>
+
                 <div class="col-md-4">
                     <div><strong>Thanh toán:</strong> @paymentVi</div>
                     <div><strong>Trạng thái:</strong> @orderVi</div>
@@ -160,7 +200,25 @@
                     {
                         <div><strong>Ghi chú:</strong> @Model.Note</div>
                     }
+
+                    @* Khuyến mãi *@
+                    @if (!string.IsNullOrWhiteSpace(ViewBag.PromoName as string)
+                    || !string.IsNullOrWhiteSpace(ViewBag.PromoNameCode as string))
+                    {
+                        <hr class="my-2" />
+                        <div class="d-flex flex-column gap-1">
+                            @if (!string.IsNullOrWhiteSpace(ViewBag.PromoNameCode as string))
+                            {
+                                <div><strong>Mã khuyến mãi:</strong> <span class="badge bg-primary">@ViewBag.PromoNameCode</span></div>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(ViewBag.PromoName as string))
+                            {
+                                <div><strong>Tên khuyến mãi:</strong> @ViewBag.PromoName</div>
+                            }
+                        </div>
+                    }
                 </div>
+
                 <div class="col-md-4">
                     <div><strong>Người nhận:</strong> @Model.RecipientName</div>
                     <div><strong>Điện thoại:</strong> @Model.RecipientPhone</div>
@@ -172,10 +230,18 @@
         <!-- Stepper 4 bước -->
         <div class="card-footer bg-light">
             <div class="stepper">
-                <div class="@(StepClass("pending"))"><div class="dot"></div><div class="label">Chờ xác nhận</div></div><div class="bar"></div>
-                <div class="@(StepClass("processing"))"><div class="dot"></div><div class="label">Đang chuẩn bị</div></div><div class="bar"></div>
-                <div class="@(StepClass("shipping"))"><div class="dot"></div><div class="label">Đang giao</div></div><div class="bar"></div>
-                <div class="@(StepClass("delivered"))"><div class="dot"></div><div class="label">Hoàn tất</div></div>
+                <div class="@(StepClass("pending"))">
+                    <div class="dot"></div><div class="label">Chờ xác nhận</div>
+                </div><div class="bar"></div>
+                <div class="@(StepClass("processing"))">
+                    <div class="dot"></div><div class="label">Đang chuẩn bị</div>
+                </div><div class="bar"></div>
+                <div class="@(StepClass("shipping"))">
+                    <div class="dot"></div><div class="label">Đang giao</div>
+                </div><div class="bar"></div>
+                <div class="@(StepClass("completed"))">
+                    <div class="dot"></div><div class="label">Hoàn tất</div>
+                </div>
             </div>
         </div>
     </div>
@@ -211,7 +277,10 @@
                     }
                 </tbody>
                 <tfoot class="table-light">
-                    <tr><th colspan="4" class="text-end">Tổng cộng</th><th class="text-end">@Model.TotalAmount.ToString("N0") VNĐ</th></tr>
+                    <tr>
+                        <th colspan="4" class="text-end">Tổng cộng</th>
+                        <th class="text-end">@Model.TotalAmount.ToString("N0") VNĐ</th>
+                    </tr>
                 </tfoot>
             </table>
         </div>
@@ -246,14 +315,13 @@
 
 @section Scripts {
     <script>
-        // Tự làm mới trạng thái mỗi 20s
+        // Auto refresh state mỗi 20s
         setInterval(async () => {
           try {
             const res = await fetch(`/User/MyOrderStatus?id=@Model.OrderId`);
             const data = await res.json();
             if (data?.success) {
-              const current = "@orderVi";
-              if (data.orderStatus && data.orderStatus !== current) location.reload();
+              if (data.orderStatus && data.orderStatus !== "@orderVi") location.reload();
             }
           } catch {}
         }, 20000);

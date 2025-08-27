@@ -124,6 +124,29 @@ app.Use(async (ctx, next) =>
     ctx.Response.Headers["Expires"] = "0";
     await next();
 });
+// --- NO-CACHE CHO NỘI DUNG CẦN ĐĂNG NHẬP (đặc biệt /Admin) ---
+app.Use(async (ctx, next) =>
+{
+    // Nếu là khu Admin HOẶC người dùng đang đăng nhập => không cho cache
+    if (ctx.Request.Path.StartsWithSegments("/Admin") ||
+        (ctx.User?.Identity?.IsAuthenticated ?? false))
+    {
+        ctx.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private";
+        ctx.Response.Headers["Pragma"] = "no-cache";
+        ctx.Response.Headers["Expires"] = "0";
+    }
+
+    await next();
+
+    // Nếu bị 401/403 (đã đăng xuất rồi bấm Back) => đảm bảo không có cache
+    if (ctx.Response.StatusCode == StatusCodes.Status401Unauthorized ||
+        ctx.Response.StatusCode == StatusCodes.Status403Forbidden)
+    {
+        ctx.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private";
+        ctx.Response.Headers["Pragma"] = "no-cache";
+        ctx.Response.Headers["Expires"] = "0";
+    }
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -135,9 +158,9 @@ app.MapControllerRoute(
     defaults: new { controller = "Admin" }
 ).RequireAuthorization("IsAdmin");
 
-// Khu USER (mặc định)
+// Khu USER (mặc định) — KHÔNG trỏ vào Admin
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Admin}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

@@ -1,4 +1,328 @@
-﻿@model DATN1API.Models.Product
+﻿@* @model DATN1API.Models.Product *@
+@* @{ *@
+@*     Layout = "_LayoutUser"; *@
+@*     var colors = ViewBag.Colors as List<DATN1WEB.Models.Color>; *@
+@*     var sizes = ViewBag.Sizes as List<DATN1WEB.Models.Size>; *@
+@*     var variantsJson = ViewBag.VariantsJson as string; // JSON list các biến thể *@
+@* } *@
+
+@* <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"> *@
+@* <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> *@
+
+@* <style> *@
+@*     #variantImage { *@
+@*         width: 100%; *@
+@*         max-width: 480px; *@
+@*         height: 480px; *@
+@*         object-fit: contain; *@
+@*         background: #f5f5f5; *@
+@*         border-radius: 8px *@
+@*     } *@
+
+@*     #thumbList { *@
+@*         max-height: 480px; *@
+@*         overflow: auto *@
+@*     } *@
+
+@*     .thumb { *@
+@*         width: 72px; *@
+@*         height: 72px; *@
+@*         border: 1px solid #dee2e6; *@
+@*         border-radius: .35rem; *@
+@*         padding: 0; *@
+@*         background: #fff; *@
+@*         cursor: pointer; *@
+@*         transition: transform .15s,box-shadow .15s,border-color .15s *@
+@*     } *@
+
+@*         .thumb:hover { *@
+@*             transform: translateY(-1px); *@
+@*             box-shadow: 0 .25rem .75rem rgba(0,0,0,.08) *@
+@*         } *@
+
+@*         .thumb.active { *@
+@*             border-color: #0d6efd; *@
+@*             box-shadow: 0 0 0 .15rem rgba(13,110,253,.15) *@
+@*         } *@
+@* </style> *@
+
+@* <div class="container py-5"> *@
+@*     <div class="row align-items-start g-4"> *@
+@*         <!-- Cột ảnh --> *@
+@*         <div class="col-md-6"> *@
+@*             <div class="row g-3"> *@
+@*                 <div class="col-12 d-md-block col-md-2 order-2 order-md-1"> *@
+@*                     <div id="thumbList" class="d-flex d-md-block flex-row gap-2"></div> *@
+@*                 </div> *@
+@*                 <div class="col-12 col-md-10 text-center order-1 order-md-2"> *@
+@*                     <img id="variantImage" src="@Url.Content(Model.ThumbnailImage)" alt="@Model.ProductName" class="img-fluid border shadow-sm"> *@
+@*                 </div> *@
+@*             </div> *@
+@*         </div> *@
+
+@*         <!-- Thông tin --> *@
+@*         <div class="col-md-6"> *@
+@*             <h2 class="fw-bold mb-2">@Model.ProductName</h2> *@
+            
+
+@*             <h4 id="price" class="text-danger fw-bold mb-2"> *@
+@*                 @String.Format("{0:N0}", Model.SalePrice ?? 0) VNĐ *@
+@*             </h4> *@
+@*             <div id="stockInfo" class="small text-muted mb-4"></div> *@
+
+@*             <!-- Màu --> *@
+@*             <div class="mb-3"> *@
+@*                 <label class="fw-bold d-block mb-1">Màu sắc</label> *@
+@*                 <div class="d-flex flex-wrap gap-2"> *@
+@*                     @foreach (var c in colors) *@
+@*                     { *@
+@*                         <button type="button" class="btn btn-outline-dark btn-color" data-color="@c.ColorId">@c.ColorName</button> *@
+@*                     } *@
+@*                 </div> *@
+@*             </div> *@
+
+@*             <!-- Size --> *@
+@*             <div class="mb-3"> *@
+@*                 <label class="fw-bold d-block mb-1">Size</label> *@
+@*                 <div class="d-flex flex-wrap gap-2"> *@
+@*                     @foreach (var s in sizes) *@
+@*                     { *@
+@*                         <button type="button" class="btn btn-outline-dark btn-size" data-size="@s.SizeId">@s.SizeName</button> *@
+@*                     } *@
+@*                 </div> *@
+@*             </div> *@
+
+@*             <!-- Số lượng --> *@
+@*             <div class="mb-3"> *@
+@*                 <label class="fw-bold d-block mb-1">Số lượng</label> *@
+@*                 <div class="input-group" style="width:160px;"> *@
+@*                     <button class="btn btn-outline-secondary btn-minus" type="button">-</button> *@
+@*                     <input type="number" id="quantity" class="form-control text-center" value="1" min="1"> *@
+@*                     <button class="btn btn-outline-secondary btn-plus" type="button">+</button> *@
+@*                 </div> *@
+@*                 <!-- THÊM MỚI: cảnh báo --> *@
+@*                 <div id="qtyWarning" class="text-danger small mt-1 d-none">Số lượng sản phẩm không đủ</div> *@
+@*             </div> *@
+
+
+@*             <!-- Nút (ẩn cho tới khi chọn đủ / còn hàng) --> *@
+@*             <div id="buySection" class="d-none d-flex gap-2 mt-4"> *@
+@*                 <!-- MUA NGAY: POST /User/MuaNgay --> *@
+@*                 <form asp-controller="User" asp-action="MuaNgay" method="post" class="me-1"> *@
+@*                     @Html.AntiForgeryToken() *@
+@*                     <input type="hidden" name="variantId" class="js-variant-id" /> *@
+@*                     <input type="hidden" name="quantity" class="js-qty-hidden" value="1" /> *@
+@*                     <button type="submit" class="btn btn-dark px-4 js-buy-btn" disabled>Mua ngay</button> *@
+@*                 </form> *@
+
+@*                 <!-- THÊM VÀO GIỎ: POST /User/ThemVaoGio --> *@
+@*                 <form asp-controller="User" asp-action="ThemVaoGio" method="post"> *@
+@*                     @Html.AntiForgeryToken() *@
+@*                     <input type="hidden" name="variantId" class="js-variant-id" /> *@
+@*                     <input type="hidden" name="quantity" class="js-qty-hidden" value="1" /> *@
+@*                     <button type="submit" class="btn btn-outline-dark px-4 js-buy-btn" disabled>Thêm vào giỏ hàng</button> *@
+@*                 </form> *@
+@*             </div> *@
+@*             <p class="text-muted m-2">@Html.Raw(Model.Description)</p> *@
+
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+
+@* <script> *@
+@*     // ===== DATA ===== *@
+@*     const variants = @Html.Raw(variantsJson ?? "[]"); *@
+
+@*     // ===== STATE ===== *@
+@*     let selectedColor = null; *@
+@*     let selectedSize  = null; *@
+@*     let currentVariant = null; *@
+
+@*     // ===== DOM ===== *@
+@*     const imgEl      = document.getElementById('variantImage'); *@
+@*     const priceEl    = document.getElementById('price'); *@
+@*     const qtyEl      = document.getElementById('quantity'); *@
+@*     const thumbWrap  = document.getElementById('thumbList'); *@
+@*     const buySection = document.getElementById('buySection'); *@
+@*     const stockEl    = document.getElementById('stockInfo'); *@
+@*     const qtyWarning = document.getElementById('qtyWarning'); *@
+
+@*     // ===== HELPERS ===== *@
+@*     const vnd = n => (parseFloat(n) || 0).toLocaleString('vi-VN') + ' VNĐ'; *@
+@*     const pushVariantToForms = id => document.querySelectorAll('.js-variant-id').forEach(i => i.value = id || ''); *@
+@*     const pushQtyToForms     = q  => document.querySelectorAll('.js-qty-hidden').forEach(i => i.value = q); *@
+
+@*     function markActive(selector, value, attr){ *@
+@*       document.querySelectorAll(selector).forEach(x => x.classList.remove('active')); *@
+@*       const btn = document.querySelector(`${selector}[${attr}="${value}"]`); *@
+@*       if (btn) btn.classList.add('active'); *@
+@*     } *@
+@*     function markActiveThumb(variantId){ *@
+@*       document.querySelectorAll('#thumbList .thumb').forEach(t => { *@
+@*         t.classList.toggle('active', String(t.dataset.variantId) === String(variantId)); *@
+@*       }); *@
+@*     } *@
+
+@*     function findVariant(colorId, sizeId){ *@
+@*       let v = variants.find(x => String(x.ColorId) === String(colorId) && String(x.SizeId) === String(sizeId)); *@
+@*       if (!v) v = variants.find(x => String(x.ColorId) === String(colorId)) *@
+@*              || variants.find(x => String(x.SizeId) === String(sizeId)) *@
+@*              || variants[0]; *@
+@*       return v; *@
+@*     } *@
+
+@*     function renderThumbs(){ *@
+@*       thumbWrap.innerHTML = ''; *@
+@*       const seen = new Set(); *@
+@*       variants.forEach(v => { *@
+@*         const src = v.ThumbnailImage || '@Url.Content(Model.ThumbnailImage)'; *@
+@*         const key = String(v.VariantId); *@
+@*         if (seen.has(key)) return; seen.add(key); *@
+
+@*         const btn = document.createElement('button'); *@
+@*         btn.type = 'button'; *@
+@*         btn.className = 'thumb'; *@
+@*         btn.dataset.variantId = v.VariantId; *@
+@*         btn.dataset.color = v.ColorId; *@
+@*         btn.dataset.size  = v.SizeId; *@
+@*         btn.innerHTML = `<img src="${src}" alt="" class="w-100 h-100" style="object-fit:cover">`; *@
+
+@*         btn.addEventListener('click', () => { *@
+@*           selectedColor = String(v.ColorId); *@
+@*           selectedSize  = String(v.SizeId); *@
+@*           markActive('.btn-color', selectedColor, 'data-color'); *@
+@*           markActive('.btn-size',  selectedSize,  'data-size'); *@
+@*           setVariant(); *@
+@*           markActiveThumb(v.VariantId); *@
+@*         }); *@
+
+@*         thumbWrap.appendChild(btn); *@
+@*       }); *@
+@*     } *@
+
+@*     // Hiển thị/ẩn cảnh báo + khóa/mở nút mua theo số lượng *@
+@*     function validateQty(stock){ *@
+@*       const max = parseInt(stock || 0, 10); *@
+@*       let qty = Math.max(1, parseInt(qtyEl.value || '1', 10)); *@
+
+@*       // Nếu nhập tay vượt tồn thì tự co về tối đa *@
+@*       if (max > 0 && qty > max) qty = max; *@
+
+@*       qtyEl.value = qty; *@
+@*       pushQtyToForms(qty); *@
+
+@*       const ok = max > 0 && qty <= max; *@
+@*       qtyWarning.classList.toggle('d-none', ok); *@
+@*       document.querySelectorAll('.js-buy-btn').forEach(b => b.disabled = !ok); *@
+
+@*       return ok; *@
+@*     } *@
+
+@*     function updateBuyState(v){ *@
+@*       const hasSel  = !!(selectedColor && selectedSize && v); *@
+@*       const hasStock = hasSel && ((v.Stock ?? 0) > 0); *@
+
+@*       // Chỉ hiện cụm nút khi biến thể còn hàng (>0) *@
+@*       buySection.classList.toggle('d-none', !hasStock); *@
+
+@*       // Cập nhật nội dung tồn *@
+@*       stockEl.textContent = hasSel ? (hasStock ? `Còn ${v.Stock} sản phẩm` : 'Hết hàng') : ''; *@
+
+@*       // Gán max cho input số lượng (để UX tốt khi dùng mobile bàn phím số) *@
+@*       if (hasSel) { *@
+@*         qtyEl.max = v.Stock ?? 0; *@
+@*         validateQty(v.Stock); *@
+@*       } else { *@
+@*         document.querySelectorAll('.js-buy-btn').forEach(b => b.disabled = true); *@
+@*         qtyWarning.classList.add('d-none'); *@
+@*       } *@
+@*     } *@
+
+@*     function setVariant(initial=false){ *@
+@*       if (!selectedColor || !selectedSize) { updateBuyState(null); return; } *@
+@*       const v = findVariant(selectedColor, selectedSize); *@
+@*       if (!v) { updateBuyState(null); return; } *@
+
+@*       currentVariant = v; *@
+
+@*       // ảnh/giá *@
+@*       const src = v.ThumbnailImage || '@Url.Content(Model.ThumbnailImage)'; *@
+@*       imgEl.src = src; *@
+@*       priceEl.textContent = vnd(v.SalePrice); *@
+
+@*       // đẩy form *@
+@*       pushVariantToForms(v.VariantId); *@
+
+@*       // active nút *@
+@*       if (initial){ *@
+@*         markActive('.btn-color', String(v.ColorId), 'data-color'); *@
+@*         markActive('.btn-size',  String(v.SizeId),  'data-size'); *@
+@*       } *@
+@*       markActiveThumb(v.VariantId); *@
+
+@*       updateBuyState(v); *@
+@*     } *@
+
+@*     // ===== EVENTS ===== *@
+@*     document.querySelectorAll('.btn-color').forEach(btn => { *@
+@*       btn.addEventListener('click', () => { *@
+@*         selectedColor = btn.getAttribute('data-color'); *@
+@*         markActive('.btn-color', selectedColor, 'data-color'); *@
+@*         setVariant(); *@
+@*       }); *@
+@*     }); *@
+@*     document.querySelectorAll('.btn-size').forEach(btn => { *@
+@*       btn.addEventListener('click', () => { *@
+@*         selectedSize = btn.getAttribute('data-size'); *@
+@*         markActive('.btn-size', selectedSize, 'data-size'); *@
+@*         setVariant(); *@
+@*       }); *@
+@*     }); *@
+
+@*     // Nút +/- *@
+@*     document.querySelector('.btn-plus')?.addEventListener('click', () => { *@
+@*       let cur = parseInt(qtyEl.value || '1', 10) + 1; *@
+@*       if (currentVariant?.Stock >= 0) cur = Math.min(cur, currentVariant.Stock); *@
+@*       qtyEl.value = cur; *@
+@*       pushQtyToForms(cur); *@
+@*       if (currentVariant) validateQty(currentVariant.Stock); *@
+@*     }); *@
+@*     document.querySelector('.btn-minus')?.addEventListener('click', () => { *@
+@*       const cur = Math.max(1, parseInt(qtyEl.value || '1', 10) - 1); *@
+@*       qtyEl.value = cur; *@
+@*       pushQtyToForms(cur); *@
+@*       if (currentVariant) validateQty(currentVariant.Stock); *@
+@*     }); *@
+
+@*     // Nhập tay *@
+@*     qtyEl.addEventListener('input', () => { *@
+@*       let val = Math.max(1, parseInt(qtyEl.value || '1', 10)); *@
+@*       if (currentVariant?.Stock >= 0) val = Math.min(val, currentVariant.Stock); *@
+@*       qtyEl.value = val; *@
+@*       pushQtyToForms(val); *@
+@*       if (currentVariant) validateQty(currentVariant.Stock); *@
+@*     }); *@
+
+@*     // ===== INIT ===== *@
+@*     (function init(){ *@
+@*       pushQtyToForms(qtyEl.value || 1); *@
+
+@*       if (!Array.isArray(variants) || variants.length === 0){ *@
+@*         updateBuyState(null); *@
+@*         return; *@
+@*       } *@
+
+@*       renderThumbs(); *@
+
+@*       const firstAvailable = variants.find(v => (v.Stock ?? 0) > 0 && String(v.Status || '').toLowerCase() !== 'inactive') *@
+@*                            || variants[0]; *@
+
+@*       selectedColor = String(firstAvailable.ColorId); *@
+@*       selectedSize  = String(firstAvailable.SizeId); *@
+@*       setVariant(true); *@
+@*     })(); *@
+@* </script> *@
+@model DATN1API.Models.Product
 @{
     Layout = "_LayoutUser";
     var colors = ViewBag.Colors as List<DATN1WEB.Models.Color>;
@@ -44,6 +368,24 @@
             border-color: #0d6efd;
             box-shadow: 0 0 0 .15rem rgba(13,110,253,.15)
         }
+
+    /* ==== Clamp mô tả: CSS tối giản ==== */
+    .clamp {
+        overflow: hidden
+    }
+
+    .desc-fade {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2.5rem;
+        background: linear-gradient(to bottom, rgba(255,255,255,0), #fff)
+    }
+
+    .expanded .desc-fade {
+        display: none !important
+    }
 </style>
 
 <div class="container py-5">
@@ -63,7 +405,6 @@
         <!-- Thông tin -->
         <div class="col-md-6">
             <h2 class="fw-bold mb-2">@Model.ProductName</h2>
-            
 
             <h4 id="price" class="text-danger fw-bold mb-2">
                 @String.Format("{0:N0}", Model.SalePrice ?? 0) VNĐ
@@ -104,7 +445,6 @@
                 <div id="qtyWarning" class="text-danger small mt-1 d-none">Số lượng sản phẩm không đủ</div>
             </div>
 
-
             <!-- Nút (ẩn cho tới khi chọn đủ / còn hàng) -->
             <div id="buySection" class="d-none d-flex gap-2 mt-4">
                 <!-- MUA NGAY: POST /User/MuaNgay -->
@@ -123,7 +463,18 @@
                     <button type="submit" class="btn btn-outline-dark px-4 js-buy-btn" disabled>Thêm vào giỏ hàng</button>
                 </form>
             </div>
-            <p class="text-muted m-2">@Html.Raw(Model.Description)</p>
+
+            <!-- MÔ TẢ có "Xem thêm / Thu gọn" -->
+            <div class="mt-4">
+                <p class="fw-bold mb-1">Mô tả</p>
+                <div id="descWrap" class="position-relative">
+                    <div id="desc" class="clamp text-muted m-0">
+                        @Html.Raw(Model.Description)
+                    </div>
+                    <div id="descFade" class="desc-fade d-none"></div>
+                </div>
+                <button id="descBtn" type="button" class="btn btn-link px-0 mt-1 d-none">Xem thêm</button>
+            </div>
 
         </div>
     </div>
@@ -228,7 +579,7 @@
       // Cập nhật nội dung tồn
       stockEl.textContent = hasSel ? (hasStock ? `Còn ${v.Stock} sản phẩm` : 'Hết hàng') : '';
 
-      // Gán max cho input số lượng (để UX tốt khi dùng mobile bàn phím số)
+      // Gán max cho input số lượng
       if (hasSel) {
         qtyEl.max = v.Stock ?? 0;
         validateQty(v.Stock);
@@ -320,5 +671,75 @@
       selectedColor = String(firstAvailable.ColorId);
       selectedSize  = String(firstAvailable.SizeId);
       setVariant(true);
+    })();
+</script>
+
+<!-- Script Clamp mô tả (đặt sau script chính) -->
+<script>
+    /* === Clamp mô tả: tự đo line-height, tự ẩn nút nếu nội dung ngắn === */
+    (function () {
+        const wrap = document.getElementById('descWrap');
+        const desc = document.getElementById('desc');
+        const fade = document.getElementById('descFade');
+        const btn  = document.getElementById('descBtn');
+        if (!wrap || !desc || !btn || !fade) return;
+
+        const LINES = 5; // số dòng hiển thị khi rút gọn
+
+        function getLineHeightPx(el){
+            const cs = window.getComputedStyle(el);
+            let lh = cs.lineHeight;
+            if (lh === 'normal') lh = (parseFloat(cs.fontSize) * 1.5) + 'px'; // ước lượng
+            return parseFloat(lh);
+        }
+
+        function clampInit(){
+            // reset để đo lại
+            wrap.classList.remove('expanded');
+            desc.style.maxHeight = '';
+            desc.style.overflow  = '';
+            fade.classList.add('d-none');
+            btn.classList.add('d-none');
+            btn.textContent = 'Xem thêm';
+
+            const line = getLineHeightPx(desc);
+            const maxH = Math.round(line * LINES);
+
+            desc.style.maxHeight = maxH + 'px';
+            desc.style.overflow  = 'hidden';
+
+            const needClamp = desc.scrollHeight > desc.clientHeight + 2;
+            if (needClamp){
+                btn.classList.remove('d-none');
+                fade.classList.remove('d-none');
+            } else {
+                // không tràn → coi như mở rộng để tắt fade
+                wrap.classList.add('expanded');
+                desc.style.maxHeight = '';
+                desc.style.overflow  = '';
+            }
+        }
+
+        btn.addEventListener('click', function(){
+            const expanded = wrap.classList.toggle('expanded');
+            if (expanded){
+                desc.style.maxHeight = '';
+                desc.style.overflow  = '';
+                btn.textContent = 'Thu gọn';
+            } else {
+                clampInit(); // quay lại trạng thái rút gọn
+            }
+        });
+
+        // Khởi tạo & re-check khi load/resize
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', clampInit);
+        } else {
+            clampInit();
+        }
+        window.addEventListener('load', clampInit);
+        window.addEventListener('resize', () => {
+            if (!wrap.classList.contains('expanded')) clampInit();
+        });
     })();
 </script>

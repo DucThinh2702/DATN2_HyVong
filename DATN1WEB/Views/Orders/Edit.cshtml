@@ -25,6 +25,31 @@
 }
 
 <h1 class="mb-3"><i class="fas fa-edit me-2 text-primary"></i>Sửa đơn hàng #@Model.OrderId</h1>
+<style>
+    /* làm “xám” input/textarea ở trạng thái readonly nhưng vẫn submit */
+    .readonly-look[readonly] {
+        background-color: #e9ecef !important; /* giống .form-control:disabled của Bootstrap */
+        opacity: 1; /* giữ độ rõ chữ */
+        pointer-events: none; /* chặn focus/click */
+    }
+    /* Ẩn spinner cho input number */
+    .no-spinner::-webkit-inner-spin-button,
+    .no-spinner::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .no-spinner {
+        -moz-appearance: textfield; /* Firefox */
+    }
+
+    .readonly-look[readonly] {
+        background-color: #e9ecef !important;
+        opacity: 1;
+        pointer-events: none;
+    }
+
+</style>
 
 <form asp-action="Edit" method="post">
     @Html.AntiForgeryToken()
@@ -39,26 +64,32 @@
                     <i class="fas fa-user me-2 text-primary"></i>Thông tin người nhận
                 </div>
                 <div class="card-body">
+                    <!-- Thông tin người nhận -->
                     <div class="mb-3">
                         <label class="form-label">Người nhận</label>
-                        <input name="RecipientName" class="form-control" value="@Model.RecipientName" />
+                        <input name="RecipientName" class="form-control readonly-look" value="@Model.RecipientName" readonly />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">SĐT</label>
-                        <input name="RecipientPhone" class="form-control" value="@Model.RecipientPhone" />
+                        <input name="RecipientPhone" class="form-control readonly-look" value="@Model.RecipientPhone" readonly />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Địa chỉ</label>
-                        <textarea name="DeliveryAddress" class="form-control" rows="2">@Model.DeliveryAddress</textarea>
+                        <textarea name="DeliveryAddress" class="form-control readonly-look" rows="2" readonly>@Model.DeliveryAddress</textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Ghi chú</label>
-                        <textarea name="Note" class="form-control" rows="2">@Model.Note</textarea>
+                        <textarea name="Note" class="form-control readonly-look" rows="2" readonly>@Model.Note</textarea>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Mã khuyến mãi</label>
-                        <input name="PromoCode" class="form-control" value="@Model.PromoCode" />
+                        <input name="PromoCode" class="form-control readonly-look" value="@Model.PromoCode" readonly />
                     </div>
+
+
+
+
+
                 </div>
             </div>
         </div>
@@ -106,11 +137,20 @@
                         <small class="text-muted">Hiện tại: @VNOrder(Model.OrderStatus)</small>
                     </div>
 
-                    <div class="mb-1">
+                    @{
+                        var shipVal = (Model.ShippingFee ?? 0m);
+                    }
+                    <div class="mb-3">
                         <label class="form-label">Phí vận chuyển</label>
-                        <input name="ShippingFee" type="number" step="0.01" class="form-control"
-                               value="@((Model.ShippingFee ?? 0m).ToString(CultureInfo.InvariantCulture))" />
-                        <div class="form-text">Nhập số thập phân bằng dấu chấm (ví dụ: 15000.50)</div>
+                        <!-- Chỉ hiển thị -->
+                        <input class="form-control readonly-look"
+                               value="@shipVal.ToString("N0", vi) ₫"
+                               readonly />
+
+                        <!-- Ẩn để submit giá trị về server -->
+                        <input type="hidden"
+                               name="ShippingFee"
+                               value="@shipVal.ToString(CultureInfo.InvariantCulture)" />
                     </div>
                 </div>
             </div>

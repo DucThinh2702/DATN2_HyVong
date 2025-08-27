@@ -81,7 +81,6 @@
         return VNOrder(orderStatus);
     }
 
-
     // helper giữ query khi bấm phân trang
     string MergeQuery(string extra)
     {
@@ -212,7 +211,9 @@
                     {
                         foreach (var o in Model)
                         {
-                            // Tổng hàng = cộng từng dòng (ưu tiên TotalPrice; fallback UnitPrice * Qty; fallback giá biến thể)
+                            // ===== CHỈ HIỂN THỊ ĐÚNG SỐ LƯU TRONG ĐƠN =====
+                            // Ưu tiên hiện đúng y như DB đã lưu (TotalAmount).
+                            // Nếu đơn CHƯA có TotalAmount, fallback tính lại từ dòng + phí ship.
                             decimal itemsSubtotal =
                             (o.OrderDetails?.Any() == true)
                             ? o.OrderDetails.Sum(d =>
@@ -224,11 +225,11 @@
                                 ?? 0m;
                                 return d.TotalPrice ?? (unit * qty);
                             })
-                            : (o.TotalAmount ?? 0m); // nếu không có dòng, fallback TotalAmount
+                            : 0m;
 
-                            var ship = o.ShippingFee ?? 0m;
-                            var grand = itemsSubtotal + ship;
+                            decimal fallbackGrand = itemsSubtotal + (o.ShippingFee ?? 0m);
 
+                            decimal displayMoney = o.TotalAmount ?? fallbackGrand;
 
                             int qty = o.OrderDetails?.Any() == true
                             ? o.OrderDetails.Sum(d => d.Quantity ?? 0)
@@ -240,7 +241,9 @@
                                 <td>@o.RecipientName</td>
                                 <td>@o.RecipientPhone</td>
                                 <td class="text-center">@qty</td>
-                                <td class="text-end fw-semibold">@grand.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫</td>
+                                <td class="text-end fw-semibold">
+                                    @displayMoney.ToString("N0", CultureInfo.GetCultureInfo("vi-VN")) ₫
+                                </td>
                                 <td>
                                     <span class="@PaymentBadgeClass(o.PaymentStatus)">@PaymentLabel(o.PaymentStatus)</span>
                                 </td>

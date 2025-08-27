@@ -13,7 +13,8 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 namespace DATN1API.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "IsAdmin")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public class AdminController : Controller
     {
         private readonly DatnContext _context;
