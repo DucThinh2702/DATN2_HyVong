@@ -639,7 +639,7 @@ namespace DATNAPI1.Controllers
                 Quantity = totalQuantity,
                 TotalAmount = totalAmount,
                 // Nếu đã thanh toán thì mặc định = "Chờ nhận hàng"
-                OrderStatus = "Chờ nhận hàng",
+                OrderStatus = "Đang chuẩn bị",
                 PaymentStatus = "Đã thanh toán",
                 OrderDetails = new List<OrderDetail>()
             };
@@ -1142,8 +1142,8 @@ namespace DATNAPI1.Controllers
                 => new() { "Đang giao", "shipping" },
 
             // ✅ thêm alias cho "Chờ nhận hàng"
-            "chờ nhận hàng" or "awaiting_receipt" 
-                => new() { "Chờ nhận hàng", "awaiting_receipt" },
+            //"chờ nhận hàng" or "awaiting_receipt" 
+            //    => new() { "Chờ nhận hàng", "awaiting_receipt" },
 
             "hoàn tất" or "delivered" or "completed" 
                 => new() { "Hoàn tất", "delivered", "completed" },
@@ -1196,9 +1196,19 @@ namespace DATNAPI1.Controllers
             TotalAmount = o.TotalAmount ?? 0m,
             PaymentStatus = CanonPay(o.PaymentStatus),
             // ✅ Nếu đã thanh toán nhưng vẫn là "Chờ xác nhận" thì hiển thị thành "Chờ nhận hàng"
-            OrderStatus = (CanonPay(o.PaymentStatus) == "Đã thanh toán" && CanonOrder(o.OrderStatus) == "Chờ xác nhận")
-                            ? "Chờ nhận hàng"
-                            : CanonOrder(o.OrderStatus),
+            OrderStatus =
+    (CanonPay(o.PaymentStatus) == "Đã thanh toán")
+        ? (
+            // nếu đã thanh toán mà chưa giao/chưa hoàn tất/chưa huỷ -> coi là đang chuẩn bị
+            (CanonOrder(o.OrderStatus) == "Đang giao" ||
+             CanonOrder(o.OrderStatus) == "Hoàn tất" ||
+             CanonOrder(o.OrderStatus) == "Đã huỷ")
+                ? CanonOrder(o.OrderStatus)
+                : "Đang chuẩn bị"
+          )
+        : CanonOrder(o.OrderStatus),
+
+
             RecipientName = o.RecipientName ?? "",
             RecipientPhone = o.RecipientPhone ?? "",
             DeliveryAddress = o.DeliveryAddress ?? "",
@@ -1217,7 +1227,7 @@ namespace DATNAPI1.Controllers
         new("Chờ xác nhận", "Chờ xác nhận"),
         new("Đang chuẩn bị", "Đang chuẩn bị"),
         new("Đang giao", "Đang giao"),
-        new("Chờ nhận hàng", "Chờ nhận hàng"),
+        //new("Chờ nhận hàng", "Chờ nhận hàng"),
         new("Hoàn tất", "Hoàn tất"),
         new("Đã huỷ", "Đã huỷ"),
     };
@@ -1466,7 +1476,7 @@ namespace DATNAPI1.Controllers
                 "" or "pending" or "chờ xác nhận" => "Chờ xác nhận",
                 "processing" or "đang chuẩn bị" or "đang xử lý" or "chờ xử lý" => "Đang chuẩn bị",
                 "shipping" or "đang giao" => "Đang giao",
-                "awaiting_receipt" or "chờ nhận hàng" => "Chờ nhận hàng",   // ✅ thêm dòng này
+                //"awaiting_receipt" or "chờ nhận hàng" => "Chờ nhận hàng",   // ✅ thêm dòng này
                 "delivered" or "completed" or "hoàn tất" => "Hoàn tất",
                 "cancelled" or "canceled" or "đã huỷ" or "đã hủy" => "Đã huỷ",
                 _ => "Chờ xác nhận"

@@ -59,6 +59,28 @@
         "Pending" => "badge bg-warning-subtle text-warning fw-semibold",
         _ => "badge bg-light text-dark fw-semibold"
     };
+    string DisplayOrderStatus(string? orderStatus, string? paymentStatus)
+    {
+        // Đã thanh toán?
+        var paid = NormalizePaymentView(paymentStatus) == "Paid";
+
+        // Chuẩn hoá trạng thái đơn hiện có
+        var os = (orderStatus ?? "").Trim().ToLowerInvariant();
+
+        // Các trạng thái đã sang bước sau hoặc kết thúc
+        bool isFinalOrAfterProcessing =
+            os == "shipping" || os == "đang giao" || os == "vận chuyển" ||
+            os == "completed" || os == "delivered" || os == "hoàn tất" || os == "hoàn thành" ||
+            os == "cancelled" || os == "canceled" || os == "đã huỷ" || os == "đã hủy";
+
+        // Nếu đã thanh toán mà chưa sang giao/hoàn tất/huỷ → hiển thị ĐANG CHUẨN BỊ
+        if (paid && !isFinalOrAfterProcessing)
+            return "Đang chuẩn bị";
+
+        // Còn lại dùng map hiện có
+        return VNOrder(orderStatus);
+    }
+
 
     // helper giữ query khi bấm phân trang
     string MergeQuery(string extra)
@@ -190,9 +212,23 @@
                     {
                         foreach (var o in Model)
                         {
-                            var subTotal = o.TotalAmount ?? 0m;
+                            // Tổng hàng = cộng từng dòng (ưu tiên TotalPrice; fallback UnitPrice * Qty; fallback giá biến thể)
+                            decimal itemsSubtotal =
+                            (o.OrderDetails?.Any() == true)
+                            ? o.OrderDetails.Sum(d =>
+                            {
+                                var qty = d.Quantity ?? 0;
+                                var unit = d.UnitPrice
+                                ?? d.ProductVariant?.SalePrice
+                                ?? d.ProductVariant?.OriginalPrice
+                                ?? 0m;
+                                return d.TotalPrice ?? (unit * qty);
+                            })
+                            : (o.TotalAmount ?? 0m); // nếu không có dòng, fallback TotalAmount
+
                             var ship = o.ShippingFee ?? 0m;
-                            var grand = subTotal + ship;
+                            var grand = itemsSubtotal + ship;
+
 
                             int qty = o.OrderDetails?.Any() == true
                             ? o.OrderDetails.Sum(d => d.Quantity ?? 0)
@@ -208,9 +244,13 @@
                                 <td>
                                     <span class="@PaymentBadgeClass(o.PaymentStatus)">@PaymentLabel(o.PaymentStatus)</span>
                                 </td>
+                                @{
+                                    var shownStatus = DisplayOrderStatus(o.OrderStatus, o.PaymentStatus);
+                                }
                                 <td>
-                                    <span class="@OrderBadgeClass(o.OrderStatus)">@VNOrder(o.OrderStatus)</span>
+                                    <span class="@OrderBadgeClass(shownStatus)">@shownStatus</span>
                                 </td>
+
                                 <td class="text-center">
                                     <div class="d-flex gap-1 justify-content-center">
                                         <a asp-action="Details" asp-route-id="@o.OrderId" class="btn btn-action btn-outline-info" title="Chi tiết"><i class="fas fa-eye"></i></a>

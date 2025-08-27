@@ -120,6 +120,7 @@ public class OrdersController : Controller
 
         var q = _ctx.Orders
             .Include(o => o.OrderDetails)
+            .ThenInclude(od => od.ProductVariant)
             .AsQueryable();
 
         // ---- Search
