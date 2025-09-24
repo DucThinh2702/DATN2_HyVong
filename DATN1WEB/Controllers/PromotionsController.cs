@@ -7,6 +7,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Collections.Generic;
+using DATN1API.Services;
+using DATN1WEB.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace DATN1API.Controllers
 {
@@ -14,15 +17,31 @@ namespace DATN1API.Controllers
     {
         private readonly DatnContext _context;
 
-        public PromotionsController(DatnContext context)
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly PermissionService _permissionService;
+
+        public PromotionsController(
+            DatnContext context,
+            UserManager<ApplicationUser> userManager,
+            PermissionService permissionService)
         {
             _context = context;
+            _userManager = userManager;
+            _permissionService = permissionService;
         }
+
 
         // GET: Promotions/Create
         [HttpGet]
         public async Task<IActionResult> Create()
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (!await _permissionService.HasPermission(user, "Promotions", "Create"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền tạo khuyến mãi!";
+                return RedirectToAction("Index", "Home");
+            }
+
             var shippingProviders = await _context.ShippingProviders
                 .Select(sp => new SelectListItem
                 {
@@ -55,53 +74,72 @@ namespace DATN1API.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-            [Bind("PromoCode,PromoName,PromoType,DiscountValue,MinOrderAmount,StartDate,EndDate,Quantity,UsedQuantity,Status,Description")]
-        Promotion promotion, int[] selectedShippingProviderIds)
+
+      [Bind("PromoCode,PromoName,PromoType,DiscountValue,MinOrderAmount,StartDate,EndDate,Quantity,UsedQuantity,Status,Description")]
+    Promotion promotion, int[] selectedShippingProviderIds)
         {
-            // Kiểm tra nếu không chọn ít nhất một đơn vị vận chuyển
+            // ===== Kiểm tra nếu không chọn ít nhất một đơn vị vận chuyển =====
             if (selectedShippingProviderIds == null || selectedShippingProviderIds.Length == 0)
             {
                 ModelState.AddModelError("selectedShippingProviderIds", "Vui lòng chọn ít nhất một đơn vị vận chuyển.");
             }
 
-            // Lấy các đơn vị vận chuyển đã chọn
+            // ===== Lấy các đơn vị vận chuyển đã chọn =====
             var selectedProviders = await _context.ShippingProviders
                 .Where(sp => selectedShippingProviderIds.Contains(sp.ShippingProviderId))
                 .ToListAsync();
 
-            // Gán các đơn vị vận chuyển đã chọn vào Promotion
+            // Gán đơn vị vận chuyển vào Promotion
             promotion.ShippingProviders = selectedProviders;
-            // Lưu tên các đơn vị vận chuyển vào trường ShippingProviderName
             promotion.ShippingProviderName = string.Join(", ", selectedProviders.Select(sp => sp.ShippingProviderName));
 
-            // Tạo mã giảm giá ngẫu nhiên
+            // ===== Tạo mã giảm giá ngẫu nhiên =====
             promotion.PromoNameCode = Promotion.GeneratePromoNameCode();
 
-            // Validate lại model sau khi gán ShippingProviders
-            TryValidateModel(promotion);
+            // ===== Kiểm tra ngày bắt đầu phải bằng ngày hiện tại =====
+            // ===== Kiểm tra ngày bắt đầu phải bằng ngày hiện tại =====
+            if (!promotion.StartDate.HasValue)
+            {
+                ModelState.AddModelError("StartDate", "Vui lòng chọn ngày bắt đầu.");
+            }
+            else if (promotion.StartDate.Value.Date != DateTime.Today)
+            {
+                ModelState.AddModelError("StartDate", "Ngày bắt đầu phải bằng ngày hiện tại.");
+            }
 
-            // Kiểm tra các điều kiện khác
+
+            // ===== Kiểm tra ngày kết thúc > ngày bắt đầu =====
             if (promotion.StartDate >= promotion.EndDate)
+            {
                 ModelState.AddModelError("EndDate", "Ngày kết thúc phải lớn hơn ngày bắt đầu.");
+            }
 
+            // ===== Kiểm tra loại giảm giá =====
             if (promotion.PromoType == "Phần trăm" && (promotion.DiscountValue < 0 || promotion.DiscountValue > 100))
+            {
                 ModelState.AddModelError("DiscountValue", "Phần trăm phải từ 0 đến 100.");
+            }
 
             if (promotion.PromoType == "Số tiền cố định" && promotion.DiscountValue > promotion.MinOrderAmount)
+            {
                 ModelState.AddModelError("DiscountValue", "Giảm giá không vượt quá giá trị đơn hàng tối thiểu.");
+            }
 
+            // ===== Kiểm tra tên mã giảm giá =====
             if (await CheckPromoNameExists(promotion.PromoName))
+            {
                 ModelState.AddModelError("PromoName", "Tên mã giảm giá đã tồn tại.");
-            else if (promotion.PromoName.Length < 10)
+            }
+            else if (string.IsNullOrWhiteSpace(promotion.PromoName) || promotion.PromoName.Length < 3)
             {
                 ModelState.AddModelError("PromoName", "Tên mã giảm giá phải có ít nhất 3 ký tự.");
             }
-            else if (promotion.PromoName.Length > 50)
+            else if (promotion.PromoName.Length > 100)
             {
                 ModelState.AddModelError("PromoName", "Tên mã giảm giá không được vượt quá 100 ký tự.");
             }
 
-            // Kiểm tra xem ModelState có hợp lệ không
+            // ===== Nếu có lỗi → load lại ViewBag & return View =====
             if (!ModelState.IsValid)
             {
                 var providers = await _context.ShippingProviders
@@ -127,13 +165,16 @@ namespace DATN1API.Controllers
                 ViewBag.ShippingProviders = providers;
                 ViewBag.Categories = categories;
                 ViewBag.SelectedProviderIds = selectedShippingProviderIds;
+
                 return View(promotion);
             }
 
+            // ===== Nếu hợp lệ → Lưu DB =====
             _context.Add(promotion);
             await _context.SaveChangesAsync();
             return RedirectToAction("MaGiamGia", "Admin");
         }
+
 
         // Kiểm tra nếu tên mã giảm giá đã tồn tại trong cơ sở dữ liệu
         private async Task<bool> CheckPromoNameExists(string promoName)
@@ -151,6 +192,13 @@ namespace DATN1API.Controllers
         // GET: Promotions/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (!await _permissionService.HasPermission(user, "Promotions", "Create"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền tạo khuyến mãi!";
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id == null)
                 return NotFound();
 
@@ -167,6 +215,13 @@ namespace DATN1API.Controllers
         // GET: Promotions/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (!await _permissionService.HasPermission(user, "Promotions", "Create"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền tạo khuyến mãi!";
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id == null) return NotFound();
 
             var promotion = await _context.Promotions
@@ -213,6 +268,13 @@ namespace DATN1API.Controllers
             [Bind("PromoCode,PromoName,PromoType,DiscountValue,MinOrderAmount,StartDate,EndDate,Quantity,UsedQuantity,Status,Description")]
 Promotion promotion, int[] selectedShippingProviderIds)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (!await _permissionService.HasPermission(user, "Promotions", "Create"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền tạo khuyến mãi!";
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id != promotion.PromoCode)
                 return NotFound();
 
@@ -331,6 +393,13 @@ Promotion promotion, int[] selectedShippingProviderIds)
         // GET: Promotions/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (!await _permissionService.HasPermission(user, "Promotions", "Create"))
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền tạo khuyến mãi!";
+                return RedirectToAction("Index", "Home");
+            }
+
             if (id == null)
                 return NotFound();
 

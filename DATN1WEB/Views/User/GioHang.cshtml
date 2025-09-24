@@ -1,8 +1,9 @@
-﻿@{
+﻿@using DATN1API.Models
+@model Cart
+@{
     ViewData["Title"] = "Giỏ hàng";
     Layout = "~/Views/Shared/_LayoutUser.cshtml";
 }
-@model DATN1API.Models.Cart
 
 <div class="container-fluid">
     <div class="row px-xl-5">
@@ -27,8 +28,8 @@
                         <tr data-id="@item.CartDetailId"
                             data-variant="@item.ProductVariantId"
                             data-name="@item.ProductVariant?.Product?.ProductName"
-                            data-color="@item.ProductVariant?.Color?.ColorName"
-                            data-size="@item.ProductVariant?.Size?.SizeName"
+                            data-color="@(item.ProductVariant?.Color?.ColorName ?? "Không có màu")"
+                            data-size="@(item.ProductVariant?.Size?.SizeName ?? "Không có size")"
                             data-price="@((item.ProductVariant?.SalePrice ?? 0))"
                             data-quantity="@((item.Quantity ?? 0))"
                             data-category-id="@item.ProductVariant?.Product?.CategoryId"
@@ -36,10 +37,47 @@
 
                             <td><input type="checkbox" class="selectItem"></td>
                             <td>@item.ProductVariant?.Product?.ProductName</td>
-                            <td>@item.ProductVariant?.Color?.ColorName</td>
-                            <td>@item.ProductVariant?.Size?.SizeName</td>
+
+                            <!-- Dropdown Màu -->
+                            <td>
+                                <select class="form-control form-control-sm select-color"
+                                        data-id="@item.CartDetailId"
+                                        data-product="@item.ProductVariant?.ProductId"
+                                        data-current="@((item.ProductVariant?.ColorId ?? 0))">
+                                    <option>Đang tải...</option>
+                                </select>
+                            </td>
+
+                            <!-- Dropdown Size -->
+                            <td>
+                                <select class="form-control form-control-sm select-size"
+                                        data-id="@item.CartDetailId"
+                                        data-product="@item.ProductVariant?.ProductId"
+                                        data-current="@((item.ProductVariant?.SizeId ?? 0))">
+                                    <option>Đang tải...</option>
+                                </select>
+                            </td>
+
                             <td>@string.Format("{0:N0} VNĐ", item.ProductVariant?.SalePrice)</td>
-                            <td>@item.Quantity</td>
+                            <td>
+                                <div class="input-group quantity mx-auto" style="width: 120px;">
+                                    <div class="input-group-prepend">
+                                        <button class="btn btn-sm btn-secondary btn-minus" type="button" data-id="@item.CartDetailId">
+                                            <i class="fa fa-minus"></i>
+                                        </button>
+                                    </div>
+                                    <input type="text"
+                                           class="form-control form-control-sm border-0 text-center item-qty"
+                                           value="@item.Quantity"
+                                           data-id="@item.CartDetailId" readonly />
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sm btn-secondary btn-plus" type="button" data-id="@item.CartDetailId">
+                                            <i class="fa fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+
                             <td>@string.Format("{0:N0} VNĐ", (item.Quantity ?? 0) * (item.ProductVariant?.SalePrice ?? 0))</td>
                             <td>
                                 <form asp-action="XoaKhoiGio" asp-controller="User" method="post" style="display:inline;">
@@ -51,26 +89,23 @@
                             </td>
                         </tr>
                     }
+
                 </tbody>
             </table>
         </div>
 
-        <!-- Chi tiết các sản phẩm đã chọn -->
+        <!-- Chi tiết giỏ hàng -->
         <div class="col-lg-4">
             <h5 class="section-title position-relative text-uppercase mb-3">
                 <span class="pr-3">Chi tiết giỏ hàng</span>
             </h5>
 
-
             <div class="bg-light p-30 mb-5" id="cartDetailPanel">
-
-                <!-- Combobox chọn sản phẩm -->
                 <div class="mb-3">
                     <label class="small text-muted mb-1">Sản phẩm đã chọn</label>
                     <select id="selectedItemsSelect" class="form-control" disabled></select>
                 </div>
 
-                <!-- Hiển thị chi tiết sản phẩm được chọn -->
                 <div id="selectedItemDetail" class="border rounded p-2 bg-white small">
                     <em>Chưa chọn sản phẩm nào</em>
                 </div>
@@ -100,16 +135,12 @@
     <script>
         let selectedItemsData = [];
 
-        document.addEventListener("DOMContentLoaded", function () {
-          const selectEl = document.getElementById("selectedItemsSelect");
-          const detailEl = document.getElementById("selectedItemDetail");
-          const tongCong = document.getElementById("tongCong");
-          const tongTien = document.getElementById("tongTien");
-
-          function renderSelectedItemDetail(index) {
+        // ========== Hiển thị chi tiết ==========
+        function renderSelectedItemDetail(index) {
+            const detailEl = document.getElementById("selectedItemDetail");
             if (index == null || selectedItemsData.length === 0) {
-              detailEl.innerHTML = '<em>Chưa chọn sản phẩm nào</em>';
-              return;
+                detailEl.innerHTML = '<em>Chưa chọn sản phẩm nào</em>';
+                return;
             }
             const it = selectedItemsData[index];
             detailEl.innerHTML = `
@@ -121,84 +152,248 @@
                 <div>Giá: ${it.price.toLocaleString("vi-VN")} VNĐ</div>
                 <div>Tổng: <strong>${it.total.toLocaleString("vi-VN")} VNĐ</strong></div>
               </div>`;
-          }
+        }
 
-          function updateSelectedItems() {
+        // ========== Cập nhật danh sách chọn ==========
+        function updateSelectedItems() {
             const rows = document.querySelectorAll("#cartTable tr");
+            const selectEl = document.getElementById("selectedItemsSelect");
+            const tongCong = document.getElementById("tongCong");
+            const tongTien = document.getElementById("tongTien");
+
             selectedItemsData = [];
             selectEl.innerHTML = "";
             let total = 0;
 
             rows.forEach(row => {
-              const checkbox = row.querySelector(".selectItem");
-              if (checkbox && checkbox.checked) {
-                const name        = row.dataset.name || "";
-                const color       = row.dataset.color || "";
-                const size        = row.dataset.size || "";
-                const price       = parseFloat(row.dataset.price) || 0;
-                const quantity    = parseInt(row.dataset.quantity) || 0;
-                const variantId   = parseInt(row.dataset.variant) || 0;
-                const categoryId  = parseInt(row.dataset.categoryId) || null;
-                const categoryName = (row.dataset.categoryName || "").trim();   // ✅ MỚI
+                const checkbox = row.querySelector(".selectItem");
+                if (checkbox && checkbox.checked) {
+                    const name   = row.dataset.name || "";
+                    const color  = row.dataset.color || "";
+                    const size   = row.dataset.size || "";
+                    const price  = parseFloat(row.dataset.price) || 0;
+                    const quantity = parseInt(row.dataset.quantity) || 0;
+                    const variantId = parseInt(row.dataset.variant) || 0;
+                    const categoryId   = parseInt(row.dataset.categoryId) || null;
+                    const categoryName = (row.dataset.categoryName || "").trim();
 
-                const itemTotal = price * quantity;
-                total += itemTotal;
+                    const itemTotal = price * quantity;
+                    total += itemTotal;
 
-                // LƯU categoryId + categoryName + variantId
-                selectedItemsData.push({
-                  name, color, size,
-                  price, quantity,
-                  total: itemTotal,
-                  variantId,
-                  ProductVariantId: variantId,
-                  categoryId,
-                  categoryName                                        // ✅ MỚI
-                });
+                    selectedItemsData.push({
+                        name, color, size,
+                        price, quantity,
+                        total: itemTotal,
+                        variantId,
+                        ProductVariantId: variantId,
+                        categoryId,
+                        categoryName
+                    });
 
-                const text = `${name} (${quantity} x ${price.toLocaleString("vi-VN")} VNĐ)`;
-                selectEl.add(new Option(text, selectedItemsData.length - 1));
-              }
+                    const text = `${name} (${quantity} x ${price.toLocaleString("vi-VN")} VNĐ)`;
+                    selectEl.add(new Option(text, selectedItemsData.length - 1));
+                }
             });
-
-            // ✅ Gửi kèm map { [categoryId]: categoryName } cho màn Thanh toán
-            const catMap = {};
-            selectedItemsData.forEach(it => {
-              if (it.categoryId != null && it.categoryName) {
-                catMap[it.categoryId] = it.categoryName;
-              }
-            });
-            localStorage.setItem("tbs_category_map", JSON.stringify(catMap));
 
             tongCong.textContent = total.toLocaleString("vi-VN") + " VNĐ";
             tongTien.textContent = total.toLocaleString("vi-VN") + " VNĐ";
 
             if (selectedItemsData.length > 0) {
-              selectEl.disabled = false;
-              selectEl.selectedIndex = 0;
-              renderSelectedItemDetail(0);
+                selectEl.disabled = false;
+                if (selectEl.selectedIndex < 0) selectEl.selectedIndex = 0;
+                renderSelectedItemDetail(parseInt(selectEl.value));
             } else {
-              selectEl.disabled = true;
-              detailEl.innerHTML = '<em>Chưa chọn sản phẩm nào</em>';
+                selectEl.disabled = true;
+                document.getElementById("selectedItemDetail").innerHTML = '<em>Chưa chọn sản phẩm nào</em>';
             }
-          }
+        }
 
-          selectEl.addEventListener("change", function () {
-            const idx = parseInt(this.value);
-            renderSelectedItemDetail(idx);
-          });
-
-          document.querySelectorAll(".selectItem").forEach(checkbox => {
-            checkbox.addEventListener("change", updateSelectedItems);
-          });
-
-          document.getElementById("btnCheckout").addEventListener("click", function () {
-            if (selectedItemsData.length === 0) {
-              alert("Vui lòng chọn ít nhất 1 sản phẩm để tiếp tục.");
-              return;
+        // ========== Refresh panel ==========
+        function refreshCartDetail() {
+            updateSelectedItems();
+            const selectEl = document.getElementById("selectedItemsSelect");
+            if (selectEl && selectEl.selectedIndex >= 0) {
+                renderSelectedItemDetail(parseInt(selectEl.value));
             }
-            localStorage.setItem("selectedCartItems", JSON.stringify(selectedItemsData));
-            window.location.href = "@Url.Action("ThanhToan", "User")";
-          });
+        }
+
+        // ========== Load variants ==========
+        function loadVariants(productId, row, currentColorId, currentSizeId) {
+            const selColor = row.querySelector(".select-color");
+            const selSize = row.querySelector(".select-size");
+            if (!selColor || !selSize) return;
+
+            fetch('@Url.Action("GetVariantsByProduct", "User")' + `?productId=${productId}`)
+            .then(res => res.json())
+            .then(variants => {
+                selColor.innerHTML = "";
+                selSize.innerHTML = "";
+
+                // Render Màu
+                const seenColors = new Set();
+                variants.forEach(v => {
+                    if (!seenColors.has(v.colorId)) {
+                        seenColors.add(v.colorId);
+                        const opt = new Option(v.colorName || "Không có màu", v.colorId || 0);
+                        selColor.add(opt);
+                    }
+                });
+
+                if (currentColorId > 0) {
+                    selColor.value = currentColorId;
+                    const cur = variants.find(v => v.colorId == currentColorId);
+                    if (cur) row.dataset.color = cur.colorName;
+                } else {
+                    selColor.selectedIndex = 0;
+                    const cur = variants.find(v => v.colorId == parseInt(selColor.value));
+                    if (cur) row.dataset.color = cur.colorName;
+                }
+
+                function renderSizes(colorId) {
+                    selSize.innerHTML = "";
+                    const sizes = variants.filter(v => v.colorId == colorId);
+
+                    if (sizes.length === 0) {
+                        selSize.add(new Option("Không có size", 0));
+                        row.dataset.size = "Không có size";
+                        return;
+                    }
+
+                    sizes.forEach(v => {
+                        const opt = new Option(v.sizeName || "Không có size", v.sizeId || 0);
+                        selSize.add(opt);
+                    });
+
+                    if (currentSizeId > 0 && sizes.some(v => v.sizeId == currentSizeId)) {
+                        selSize.value = currentSizeId;
+                        row.dataset.size = sizes.find(v => v.sizeId == currentSizeId).sizeName;
+                    } else {
+                        selSize.selectedIndex = 0;
+                        row.dataset.size = sizes[0].sizeName;
+                    }
+                }
+
+                renderSizes(parseInt(selColor.value) || 0);
+
+                // Khi đổi màu
+                selColor.addEventListener("change", function () {
+                    const cur = variants.find(v => v.colorId == parseInt(this.value));
+                    if (cur) row.dataset.color = cur.colorName;
+                    renderSizes(parseInt(this.value) || 0);
+                    updateVariant(row, variants, selColor, selSize);
+                });
+
+                // Khi đổi size
+                selSize.addEventListener("change", function () {
+                    const cur = variants.find(v => v.sizeId == parseInt(this.value) && v.colorId == parseInt(selColor.value));
+                    if (cur) row.dataset.size = cur.sizeName;
+                    updateVariant(row, variants, selColor, selSize);
+                });
+            });
+        }
+
+        // ========== Update khi đổi biến thể ==========
+        function updateVariant(row, variants, selColor, selSize) {
+            const colorId = parseInt(selColor.value);
+            const sizeId  = parseInt(selSize.value);
+            const match = variants.find(v => v.ColorId == colorId && v.SizeId == sizeId);
+            if (!match) return;
+
+            // Update ngay dataset + UI
+            row.dataset.variant = match.VariantId;
+            row.dataset.price   = match.SalePrice;
+            row.dataset.color   = match.ColorName || "Không có màu";
+            row.dataset.size    = match.SizeName  || "Không có size";
+
+            const qty = parseInt(row.dataset.quantity) || 1;
+            row.querySelector("td:nth-child(5)").innerText =
+                match.SalePrice.toLocaleString("vi-VN") + " VNĐ";
+            row.querySelector("td:nth-child(7)").innerText =
+                (match.SalePrice * qty).toLocaleString("vi-VN") + " VNĐ";
+
+            // Refresh panel ngay lập tức
+            refreshCartDetail();
+
+            // Gọi API để đồng bộ DB
+            fetch('@Url.Action("UpdateCartVariant", "User")', {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `cartDetailId=${row.dataset.id}&newVariantId=${match.VariantId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert(data.message);
+                }
+            });
+        }
+
+        // ========== DOMContentLoaded ==========
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectEl = document.getElementById("selectedItemsSelect");
+
+            // chọn sản phẩm
+            document.querySelectorAll(".selectItem").forEach(cb => cb.addEventListener("change", updateSelectedItems));
+
+            // combobox panel
+            selectEl.addEventListener("change", function () {
+                renderSelectedItemDetail(parseInt(this.value));
+            });
+
+            // checkout
+            document.getElementById("btnCheckout").addEventListener("click", function () {
+                if (selectedItemsData.length === 0) {
+                    alert("Vui lòng chọn ít nhất 1 sản phẩm để tiếp tục.");
+                    return;
+                }
+                localStorage.setItem("selectedCartItems", JSON.stringify(selectedItemsData));
+                window.location.href = "@Url.Action("ThanhToan", "User")";
+            });
+
+            // nút + / - số lượng
+            document.querySelectorAll(".btn-plus, .btn-minus").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const id = this.dataset.id;
+                    const input = document.querySelector(`.item-qty[data-id="${id}"]`);
+                    let qty = parseInt(input.value) || 1;
+                    if (this.classList.contains("btn-plus")) qty++;
+                    else if (this.classList.contains("btn-minus") && qty > 1) qty--;
+
+                    fetch('@Url.Action("UpdateCartQuantity", "User")', {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: `cartDetailId=${id}&quantity=${qty}`
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            input.value = data.newQuantity;
+                            const row = input.closest("tr");
+                            row.dataset.quantity = data.newQuantity;
+                            row.querySelector("td:nth-child(7)").innerText =
+                              (data.itemTotal).toLocaleString("vi-VN") + " VNĐ";
+                            refreshCartDetail();
+                        } else {
+                            alert(data.message);
+                        }
+                    });
+                });
+            });
+
+            // load variants cho từng row
+            document.querySelectorAll("#cartTable tr").forEach(row => {
+                const selColor = row.querySelector(".select-color");
+                if (!selColor) return;
+                const productId = selColor.dataset.product;
+                const currentColorId = parseInt(selColor.dataset.current) || 0;
+                const currentSizeId  = parseInt(row.querySelector(".select-size").dataset.current) || 0;
+                if (productId) {
+                    loadVariants(productId, row, currentColorId, currentSizeId);
+                }
+            });
         });
     </script>
 }
+
+
+

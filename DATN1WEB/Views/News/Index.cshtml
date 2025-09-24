@@ -4,7 +4,6 @@
 @{
     ViewData["Title"] = "Bài viết";
 
-    // query/filter
     string q = (ViewBag.Search as string) ?? (string)Context.Request.Query["search"];
     string hasImage = (ViewBag.HasImage as string) ?? (string)Context.Request.Query["hasImage"];
 
@@ -13,7 +12,6 @@
     int pageSize = ViewBag.PageSize ?? 5;
     int totalRecords = ViewBag.TotalRecords ?? 0;
 
-    // cửa sổ tối đa 5 nút
     int window = 5;
     int start = Math.Max(1, page - window / 2);
     int end = Math.Min(totalPages, start + window - 1);
@@ -57,13 +55,13 @@
     </form>
 </div>
 
-@if (TempData["Success"] != null)
+@if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success mt-3">@Html.Raw(TempData["Success"])</div>
+    <div class="alert alert-success mt-3">@Html.Raw(TempData["SuccessMessage"])</div>
 }
-@if (TempData["Error"] != null)
+@if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger mt-3">@Html.Raw(TempData["Error"])</div>
+    <div class="alert alert-danger mt-3">@Html.Raw(TempData["ErrorMessage"])</div>
 }
 
 <!-- News table -->
@@ -86,6 +84,7 @@
                     <tr>
                         <th>Ảnh</th>
                         <th>Tiêu đề</th>
+                        <th>Tác giả</th>
                         <th>Ngày đăng</th>
                         <th class="text-center">Hành động</th>
                     </tr>
@@ -111,6 +110,7 @@
                                     }
                                 </td>
                                 <td class="fw-semibold">@n.Title</td>
+                                <td>@(n.Author?.FullName ?? n.Author?.UserName ?? "Ẩn danh")</td>
                                 <td>@(n.PostedDate?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                                 <td class="text-center">
                                     <div class="d-flex gap-1 justify-content-center">
@@ -125,14 +125,14 @@
                     else
                     {
                         <tr>
-                            <td colspan="4" class="text-center text-muted">Chưa có bài viết</td>
+                            <td colspan="5" class="text-center text-muted">Chưa có bài viết</td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
 
-        @* PAGER COMPACT – canh giữa *@
+        @* PAGER COMPACT *@
         @if (totalPages > 1)
         {
             <div class="d-flex justify-content-center py-2">
@@ -206,7 +206,6 @@
             background: #f1f3f5;
         }
 
-    /* PAGER COMPACT */
     .pager-compact {
         background: #f1f3f5;
         border-radius: .6rem;

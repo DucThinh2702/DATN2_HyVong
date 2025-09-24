@@ -1,0 +1,152 @@
+﻿@model DATN1API.Models.ViewModels.CreateAdminViewModel
+
+@{
+    bool isCreate = ViewBag.IsCreate ?? false;
+    bool isSuperAdmin = User.IsInRole("SuperAdmin");
+    ViewData["Title"] = isCreate ? "Tạo Admin mới" : "Sửa thông tin Admin";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>
+        <i class="fas fa-user-shield me-2"></i>
+        @(isCreate ? "Tạo tài khoản Admin mới" : "Cập nhật thông tin Admin")
+    </h2>
+    <hr />
+
+    <!-- Hiển thị thông báo -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <form asp-action="@(isCreate ? "CreateAdmin" : "EditAdmin")" method="post">
+        @Html.AntiForgeryToken()
+
+        <!-- Email -->
+        @if (isCreate)
+        {
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" readonly />
+                <input type="hidden" asp-for="Email" />
+            </div>
+        }
+
+        <!-- Họ tên -->
+        <div class="mb-3">
+            <label asp-for="FullName" class="form-label">Họ tên</label>
+            <input asp-for="FullName" class="form-control" />
+            <span asp-validation-for="FullName" class="text-danger"></span>
+        </div>
+
+        <!-- Mật khẩu -->
+        @if (isCreate || isSuperAdmin)
+        {
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label">Mật khẩu</label>
+                <input asp-for="Password" type="password" class="form-control" placeholder="(Để trống nếu không đổi)" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+        }
+
+        <!-- SĐT -->
+        <div class="mb-3">
+            <label asp-for="Phone" class="form-label">Số điện thoại</label>
+            <input asp-for="Phone" class="form-control" />
+        </div>
+
+        <!-- Địa chỉ -->
+        <div class="mb-3">
+            <label asp-for="Address" class="form-label">Địa chỉ</label>
+            <input asp-for="Address" class="form-control" />
+        </div>
+
+        <!-- Giới tính -->
+        <div class="mb-3">
+            <label asp-for="Gender" class="form-label">Giới tính</label>
+            <select asp-for="Gender" class="form-select">
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+                <option value="Khác">Khác</option>
+            </select>
+        </div>
+
+        <!-- Ngày sinh -->
+        <div class="mb-3">
+            <label asp-for="DateOfBirth" class="form-label">Ngày sinh</label>
+            <input asp-for="DateOfBirth" type="date" class="form-control" />
+        </div>
+
+        <!-- ================= PHÂN QUYỀN ================= -->
+        <hr />
+        <h4><i class="fas fa-key me-2"></i>Phân quyền chức năng</h4>
+
+        <table class="table table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <th>Chức năng</th>
+                    <th class="text-center">Xem</th>
+                    <th class="text-center">Thêm</th>
+                    <th class="text-center">Sửa</th>
+                    <th class="text-center">Xóa</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Permissions.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            <select asp-for="Permissions[@i].FunctionName" class="form-select">
+                                <option value="Categories" selected="@(Model.Permissions[i].FunctionName=="Categories")">Danh mục</option>
+                                <option value="Colors" selected="@(Model.Permissions[i].FunctionName=="Colors")">Màu sắc</option>
+                                <option value="Customer" selected="@(Model.Permissions[i].FunctionName=="Customer")">Khách hàng</option>
+                                <option value="News" selected="@(Model.Permissions[i].FunctionName=="News")">Tin tức</option>
+                                <option value="Orders" selected="@(Model.Permissions[i].FunctionName=="Orders")">Đơn hàng</option>
+                                <option value="ProductVariants" selected="@(Model.Permissions[i].FunctionName=="ProductVariants")">Biến thể sản phẩm</option>
+                                <option value="Promotions" selected="@(Model.Permissions[i].FunctionName=="Promotions")">Khuyến mãi</option>
+                                <option value="SanPham" selected="@(Model.Permissions[i].FunctionName=="SanPham")">Sản phẩm</option>
+                                <option value="Sizes" selected="@(Model.Permissions[i].FunctionName=="Sizes")">Kích thước</option>
+                            </select>
+                        </td>
+                        <td class="text-center">
+                            <input type="checkbox" asp-for="Permissions[@i].CanView" class="form-check-input" />
+                        </td>
+                        <td class="text-center">
+                            <input type="checkbox" asp-for="Permissions[@i].CanCreate" class="form-check-input" />
+                        </td>
+                        <td class="text-center">
+                            <input type="checkbox" asp-for="Permissions[@i].CanEdit" class="form-check-input" />
+                        </td>
+                        <td class="text-center">
+                            <input type="checkbox" asp-for="Permissions[@i].CanDelete" class="form-check-input" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Buttons -->
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>
+            @(isCreate ? "Tạo Admin" : "Lưu thay đổi")
+        </button>
+        <a asp-action="KhachHang" class="btn btn-secondary">Quay lại</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

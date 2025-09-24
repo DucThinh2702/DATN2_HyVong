@@ -364,13 +364,64 @@ namespace DATN1API.Controllers
             return View();
         }
 
+        //[HttpGet]
+        //public async Task<IActionResult> Profile()
+        //{
+        //    var user = await _userManager.GetUserAsync(User);
+        //    if (user == null) return NotFound();
+
+        //    // Lấy danh sách role của user
+        //    var roles = await _userManager.GetRolesAsync(user);
+        //    string position = roles.FirstOrDefault() ?? "Không có chức vụ";
+
+        //    var model = new ProfileViewModel
+        //    {
+        //        FullName = user.FullName,
+        //        Email = user.Email,
+        //        Phone = user.PhoneNumber,
+        //        Address = user.Address,
+        //        Gender = user.Gender,
+        //        DateOfBirth = user.BirthDate,
+        //        Position = position // Lấy từ role
+        //    };
+
+        //    return View(model);
+        //}
+
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Profile(ProfileViewModel model)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        TempData["Error"] = "Dữ liệu không hợp lệ!";
+        //        return View(model);
+        //    }
+
+        //    var user = await _userManager.GetUserAsync(User);
+        //    if (user == null) return NotFound();
+
+        //    user.FullName = model.FullName;
+        //    user.PhoneNumber = model.Phone;
+        //    user.Address = model.Address;
+        //    user.Gender = model.Gender;
+        //    user.BirthDate = model.DateOfBirth;
+
+        //    var result = await _userManager.UpdateAsync(user);
+
+        //    if (result.Succeeded)
+        //        TempData["Success"] = "Cập nhật thông tin thành công!";
+        //    else
+        //        TempData["Error"] = "Đã có lỗi xảy ra khi cập nhật!";
+
+        //    return RedirectToAction(nameof(Profile));
+        //}
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
 
-            // Lấy danh sách role của user
             var roles = await _userManager.GetRolesAsync(user);
             string position = roles.FirstOrDefault() ?? "Không có chức vụ";
 
@@ -382,7 +433,7 @@ namespace DATN1API.Controllers
                 Address = user.Address,
                 Gender = user.Gender,
                 DateOfBirth = user.BirthDate,
-                Position = position // Lấy từ role
+                Position = position
             };
 
             return View(model);
@@ -416,5 +467,281 @@ namespace DATN1API.Controllers
 
             return RedirectToAction(nameof(Profile));
         }
+        //[HttpGet]
+        //[Authorize(Roles = "SuperAdmin")]
+        //public IActionResult CreateAdmin()
+        //{
+        //    ViewBag.IsCreate = true;
+        //    return View("EditAdmin", new CreateAdminViewModel());
+        //}
+
+        [HttpGet]
+        [Authorize(Roles = "SuperAdmin")]
+        public IActionResult CreateAdmin()
+        {
+            ViewBag.IsCreate = true;
+
+            var model = new CreateAdminViewModel
+            {
+                Permissions = new List<PermissionDto>
+        {
+            new PermissionDto { FunctionName = "Categories", DisplayName = "Danh mục" },
+            new PermissionDto { FunctionName = "Colors", DisplayName = "Màu sắc" },
+            new PermissionDto { FunctionName = "Customer", DisplayName = "Khách hàng" },
+            new PermissionDto { FunctionName = "News", DisplayName = "Tin tức" },
+            new PermissionDto { FunctionName = "Orders", DisplayName = "Đơn hàng" },
+            new PermissionDto { FunctionName = "ProductVariants", DisplayName = "Biến thể sản phẩm" },
+            new PermissionDto { FunctionName = "Promotions", DisplayName = "Khuyến mãi" },
+            new PermissionDto { FunctionName = "SanPham", DisplayName = "Sản phẩm" },
+            new PermissionDto { FunctionName = "Sizes", DisplayName = "Kích thước" }
+        }
+            };
+
+            return View("EditAdmin", model);
+        }
+
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateAdmin(CreateAdminViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            // Tìm hoặc tạo user
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FullName = model.FullName,
+                    PhoneNumber = model.Phone,
+                    Address = model.Address,
+                    Gender = model.Gender,
+                    BirthDate = model.DateOfBirth,
+                    Status = true
+                };
+
+                var createResult = await _userManager.CreateAsync(user, model.Password);
+                if (!createResult.Succeeded)
+                {
+                    foreach (var error in createResult.Errors)
+                        ModelState.AddModelError("", error.Description);
+
+                    return View(model);
+                }
+            }
+            else
+            {
+                user.FullName = model.FullName;
+                user.PhoneNumber = model.Phone;
+                user.Address = model.Address;
+                user.Gender = model.Gender;
+                user.BirthDate = model.DateOfBirth;
+                await _userManager.UpdateAsync(user);
+            }
+
+            // Role
+            if (await _userManager.IsInRoleAsync(user, "User"))
+                await _userManager.RemoveFromRoleAsync(user, "User");
+
+            if (user.Email == "nguyenducthinhcn2005@gmail.com")
+            {
+                if (!await _userManager.IsInRoleAsync(user, "SuperAdmin"))
+                    await _userManager.AddToRoleAsync(user, "SuperAdmin");
+            }
+            else
+            {
+                if (!await _userManager.IsInRoleAsync(user, "Admin"))
+                    await _userManager.AddToRoleAsync(user, "Admin");
+            }
+
+            // 🚩 Xử lý lưu Permissions
+            var oldPermissions = _context.AdminPermissions.Where(p => p.UserId == user.Id);
+            _context.AdminPermissions.RemoveRange(oldPermissions);
+
+            if (model.Permissions != null)
+            {
+                var newPermissions = model.Permissions.Select(p => new AdminPermission
+                {
+                    UserId = user.Id,
+                    FunctionName = p.FunctionName,
+                    CanView = p.CanView,
+                    CanCreate = p.CanCreate,
+                    CanEdit = p.CanEdit,
+                    CanDelete = p.CanDelete
+                }).ToList();
+
+                _context.AdminPermissions.AddRange(newPermissions);
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Tài khoản Admin đã được tạo/cập nhật thành công!";
+            return RedirectToAction("KhachHang");
+        }
+
+
+
+        // GET: Admin/EditAdmin?email=...
+        [HttpGet]
+        [Authorize(Roles = "Admin,SuperAdmin")]
+        public async Task<IActionResult> EditAdmin(string email)
+        {
+            if (string.IsNullOrEmpty(email)) return NotFound();
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) return NotFound();
+
+            // Load quyền đã lưu
+            var permissions = await _context.AdminPermissions
+                .Where(p => p.UserId == user.Id)
+                .Select(p => new PermissionDto
+                {
+                    FunctionName = p.FunctionName,
+                    DisplayName = p.FunctionName, // hoặc map sang tiếng Việt
+                    CanView = p.CanView,
+                    CanCreate = p.CanCreate,
+                    CanEdit = p.CanEdit,
+                    CanDelete = p.CanDelete
+                }).ToListAsync();
+
+            // Nếu chưa có quyền thì khởi tạo mặc định
+            if (!permissions.Any())
+            {
+                permissions = new List<PermissionDto>
+        {
+            new PermissionDto { FunctionName = "Categories", DisplayName = "Danh mục" },
+            new PermissionDto { FunctionName = "Colors", DisplayName = "Màu sắc" },
+            new PermissionDto { FunctionName = "Customer", DisplayName = "Khách hàng" },
+            new PermissionDto { FunctionName = "News", DisplayName = "Tin tức" },
+            new PermissionDto { FunctionName = "Orders", DisplayName = "Đơn hàng" },
+            new PermissionDto { FunctionName = "ProductVariants", DisplayName = "Biến thể sản phẩm" },
+            new PermissionDto { FunctionName = "Promotions", DisplayName = "Khuyến mãi" },
+            new PermissionDto { FunctionName = "SanPham", DisplayName = "Sản phẩm" },
+            new PermissionDto { FunctionName = "Sizes", DisplayName = "Kích thước" }
+        };
+            }
+
+            var model = new CreateAdminViewModel
+            {
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.PhoneNumber,
+                Address = user.Address,
+                Gender = user.Gender,
+                DateOfBirth = user.BirthDate,
+                Permissions = permissions
+            };
+
+            ViewBag.IsCreate = false;
+            return View(model);
+        }
+
+
+        // POST: Admin/EditAdmin
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,SuperAdmin")]
+        public async Task<IActionResult> EditAdmin(CreateAdminViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                TempData["Error"] = "Không tìm thấy Admin.";
+                return RedirectToAction("KhachHang");
+            }
+
+            // Cập nhật thông tin cơ bản
+            user.FullName = model.FullName;
+            user.PhoneNumber = model.Phone;
+            user.Address = model.Address;
+            user.Gender = model.Gender;
+            user.BirthDate = model.DateOfBirth;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                TempData["Error"] = "Cập nhật thất bại!";
+                return View(model);
+            }
+
+            // 🚩 Xử lý lưu lại Permissions
+            var oldPermissions = _context.AdminPermissions.Where(p => p.UserId == user.Id);
+            _context.AdminPermissions.RemoveRange(oldPermissions);
+
+            if (model.Permissions != null)
+            {
+                var newPermissions = model.Permissions.Select(p => new AdminPermission
+                {
+                    UserId = user.Id,
+                    FunctionName = p.FunctionName,
+                    CanView = p.CanView,
+                    CanCreate = p.CanCreate,
+                    CanEdit = p.CanEdit,
+                    CanDelete = p.CanDelete
+                }).ToList();
+
+                _context.AdminPermissions.AddRange(newPermissions);
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Cập nhật Admin & phân quyền thành công!";
+            return RedirectToAction("KhachHang");
+        }
+
+
+
+
+
+
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> ListAdmins()
+        {
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+
+            var model = admins.Select(u => new CreateAdminViewModel
+            {
+                FullName = u.FullName,
+                Email = u.Email,
+                Phone = u.PhoneNumber,
+                Address = u.Address,
+                Gender = u.Gender,
+                DateOfBirth = u.BirthDate
+            }).ToList();
+
+            return View(model);
+        }
+
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAdmin(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                TempData["Error"] = "Không tìm thấy tài khoản Admin!";
+                return RedirectToAction("ListAdmins");
+            }
+
+            // Không cho xóa chính SuperAdmin
+            if (user.Email == "nguyenducthinhcn2005@gmail.com")
+            {
+                TempData["Error"] = "Không thể xóa SuperAdmin!";
+                return RedirectToAction("ListAdmins");
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            TempData["Success"] = result.Succeeded ? "Xóa Admin thành công!" : "Xóa thất bại!";
+
+            return RedirectToAction("ListAdmins");
+        }
+
     }
 }

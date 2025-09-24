@@ -88,6 +88,7 @@ builder.Services.AddHttpClient<PayOSService>(client =>
 builder.Services.Configure<VNPAYSettings>(builder.Configuration.GetSection("VNPAY"));
 builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddScoped<VnPayService>();
+builder.Services.AddScoped<PermissionService>();
 
 builder.Services.AddSession(o =>
 {
@@ -104,6 +105,28 @@ builder.Services.AddHttpClient("api", client =>
 });
 
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    string[] roles = { "SuperAdmin", "Admin", "User" };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new ApplicationRole(role));
+        }
+    }
+
+    // Gán SuperAdmin cho email đặc biệt
+    var superAdminEmail = "nguyenducthinhcn2005@gmail.com";
+    var superAdmin = await userManager.FindByEmailAsync(superAdminEmail);
+    if (superAdmin != null && !await userManager.IsInRoleAsync(superAdmin, "SuperAdmin"))
+    {
+        await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
+    }
+}
 
 if (!app.Environment.IsDevelopment())
 {

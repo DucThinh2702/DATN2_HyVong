@@ -1,0 +1,67 @@
+﻿@model IEnumerable<DATN1API.Models.ViewModels.CreateAdminViewModel>
+
+@{
+    ViewData["Title"] = "Danh sách Admin";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2><i class="fas fa-users me-2"></i>Danh sách Admin</h2>
+    <hr />
+
+    <table class="table table-bordered table-hover align-middle text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Họ tên</th>
+                <th>Email</th>
+                <th>SĐT</th>
+                <th>Địa chỉ</th>
+                <th>Giới tính</th>
+                <th>Ngày sinh</th>
+                <th style="width:150px;">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var admin in Model)
+            {
+                <tr>
+                    <td>@admin.FullName</td>
+                    <td>@admin.Email</td>
+                    <td>@admin.Phone</td>
+                    <td>@admin.Address</td>
+                    <td>@admin.Gender</td>
+                    <td>@admin.DateOfBirth?.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        @if (admin.Email != "nguyenducthinhcn2005@gmail.com")
+                        {
+                            <div class="d-flex justify-content-center gap-2">
+                                <!-- Nút sửa -->
+                                <a asp-action="EditAdmin" asp-controller="Admin" asp-route-email="@admin.Email"
+                                   class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+
+
+                                <!-- Nút xóa -->
+                                <form asp-action="DeleteAdmin" method="post" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="email" value="@admin.Email" />
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                            title="Xóa"
+                                            onclick="return confirm('Bạn có chắc chắn muốn xóa Admin này không?')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="badge bg-primary fs-6 px-3 py-2">Tổng Quản Trị</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

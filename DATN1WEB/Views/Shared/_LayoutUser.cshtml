@@ -96,56 +96,58 @@
 
                 <div class="col-lg-6 d-flex justify-content-end align-items-center">
                     <!-- Account -->
-                    <div class="dropdown me-2">
-                        <button class="btn btn-sm btn-light border dropdown-toggle"
-                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            @(User?.Identity?.IsAuthenticated == true ? (User.Identity!.Name ?? "Tài khoản") : "Tài khoản")
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            @if (User?.Identity?.IsAuthenticated == true)
-                            {
-                                <li>
-                                    <a class="dropdown-item" href="@Url.Action("ProfileUser", "User")">
-                                        <i class="fa fa-user me-2"></i>Thông tin cá nhân
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider" /></li>
-                                <li>
-                                    <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="fa fa-sign-out-alt me-2"></i>Đăng xuất
-                                        </button>
-                                    </form>
-                                </li>
-                            }
-                            else
-                            {
-                                <li>
-                                    <a class="dropdown-item" href="/Account/Login">
-                                        <i class="fa fa-sign-in-alt me-2"></i>Đăng nhập
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="/Account/Register">
-                                        <i class="fa fa-user-plus me-2"></i>Đăng ký
-                                    </a>
-                                </li>
-                            }
-                        </ul>
-                    </div>
+                    <div class="col-lg-6 d-flex justify-content-end align-items-center">
 
-                    <!-- Language -->
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light border dropdown-toggle"
-                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Ngôn ngữ
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#">Tiếng Việt</a></li>
-                            <li><a class="dropdown-item" href="#">Tiếng Anh</a></li>
-                        </ul>
-                    </div>
+                        <!-- Account Dropdown -->
+                        <div class="dropdown me-2">
+                            <button class="btn btn-sm btn-light border dropdown-toggle"
+                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                @if (User.Identity.IsAuthenticated)
+                                {
+                                    <text>Xin chào, @User.Identity.Name</text>
+                                }
+                                else
+                                {
+                                    <text>Tài khoản</text>
+                                }
+                            </button>
+
+                            <!-- Bootstrap 5: dùng <ul><li> và dropdown-menu-end để canh phải -->
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                @if (User.Identity.IsAuthenticated)
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("ProfileUser", "User")">
+                                            <i class="fa fa-user me-2"></i>Thông tin cá nhân
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <form action="@Url.Action("LogoutUser", "Account")" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item">Đăng xuất</button>
+                                        </form>
+
+
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="/Account/Login">
+                                            <i class="fa fa-sign-in-alt me-2"></i>Đăng nhập
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/Account/Register">
+                                            <i class="fa fa-user-plus me-2"></i>Đăng ký
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+
+                        </div>
+                   
                 </div>
             </div>
         </div>
@@ -244,13 +246,13 @@
                             <a href="@Url.Action("News")" class="nav-link px-3 text-white-50 nav-hover-gold">Tin tức</a>
                         </div>
 
-                        <div class="ms-auto d-none d-lg-flex align-items-center gap-3">
-                           
-                            <a href="@Url.Action("GioHang")" class="position-relative text-decoration-none">
-                                <i class="bi bi-cart3 text-warning fs-5"></i>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">0</span>
-                            </a>
-                        </div>
+                            <<div class="ms-auto d-none d-lg-flex align-items-center gap-3">
+
+                                <a href="@Url.Action("GioHang")" class="position-relative text-decoration-none">
+                                    <i class="bi bi-cart3 text-warning fs-5"></i>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">0</span>
+                                </a>
+                            </div>
                     </div>
                 </nav>
             </div>

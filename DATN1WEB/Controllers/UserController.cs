@@ -46,40 +46,7 @@ namespace DATNAPI1.Controllers
             _userManager = userManager;
         }
 
-        // ===================== CATALOG / INDEX (PUBLIC) =====================
-        //[AllowAnonymous]
-        //public async Task<IActionResult> Index(int? categoryId, int page = 1)
-        //{
-        //    if (User.Identity?.IsAuthenticated == true)
-        //    {
-        //        ViewBag.UserName = User.Identity!.Name;
-        //    }
-
-        //    var products = await _client.GetFromJsonAsync<List<Product>>("api/Product") ?? new();
-        //    var categories = await _client.GetFromJsonAsync<List<Category>>("api/Categories") ?? new();
-
-        //    ViewBag.Categories = categories;
-        //    ViewBag.SelectedCategoryId = categoryId;
-
-        //    if (categoryId.HasValue)
-        //    {
-        //        products = products.Where(p => p.CategoryId == categoryId.Value).ToList();
-        //    }
-
-        //    const int pageSize = 8;
-        //    int totalProducts = products.Count;
-        //    var pagedProducts = products
-        //        .OrderByDescending(p => p.CreatedDate)
-        //        .Skip((page - 1) * pageSize)
-        //        .Take(pageSize)
-        //        .ToList();
-
-        //    ViewBag.Page = page;
-        //    ViewBag.TotalPages = (int)Math.Ceiling((double)totalProducts / pageSize);
-        //    ViewBag.Top4Products = products.OrderByDescending(p => p.CreatedDate).Take(4).ToList();
-
-        //    return View(pagedProducts);
-        //}
+       
         [AllowAnonymous]
         public async Task<IActionResult> Index(int? categoryId, int page = 1, string? search = null)
         {
@@ -302,87 +269,7 @@ namespace DATNAPI1.Controllers
             return View(product);
         }
 
-        // ===================== CART =====================
-        //[HttpPost]
-        //public IActionResult ThemVaoGio(int variantId, int quantity)
-        //{
-        //    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //    if (string.IsNullOrEmpty(userId)) return RedirectToAction("DangNhap");
-
-        //    var cart = _context.Carts
-        //        .Include(c => c.CartDetails)
-        //        .FirstOrDefault(c => c.UserId == userId);
-
-        //    if (cart == null)
-        //    {
-        //        cart = new Cart
-        //        {
-        //            UserId = userId,
-        //            CreatedDate = DateTime.Now,
-        //            LastUpdated = DateTime.Now
-        //        };
-        //        _context.Carts.Add(cart);
-        //        _context.SaveChanges();
-        //    }
-
-        //    var existingItem = cart.CartDetails.FirstOrDefault(c => c.ProductVariantId == variantId);
-        //    if (existingItem != null)
-        //        existingItem.Quantity = (existingItem.Quantity ?? 0) + quantity;
-        //    else
-        //        _context.CartDetails.Add(new CartDetail
-        //        {
-        //            CartId = cart.CartId,
-        //            ProductVariantId = variantId,
-        //            Quantity = quantity
-        //        });
-
-        //    cart.LastUpdated = DateTime.Now;
-        //    _context.SaveChanges();
-
-        //    return RedirectToAction(nameof(Index));
-        //}
-
-        //[HttpPost]
-        //public IActionResult MuaNgay(int variantId, int quantity)
-        //{
-        //    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //    if (string.IsNullOrEmpty(userId)) return RedirectToAction("DangNhap");
-
-        //    var variant = _context.ProductVariants.FirstOrDefault(v => v.VariantId == variantId);
-        //    if (variant == null) return NotFound("Biến thể sản phẩm không tồn tại.");
-
-        //    var cart = _context.Carts
-        //        .Include(c => c.CartDetails)
-        //        .FirstOrDefault(c => c.UserId == userId);
-
-        //    if (cart == null)
-        //    {
-        //        cart = new Cart
-        //        {
-        //            UserId = userId,
-        //            CreatedDate = DateTime.Now,
-        //            LastUpdated = DateTime.Now
-        //        };
-        //        _context.Carts.Add(cart);
-        //        _context.SaveChanges();
-        //    }
-
-        //    var existingItem = cart.CartDetails.FirstOrDefault(c => c.ProductVariantId == variantId);
-        //    if (existingItem != null)
-        //        existingItem.Quantity = (existingItem.Quantity ?? 0) + quantity;
-        //    else
-        //        _context.CartDetails.Add(new CartDetail
-        //        {
-        //            CartId = cart.CartId,
-        //            ProductVariantId = variantId,
-        //            Quantity = quantity
-        //        });
-
-        //    cart.LastUpdated = DateTime.Now;
-        //    _context.SaveChanges();
-
-        //    return RedirectToAction(nameof(GioHang), new { id = cart.CartId });
-        //}
+        
         // ===================== CART =====================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -475,6 +362,52 @@ namespace DATNAPI1.Controllers
             return RedirectToAction(nameof(GioHang));
         }
 
+        //[HttpGet]
+        //public IActionResult GioHang()
+        //{
+        //    if (User.Identity?.IsAuthenticated == true)
+        //    {
+        //        ViewBag.UserName = User.Identity!.Name;
+        //    }
+
+        //    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //    if (string.IsNullOrEmpty(userId)) return RedirectToAction("DangNhap");
+
+        //    var cart = _context.Carts
+        //        .Include(c => c.CartDetails)
+        //            .ThenInclude(cd => cd.ProductVariant)
+        //                .ThenInclude(pv => pv.Product)
+        //        .Include(c => c.CartDetails)
+        //            .ThenInclude(cd => cd.ProductVariant)
+        //                .ThenInclude(pv => pv.Color)
+        //        .Include(c => c.CartDetails)
+        //            .ThenInclude(cd => cd.ProductVariant)
+        //                .ThenInclude(pv => pv.Size)
+        //        .FirstOrDefault(c => c.UserId == userId);
+
+        //    if (cart == null)
+        //    {
+        //        cart = new Cart
+        //        {
+        //            UserId = userId,
+        //            CreatedDate = DateTime.Now,
+        //            LastUpdated = DateTime.Now
+        //        };
+        //        _context.Carts.Add(cart);
+        //        _context.SaveChanges();
+        //    }
+
+        //    var appUser = _context.Users.FirstOrDefault(u => u.Id == userId);
+        //    ViewBag.UserProfile = new
+        //    {
+        //        FullName = appUser?.FullName ?? appUser?.UserName,
+        //        Email = appUser?.Email,
+        //        Phone = appUser?.PhoneNumber,
+        //        Address = appUser?.Address
+        //    };
+
+        //    return View(cart);
+        //}
         [HttpGet]
         public IActionResult GioHang()
         {
@@ -510,6 +443,48 @@ namespace DATNAPI1.Controllers
                 _context.SaveChanges();
             }
 
+            // ====== Lấy danh sách biến thể cho từng sản phẩm trong giỏ ======
+            var productIds = cart.CartDetails.Select(cd => cd.ProductVariant.ProductId).Distinct().ToList();
+
+            var variantsByProduct = _context.ProductVariants
+                .Include(v => v.Color)
+                .Include(v => v.Size)
+                .Where(v => productIds.Contains(v.ProductId) && v.Status == "Active")
+                .ToList();
+
+            // Gom theo productId
+            var productVariantData = variantsByProduct
+     .GroupBy(v => v.ProductId)
+     .ToDictionary(
+         g => g.Key,
+         g => new {
+             Colors = g.Select(v => new {
+                 v.ColorId,
+                 v.Color.ColorName
+             }).Distinct().ToList(),
+
+             Sizes = g.Select(v => new {
+                 v.SizeId,
+                 v.Size.SizeName
+             }).Distinct().ToList(),
+
+             Variants = g.Select(v => new {
+                 v.VariantId,
+                 v.ColorId,
+                 ColorName = v.Color.ColorName,
+                 v.SizeId,
+                 SizeName = v.Size.SizeName,
+                 v.SalePrice,
+                 v.Stock,
+                 v.ThumbnailImage
+             }).ToList()
+         }
+     );
+
+            ViewBag.VariantsByProduct = JsonConvert.SerializeObject(productVariantData);
+
+
+            // ====== Thông tin user profile ======
             var appUser = _context.Users.FirstOrDefault(u => u.Id == userId);
             ViewBag.UserProfile = new
             {
@@ -521,6 +496,144 @@ namespace DATNAPI1.Controllers
 
             return View(cart);
         }
+
+        [HttpPost]
+        public IActionResult UpdateCartQuantity(int cartDetailId, int quantity)
+        {
+            try
+            {
+                if (quantity <= 0)
+                    return Json(new { success = false, message = "Số lượng phải lớn hơn 0" });
+
+                var cartDetail = _context.CartDetails
+                    .Include(cd => cd.Cart)
+                    .Include(cd => cd.ProductVariant)
+                    .ThenInclude(pv => pv.Product)
+                    .FirstOrDefault(cd => cd.CartDetailId == cartDetailId);
+
+                if (cartDetail == null)
+                    return Json(new { success = false, message = "Không tìm thấy sản phẩm trong giỏ" });
+
+                var variant = cartDetail.ProductVariant;
+                if (variant == null)
+                    return Json(new { success = false, message = "Biến thể không tồn tại" });
+
+                // ✅ Kiểm tra tồn kho
+                if (variant.Stock.HasValue && quantity > variant.Stock.Value)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Số lượng vượt quá tồn kho (còn {variant.Stock.Value} sản phẩm).",
+                        available = variant.Stock.Value
+                    });
+                }
+
+                // ✅ Cập nhật
+                cartDetail.Quantity = quantity;
+                if (cartDetail.Cart != null)
+                    cartDetail.Cart.LastUpdated = DateTime.Now;
+
+                _context.SaveChanges();
+
+                // ✅ Tính lại tổng của item
+                var itemTotal = (variant.SalePrice ?? 0) * (cartDetail.Quantity ?? 0);
+
+                // ✅ Tính lại tổng cả giỏ
+                var cartTotal = _context.CartDetails
+                    .Where(cd => cd.CartId == cartDetail.CartId)
+                    .Sum(cd => (cd.Quantity ?? 0) * (cd.ProductVariant!.SalePrice ?? 0));
+
+                return Json(new
+                {
+                    success = true,
+                    newQuantity = cartDetail.Quantity,
+                    itemTotal,
+                    cartTotal
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+            }
+        }
+        [HttpPost]
+        public IActionResult UpdateCartVariant(int cartDetailId, int newVariantId)
+        {
+            try
+            {
+                var detail = _context.CartDetails
+                    .Include(cd => cd.ProductVariant)
+                    .FirstOrDefault(cd => cd.CartDetailId == cartDetailId);
+
+                if (detail == null)
+                    return Json(new { success = false, message = "Không tìm thấy sản phẩm trong giỏ." });
+
+                var newVariant = _context.ProductVariants
+                    .Include(v => v.Product)
+                    .Include(v => v.Color)
+                    .Include(v => v.Size)
+                    .FirstOrDefault(v => v.VariantId == newVariantId && v.Status == "Active");
+
+                if (newVariant == null)
+                    return Json(new { success = false, message = "Biến thể không tồn tại hoặc đã ngừng bán." });
+
+                var qty = detail.Quantity ?? 1;
+                if (newVariant.Stock.HasValue && qty > newVariant.Stock.Value)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"Biến thể {newVariant.Product?.ProductName} ({newVariant.Color?.ColorName}/{newVariant.Size?.SizeName}) chỉ còn {newVariant.Stock.Value} sản phẩm."
+                    });
+                }
+
+                detail.ProductVariantId = newVariantId;
+                _context.SaveChanges();
+
+                return Json(new
+                {
+                    success = true,
+                    variantId = newVariant.VariantId,
+                    salePrice = newVariant.SalePrice ?? 0m,
+                    colorName = newVariant.Color?.ColorName,
+                    sizeName = newVariant.Size?.SizeName
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Có lỗi: " + ex.Message });
+            }
+        }
+
+       [HttpGet]
+public async Task<IActionResult> GetVariantsByProduct(int productId)
+{
+    var variants = await _context.ProductVariants
+        .Include(v => v.Color)
+        .Include(v => v.Size)
+        .Where(v => v.ProductId == productId && v.Status == "Active")
+        .Select(v => new {
+            v.VariantId,
+            v.ProductId,
+            ColorId = (int?)(v.ColorId) ?? 0,
+            ColorName = v.Color != null ? v.Color.ColorName : "Không có màu",
+            SizeId = (int?)(v.SizeId) ?? 0,
+            SizeName = v.Size != null ? v.Size.SizeName : "Không có size",
+            v.SalePrice,
+            v.Stock
+        })
+        .ToListAsync();
+
+    return Json(variants);
+}
+
+
+
+
+
+
+
 
         // ===================== CHECKOUT / PAYOS =====================
         [HttpPost]
@@ -963,13 +1076,14 @@ namespace DATNAPI1.Controllers
         [AllowAnonymous]
         public IActionResult News()
         {
-            // Lấy danh sách bài viết từ DB
             var newsList = _context.News
+                .Include(n => n.Author)              // 🔥 load luôn thông tin tác giả
                 .OrderByDescending(n => n.PostedDate)
                 .ToList();
 
-            return View(newsList); // -> Views/User/News.cshtml
+            return View(newsList);
         }
+
 
         // Hiển thị danh sách khuyến mãi (public)
         [AllowAnonymous]
@@ -1457,30 +1571,8 @@ namespace DATNAPI1.Controllers
 
 
 
-        // ==== Cập nhật thông tin giao hàng: chỉ khi Chờ xác nhận ====
-        //[HttpPost]
-        //public async Task<IActionResult> UpdateOrderInfo([FromBody] UpdateOrderInfoDto dto)
-        //{
-        //    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //    var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == dto.OrderId && o.UserId == userId);
-        //    if (order == null) return Json(new { success = false, message = "Không tìm thấy đơn hàng." });
-        //    if (CanonOrder(order.OrderStatus) != "Chờ xác nhận")
+       
 
-        //        return Json(new { success = false, message = "Đơn không còn ở trạng thái Chờ xác nhận." });
-
-        //    if (string.IsNullOrWhiteSpace(dto.RecipientName) ||
-        //        string.IsNullOrWhiteSpace(dto.RecipientPhone) ||
-        //        string.IsNullOrWhiteSpace(dto.DeliveryAddress))
-        //        return Json(new { success = false, message = "Vui lòng nhập đủ Tên, SĐT, Địa chỉ." });
-
-        //    order.RecipientName = dto.RecipientName.Trim();
-        //    order.RecipientPhone = dto.RecipientPhone.Trim();
-        //    order.DeliveryAddress = dto.DeliveryAddress.Trim();
-        //    order.Note = dto.Note;
-
-        //    await _context.SaveChangesAsync();
-        //    return Json(new { success = true, message = "Đã lưu thay đổi." });
-        //}
 
         // ==== Trạng thái hiện tại (phục vụ auto-refresh) ====
         [HttpGet]
@@ -1595,73 +1687,7 @@ namespace DATNAPI1.Controllers
         ");
             }
         }
-        // Huỷ đơn bằng form (TempData + Redirect)
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> CancelOrderSubmit(int id, string? reason)
-        //{
-        //    try
-        //    {
-        //        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //        if (string.IsNullOrEmpty(userId))
-        //        {
-        //            TempData["Error"] = "Vui lòng đăng nhập.";
-        //            return RedirectToAction(nameof(OrderDetail), new { id });
-        //        }
-
-        //        var order = await _context.Orders
-        //            .Include(o => o.OrderDetails)
-        //            .FirstOrDefaultAsync(o => o.OrderId == id && o.UserId == userId);
-
-        //        if (order == null)
-        //        {
-        //            TempData["Error"] = "Không tìm thấy đơn hàng.";
-        //            return RedirectToAction(nameof(OrderDetail), new { id });
-        //        }
-
-        //        var st = (order.OrderStatus ?? "").Trim().ToLowerInvariant();
-        //        var isPending = string.IsNullOrWhiteSpace(st) || st == "pending" || st == "chờ xác nhận";
-        //        if (!isPending)
-        //        {
-        //            TempData["Error"] = "Chỉ có thể huỷ khi đơn ở trạng thái Chờ xác nhận.";
-        //            return RedirectToAction(nameof(OrderDetail), new { id });
-        //        }
-
-        //        reason = (reason ?? "").Trim();
-        //        if (reason.Length < 5)
-        //        {
-        //            TempData["Error"] = "Lý do huỷ tối thiểu 5 ký tự.";
-        //            return RedirectToAction(nameof(OrderDetail), new { id });
-        //        }
-
-        //        using var tx = await _context.Database.BeginTransactionAsync();
-
-        //        // Hoàn kho
-        //        var lines = order.OrderDetails.Select(d => ((int)d.ProductVariantId, (int)(d.Quantity ?? 0)));
-        //        await RestockAsync(lines);
-
-        //        // Cập nhật trạng thái
-        //        order.OrderStatus = "Cancelled";
-        //        if (string.Equals(order.PaymentStatus, "Đã thanh toán", StringComparison.OrdinalIgnoreCase))
-        //            order.PaymentStatus = "Chờ hoàn tiền";
-
-        //        var prefix = $"[HUỶ BỞI KHÁCH {DateTime.Now:dd/MM/yyyy HH:mm}] ";
-        //        order.Note = string.IsNullOrWhiteSpace(order.Note)
-        //            ? (prefix + reason)
-        //            : (prefix + reason + "\n" + order.Note);
-
-        //        await _context.SaveChangesAsync();
-        //        await tx.CommitAsync();
-
-        //        TempData["Success"] = $"Đã huỷ đơn #{id} và hoàn lại tồn kho.";
-        //        return RedirectToAction(nameof(OrderDetail), new { id });
-        //    }
-        //    catch
-        //    {
-        //        TempData["Error"] = "Có lỗi xảy ra khi huỷ đơn.";
-        //        return RedirectToAction(nameof(OrderDetail), new { id });
-        //    }
-        //}
+        
 
     }
 }
